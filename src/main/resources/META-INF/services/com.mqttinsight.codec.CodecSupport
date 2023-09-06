@@ -1,0 +1,2 @@
+com.mqttinsight.codec.Base64CodecSupport
+com.mqttinsight.codec.XmlCodecSupport

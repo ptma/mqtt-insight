@@ -1,0 +1,30 @@
+# root 表明是最顶层的配置文件，发现设为true时，才会停止查找.editorconfig文件。
+root = true
+
+[*]
+# 缩进样式, tab | space
+indent_style = space
+
+# 设置整数表示规定每级缩进的列数和soft-tabs的宽度（译注 = 空格数）。如果设定为tab，则会使用tab_width的值（如果已指定）
+indent_size = 4
+
+# 设置整数用于指定替代tab的列数。默认值就是indent_size的值，一般无需指定
+tab_width = 4
+
+# 定义换行符，支持 lf、 cr 和 crlf
+end_of_line = crlf
+
+charset = utf-8
+
+# 设为 true 表示会除去换行行首的任意空白字符，false 反之
+trim_trailing_whitespace = true
+
+# 设为 true 表明使文件以一个空白行结尾，false 反之
+insert_final_newline = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+[{package,bower}.json]
+indent_style = space
+indent_size = 4

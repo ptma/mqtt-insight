@@ -1,0 +1,4 @@
+The icons in this folder are from IntelliJ IDEA Community Edition and iconfont,
+See: 
+https://github.com/JetBrains/intellij-community/
+https://www.iconfont.cn/

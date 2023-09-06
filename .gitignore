@@ -1,0 +1,23 @@
+**/pom.xml.versionsBackup
+**/target/
+**/out/
+**/build/
+**/node_modules/
+*.class
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+.idea/
+.gradle/
+*.ipr
+*.iws
+*.iml
+rebel.xml
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+temp/
+/scripts/package-lock.json

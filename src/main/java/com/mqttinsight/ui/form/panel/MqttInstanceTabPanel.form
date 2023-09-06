@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.mqttinsight.ui.form.panel.MqttInstanceTabPanel">
+  <grid id="27dc6" binding="rootPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
+    <constraints>
+      <xy x="20" y="20" width="873" height="668"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <grid id="89f4c" binding="topPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
+        <constraints border-constraint="North"/>
+        <properties/>
+        <border type="none">
+          <size top="5" left="5" bottom="5" right="5"/>
+        </border>
+        <children/>
+      </grid>
+      <splitpane id="fed37" binding="subscriptionSplitPanel">
+        <constraints border-constraint="Center"/>
+        <properties>
+          <continuousLayout value="false"/>
+          <dividerLocation value="219"/>
+          <resizeWeight value="0.0"/>
+        </properties>
+        <border type="none"/>
+        <children>
+          <splitpane id="9066f" binding="messageSplitPanel">
+            <constraints>
+              <splitpane position="right"/>
+            </constraints>
+            <properties>
+              <dividerLocation value="385"/>
+              <orientation value="0"/>
+              <resizeWeight value="1.0"/>
+            </properties>
+            <border type="none"/>
+            <children>
+              <tabbedpane id="5410" binding="detailTabbedPanel">
+                <constraints>
+                  <splitpane position="right"/>
+                </constraints>
+                <properties>
+                  <doubleBuffered value="true"/>
+                </properties>
+                <border type="none"/>
+                <children/>
+              </tabbedpane>
+            </children>
+          </splitpane>
+        </children>
+      </splitpane>
+    </children>
+  </grid>
+</form>
