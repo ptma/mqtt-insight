@@ -20,4 +20,5 @@ rebel.xml
 *.log
 hs_err_pid*
 temp/
-/scripts/package-lock.json
+scripts/
+conf/
