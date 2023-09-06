@@ -12,3 +12,8 @@ Features:
 * Provide two message views: table and dialogue;
 * Support Node.js JavaScript (Javet);
 * Supports PlainText, JSON, XML, HEX, and Base64 regular message encoding and decoding, as well as SPI extended codecs;
+
+![Screenshot1](screenshots/table_view.png)
+![Screenshot1](screenshots/dialogue_view.png)
+
+[Scripting](Scripting.md)
