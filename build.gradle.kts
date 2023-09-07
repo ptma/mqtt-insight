@@ -19,7 +19,8 @@ buildscript {
         mavenLocal()
         mavenCentral()
         dependencies {
-            classpath("io.github.fvarrui:javapackager:1.7.2")
+            // ********* package with gradle 7.6.2 *********
+            classpath("io.github.fvarrui:javapackager:1.6.7")
         }
     }
 }
