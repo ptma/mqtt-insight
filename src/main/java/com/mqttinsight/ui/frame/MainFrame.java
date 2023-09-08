@@ -5,6 +5,7 @@ import com.formdev.flatlaf.icons.FlatTabbedPaneCloseIcon;
 import com.mqttinsight.codec.CodecSupportLoader;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
+import com.mqttinsight.ui.form.ConnectionManagerForm;
 import com.mqttinsight.ui.form.MainWindowForm;
 import com.mqttinsight.util.Const;
 import com.mqttinsight.util.Icons;
@@ -141,6 +142,7 @@ public class MainFrame extends JXFrame {
             @Override
             public void windowOpened(WindowEvent e) {
                 loadFrameSize();
+                ConnectionManagerForm.open();
             }
 
             @Override
