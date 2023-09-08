@@ -106,7 +106,7 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
 
     protected abstract JPopupMenu createPopup();
 
-    protected JPopupMenu getPopup() {
+    public JPopupMenu getPopup() {
         return this.popup;
     }
 

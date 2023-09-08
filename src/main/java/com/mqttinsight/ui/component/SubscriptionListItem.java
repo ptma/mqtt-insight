@@ -2,6 +2,7 @@ package com.mqttinsight.ui.component;
 
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
+import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.Subscription;
 import com.mqttinsight.ui.form.panel.SubscriptionListPanel;
 import com.mqttinsight.util.Icons;
@@ -18,6 +19,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseAdapter;
 
 /**
  * @author ptma
@@ -41,7 +43,6 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
     private JButton favoriteButton;
     private JButton muteButton;
     private PopupMenuButton moreButton;
-    private JMenuItem unsubscribeAndCloseMenu;
     private JMenuItem unsubscribeMenu;
     private JMenuItem resubscribeMenu;
     private JMenu formatMenu;
@@ -89,13 +90,8 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
         // More Menu
         moreButton = new PopupMenuButton(Icons.MORE);
 
-        unsubscribeAndCloseMenu = new JMenuItem();
-        LangUtil.buttonText(unsubscribeAndCloseMenu, "Unsubscribe");
-        unsubscribeAndCloseMenu.addActionListener(e -> unsubscribeListener.unsubscribe(true));
-        moreButton.addMunuItem(unsubscribeAndCloseMenu);
-
         unsubscribeMenu = new JMenuItem();
-        LangUtil.buttonText(unsubscribeMenu, "UnsubscribeKeep");
+        LangUtil.buttonText(unsubscribeMenu, "Unsubscribe");
         unsubscribeMenu.addActionListener(e -> unsubscribeListener.unsubscribe(false));
         moreButton.addMunuItem(unsubscribeMenu);
 
@@ -169,6 +165,7 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
                 parent.getProperties().addFavorite(subscription.getTopic(), subscription.getQos(), subscription.getSelfPayloadFormat());
                 favoriteButton.setIcon(Icons.FAVORITE_FILL);
             }
+            Configuration.instance().changed();
         });
         muteButton.addActionListener(e -> {
             if (subscription.isMuted()) {
@@ -177,6 +174,23 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
             } else {
                 subscription.setMuted(true);
                 muteButton.setIcon(Icons.EYE_CLOSE);
+            }
+        });
+        
+        topicLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    moreButton.getPopup().show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
+        toolBar.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    moreButton.getPopup().show(e.getComponent(), e.getX(), e.getY());
+                }
             }
         });
     }
@@ -213,7 +227,6 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
         topicLabel.setEnabled(subscribed);
         resubscribeMenu.setEnabled(!subscribed);
         unsubscribeMenu.setEnabled(subscribed);
-        unsubscribeAndCloseMenu.setEnabled(subscribed);
     }
 
     private boolean isFavorite() {
