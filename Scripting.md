@@ -21,9 +21,9 @@ MqttInsight 仅提供了一些基本的 MQTT 功能，用户可以通过编写�
 将订阅的 testtopic/# 主题下的消息通过 mqtt.js 转发到 MQTT Broker:
 
 ```javascript
-const mqtt = require("mqtt");
+const mqttJS = require("mqtt");
 
-const mqttClient = mqtt.connect("mqtt://127.0.0.1:1883");
+const mqttClient = mqttJS.connect("mqtt://127.0.0.1:1883");
 mqttClient.on("connect", () => {
     logger.debug("已连接: mqtt://127.0.0.1:1883");
 });
