@@ -127,8 +127,8 @@ public class MainFrame extends JXFrame {
     }
 
     public void close() {
-        MainWindowForm.getInstance().close();
         Configuration.instance().save();
+        MainWindowForm.getInstance().close();
         this.dispose();
     }
 
