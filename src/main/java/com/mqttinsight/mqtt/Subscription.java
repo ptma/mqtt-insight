@@ -64,11 +64,11 @@ public class Subscription {
     }
 
     public String getSelfPayloadFormat() {
-        return payloadFormat == null ? CodecSupport.AUTO : payloadFormat;
+        return payloadFormat == null ? CodecSupport.DEFAULT : payloadFormat;
     }
-    
+
     public String getPayloadFormat() {
-        return (payloadFormat == null || CodecSupport.AUTO.equals(payloadFormat)) ? mqttInstance.getPayloadFormat() : payloadFormat;
+        return (payloadFormat == null || CodecSupport.DEFAULT.equals(payloadFormat)) ? mqttInstance.getPayloadFormat() : payloadFormat;
     }
 
     public void incrementMessageCount() {

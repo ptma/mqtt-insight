@@ -15,10 +15,7 @@ import com.mqttinsight.ui.component.ColorPicker;
 import com.mqttinsight.ui.component.model.PayloadFormatComboBoxModel;
 import com.mqttinsight.ui.component.renderer.TextableListRenderer;
 import com.mqttinsight.ui.form.panel.MqttInstance;
-import com.mqttinsight.util.LangUtil;
-import com.mqttinsight.util.TopicUtil;
-import com.mqttinsight.util.Utils;
-import com.mqttinsight.util.Validator;
+import com.mqttinsight.util.*;
 import org.jdesktop.swingx.combobox.EnumComboBoxModel;
 
 import javax.swing.*;
@@ -98,7 +95,7 @@ public class NewSubscriptionForm extends JDialog {
         qosComboBox.setSelectedItem(MqttQos.QOS_0);
         qosComboBox.setRenderer(new TextableListRenderer());
         formatComboBox.setModel(new PayloadFormatComboBoxModel(true));
-        formatComboBox.setSelectedItem(CodecSupport.AUTO);
+        formatComboBox.setSelectedItem(CodecSupport.DEFAULT);
 
         buttonOK.addActionListener(e -> onOK());
         buttonCancel.addActionListener(e -> onCancel());
@@ -117,6 +114,9 @@ public class NewSubscriptionForm extends JDialog {
         topicLabel.setText(LangUtil.getString("Topic"));
         qoSLabel.setText(LangUtil.getString("QoS"));
         formatLabel.setText(LangUtil.getString("PayloadFormat"));
+        formatLabel.setToolTipText(LangUtil.getString("PayloadFormatTip"));
+        formatLabel.setIcon(Icons.TIPS);
+        formatLabel.setHorizontalTextPosition(SwingConstants.LEADING);
         colorLabel.setText(LangUtil.getString("Color"));
         colorPicker.setMoreText(LangUtil.getString("MoreColor"));
         colorPicker.setDialogTitle(LangUtil.getString("ChooseColor"));

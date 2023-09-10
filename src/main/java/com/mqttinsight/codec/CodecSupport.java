@@ -7,7 +7,7 @@ package com.mqttinsight.codec;
  */
 public interface CodecSupport {
 
-    String AUTO = "Auto";
+    String DEFAULT = "Default";
     String PLAIN = "Plain";
     String JSON = "JSON";
 

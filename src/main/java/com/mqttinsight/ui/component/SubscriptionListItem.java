@@ -17,9 +17,9 @@ import org.jdesktop.swingx.painter.RectanglePainter;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.MouseAdapter;
 
 /**
  * @author ptma
@@ -176,7 +176,7 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
                 muteButton.setIcon(Icons.EYE_CLOSE);
             }
         });
-        
+
         topicLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -198,9 +198,9 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
     private void loadFormatMenus() {
         ButtonGroup formatGroup = new ButtonGroup();
 
-        JCheckBoxMenuItem formatMenuItem = new JCheckBoxMenuItem(CodecSupport.AUTO);
+        JCheckBoxMenuItem formatMenuItem = new JCheckBoxMenuItem(CodecSupport.DEFAULT);
         formatMenuItem.addActionListener(this::payloadFormatChanged);
-        if (CodecSupport.AUTO.equals(subscription.getSelfPayloadFormat())) {
+        if (CodecSupport.DEFAULT.equals(subscription.getSelfPayloadFormat())) {
             formatMenuItem.setSelected(true);
         }
         formatMenu.add(formatMenuItem);

@@ -22,7 +22,7 @@ public class PayloadFormatComboBoxModel extends AbstractListModel<String> implem
     public PayloadFormatComboBoxModel(boolean withAuto) {
         data = new ArrayList<>();
         if (withAuto) {
-            data.add(CodecSupport.AUTO);
+            data.add(CodecSupport.DEFAULT);
         }
         CodecSupports.instance().getCodes().forEach(codecSupport -> {
             data.add(codecSupport.getName());

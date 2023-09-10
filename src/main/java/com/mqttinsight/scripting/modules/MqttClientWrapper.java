@@ -22,7 +22,7 @@ public class MqttClientWrapper {
     }
 
     public void subscribe(String topic, int qos) {
-        Subscription subscription = new Subscription(mqttInstance, topic, qos, CodecSupport.AUTO, Utils.generateRandomColor());
+        Subscription subscription = new Subscription(mqttInstance, topic, qos, CodecSupport.DEFAULT, Utils.generateRandomColor());
         mqttInstance.subscribe(subscription);
     }
 
