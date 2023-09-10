@@ -1,6 +1,7 @@
 package com.mqttinsight.ui.component.model;
 
 import com.mqttinsight.config.ConnectionNode;
+import com.mqttinsight.util.LangUtil;
 import org.jdesktop.swingx.treetable.AbstractTreeTableModel;
 
 import javax.swing.tree.TreePath;
@@ -103,11 +104,11 @@ public class ConnectionTreeTableModel extends AbstractTreeTableModel {
     public String getColumnName(int column) {
         switch (column) {
             case 0:
-                return "Name";
+                return LangUtil.getString("Name");
             case 1:
-                return "Host";
+                return LangUtil.getString("Server");
             case 2:
-                return "Port";
+                return LangUtil.getString("Port");
             default:
                 return "Unknown";
         }
