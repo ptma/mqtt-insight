@@ -7,10 +7,7 @@ import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.*;
 import com.mqttinsight.scripting.ScriptLoader;
-import com.mqttinsight.ui.component.FileExtensionsFilter;
-import com.mqttinsight.ui.component.MessageTable;
-import com.mqttinsight.ui.component.MessageToolbar;
-import com.mqttinsight.ui.component.SingleLineBorder;
+import com.mqttinsight.ui.component.*;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.ui.event.InstanceEventListener;
@@ -55,7 +52,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     private JLabel statusLabel;
     private JButton connectButton;
-    private JButton subscribeButton;
+    private SplitButton subscribeButton;
     private MessageToolbar messageToolbar;
 
     protected SubscriptionListPanel subscriptionListPanel;
@@ -141,14 +138,19 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         connectButton.setEnabled(false);
         connectButton.addActionListener(e -> connect());
         leftToolbar.add(connectButton);
-        subscribeButton = new JButton(Icons.SUBSCRIBE);
+        subscribeButton = new SplitButton();
+        subscribeButton.setIcon(Icons.SUBSCRIBE);
         LangUtil.buttonText(subscribeButton, "NewSubscription");
         subscribeButton.setToolTipText(LangUtil.getString("NewSubscription") + " (Ctrl + Shift + S)");
         subscribeButton.setEnabled(false);
         subscribeButton.addActionListener(e -> {
             openSubscriptionForm();
         });
+        JPopupMenu popup = new JPopupMenu();
+        // TODO: 收藏的订阅列表菜单加载并监听变更
+        subscribeButton.setPopupMenu(popup);
         leftToolbar.add(subscribeButton);
+
         leftToolbar.addSeparator();
 
         topPanel.add(leftToolbar, "cell 0 0");
