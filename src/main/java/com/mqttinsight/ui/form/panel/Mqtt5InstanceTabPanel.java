@@ -13,6 +13,7 @@ import org.eclipse.paho.mqttv5.common.MqttMessage;
 import org.eclipse.paho.mqttv5.common.MqttSubscription;
 import org.eclipse.paho.mqttv5.common.packet.MqttReturnCode;
 
+import javax.swing.*;
 import java.io.File;
 import java.util.Collections;
 
@@ -47,21 +48,32 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
     }
 
     @Override
-    @SneakyThrows
     public void connect() {
-        if (mqttClient.isConnected()) {
-            mqttClient.disconnect();
-        }
-        mqttClient.connect(Mqtt5Options.fromProperties(properties),
-            Collections.EMPTY_MAP,
-            new Mqtt5ActionHandler()
-        );
+        SwingUtilities.invokeLater(() -> {
+            try {
+                if (mqttClient == null) {
+                    initMqttClient();
+                }
+                if (mqttClient.isConnected()) {
+                    onConnectionChanged(ConnectionStatus.DISCONNECTING);
+                    mqttClient.disconnect();
+                }
+                onConnectionChanged(ConnectionStatus.CONNECTING);
+                mqttClient.connect(Mqtt5Options.fromProperties(properties),
+                    Collections.EMPTY_MAP,
+                    new Mqtt5ActionHandler()
+                );
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+        });
     }
 
     @Override
     @SneakyThrows
     public void disconnect() {
         if (mqttClient.isConnected()) {
+            onConnectionChanged(ConnectionStatus.DISCONNECTING);
             mqttClient.disconnect();
             onConnectionChanged(ConnectionStatus.DISCONNECTED);
         }

@@ -76,7 +76,6 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         add(rootPanel, BorderLayout.CENTER);
         initComponents();
         initEventListeners();
-        initMqttClient();
     }
 
     private void initComponents() {

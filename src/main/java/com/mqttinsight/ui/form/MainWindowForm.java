@@ -98,6 +98,8 @@ public class MainWindowForm {
                             return;
                         }
                     }
+                    afterConnected.run();
+
                     MqttInstanceTabPanel mqttInstance;
                     if (properties.getVersion().equals(Version.MQTT_5)) {
                         mqttInstance = Mqtt5InstanceTabPanel.newInstance(properties);
@@ -109,7 +111,6 @@ public class MainWindowForm {
                     tabPanel.setIconAt(tabIndex, mqttInstance.getConnectionStatus().getSmallIcon());
                     tabPanel.setSelectedIndex(tabIndex);
                     mqttInstance.connect();
-                    afterConnected.run();
                 } catch (Exception ex) {
                     log.error(ex.getMessage(), ex);
                     if (ex.getCause() != null) {

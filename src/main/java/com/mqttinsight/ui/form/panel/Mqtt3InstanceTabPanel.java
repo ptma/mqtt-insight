@@ -11,6 +11,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
+import javax.swing.*;
 import java.io.File;
 import java.util.Collections;
 
@@ -45,21 +46,32 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
     }
 
     @Override
-    @SneakyThrows
     public void connect() {
-        if (mqttClient.isConnected()) {
-            mqttClient.disconnect();
-        }
-        mqttClient.connect(Mqtt3Options.fromProperties(properties),
-            Collections.EMPTY_MAP,
-            new Mqtt3ActionHandler()
-        );
+        SwingUtilities.invokeLater(() -> {
+            try {
+                if (mqttClient == null) {
+                    initMqttClient();
+                }
+                if (mqttClient.isConnected()) {
+                    onConnectionChanged(ConnectionStatus.DISCONNECTING);
+                    mqttClient.disconnect();
+                }
+                onConnectionChanged(ConnectionStatus.CONNECTING);
+                mqttClient.connect(Mqtt3Options.fromProperties(properties),
+                    Collections.EMPTY_MAP,
+                    new Mqtt3ActionHandler()
+                );
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+        });
     }
 
     @Override
     @SneakyThrows
     public void disconnect() {
         if (mqttClient.isConnected()) {
+            onConnectionChanged(ConnectionStatus.DISCONNECTING);
             mqttClient.disconnect();
             onConnectionChanged(ConnectionStatus.DISCONNECTED);
         }
