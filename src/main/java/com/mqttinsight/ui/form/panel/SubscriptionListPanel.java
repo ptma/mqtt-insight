@@ -84,6 +84,12 @@ public class SubscriptionListPanel {
                 for (SubscriptionListItem listItem : subscriptionList) {
                     listItem.setSubscribed(false);
                 }
+            } else {
+                for (SubscriptionListItem listItem : subscriptionList) {
+                    if (!listItem.isSubscribed()) {
+                        listItem.resubscribe();
+                    }
+                }
             }
         });
     }

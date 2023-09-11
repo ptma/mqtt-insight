@@ -27,6 +27,8 @@ public interface InstanceEventListener {
     void tableSelectionChanged();
 
     void requestFocusPreview();
+    
+    void favoriteChanged();
 
     void fireLoadScript();
 

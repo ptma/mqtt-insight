@@ -4,6 +4,7 @@ import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.Subscription;
+import com.mqttinsight.ui.event.InstanceEventListener;
 import com.mqttinsight.ui.form.panel.SubscriptionListPanel;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
@@ -165,8 +166,10 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
                 parent.getProperties().addFavorite(subscription.getTopic(), subscription.getQos(), subscription.getSelfPayloadFormat());
                 favoriteButton.setIcon(Icons.FAVORITE_FILL);
             }
+            parent.getMqttInstance().getEventListeners().forEach(InstanceEventListener::favoriteChanged);
             Configuration.instance().changed();
         });
+        
         muteButton.addActionListener(e -> {
             if (subscription.isMuted()) {
                 subscription.setMuted(false);
@@ -228,6 +231,10 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
         resubscribeMenu.setEnabled(!subscribed);
         unsubscribeMenu.setEnabled(subscribed);
     }
+    
+    public boolean isSubscribed() {
+        return subscribed;
+    }
 
     private boolean isFavorite() {
         return parent.getProperties().isFavorite(subscription.getTopic());
@@ -241,7 +248,7 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
         }
     }
 
-    private void resubscribe() {
+    public void resubscribe() {
         SwingUtilities.invokeLater(() -> {
             if (parent.getMqttInstance().subscribe(subscription)) {
                 setSubscribed(true);

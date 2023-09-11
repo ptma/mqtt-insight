@@ -123,7 +123,7 @@ public class SplitButton extends JButton {
     protected void showPopupMenu() {
         if (getOptionsCount() > 0) {
             JPopupMenu menu = getPopupMenu();
-            menu.setVisible(true); //Necessary to calculate pop-up menu width the first time it's displayed.
+            menu.setVisible(true);
             menu.show(this, (getWidth() - menu.getWidth()), getHeight());
         }
     }

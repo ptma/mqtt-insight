@@ -50,6 +50,11 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
     @Override
     public void requestFocusPreview() {
     }
+    
+    @Override
+    public void favoriteChanged() {
+        
+    }
 
     @Override
     public void fireLoadScript() {

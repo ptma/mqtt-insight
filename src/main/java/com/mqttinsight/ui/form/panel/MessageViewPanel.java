@@ -124,8 +124,10 @@ public class MessageViewPanel {
     }
 
     private void toggleViewMode(MessageViewMode viewMode) {
-        messageTableModel.setViewMode(viewMode);
-        initializeMessageTable();
+        if (!messageTableModel.getViewMode().equals(viewMode)) {
+            messageTableModel.setViewMode(viewMode);
+            initializeMessageTable();
+        }
     }
 
     public MessageTable getMessageTable() {

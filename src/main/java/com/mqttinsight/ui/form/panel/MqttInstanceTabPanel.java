@@ -26,6 +26,7 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.File;
+import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,6 +54,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     private JLabel statusLabel;
     private JButton connectButton;
     private SplitButton subscribeButton;
+    private JPopupMenu favoriteMenu;
     private MessageToolbar messageToolbar;
 
     protected SubscriptionListPanel subscriptionListPanel;
@@ -61,7 +63,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     protected MessagePreviewPanel messagePreviewPanel;
 
     private final List<InstanceEventListener> eventListeners;
-
+    
     private ScriptLoader scriptLoader;
 
     public MqttInstanceTabPanel(MqttProperties properties) {
@@ -136,8 +138,9 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         connectButton = new JButton(Icons.EXECUTE);
         LangUtil.buttonText(connectButton, "Connect");
         connectButton.setEnabled(false);
-        connectButton.addActionListener(e -> connect());
+        connectButton.addActionListener(e -> connectButtonAction());
         leftToolbar.add(connectButton);
+        
         subscribeButton = new SplitButton();
         subscribeButton.setIcon(Icons.SUBSCRIBE);
         LangUtil.buttonText(subscribeButton, "NewSubscription");
@@ -146,9 +149,10 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         subscribeButton.addActionListener(e -> {
             openSubscriptionForm();
         });
-        JPopupMenu popup = new JPopupMenu();
+        favoriteMenu = new JPopupMenu();
         // TODO: 收藏的订阅列表菜单加载并监听变更
-        subscribeButton.setPopupMenu(popup);
+        loadFavoriteMenus();
+        subscribeButton.setPopupMenu(favoriteMenu);
         leftToolbar.add(subscribeButton);
 
         leftToolbar.addSeparator();
@@ -172,6 +176,11 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             @Override
             public void requestFocusPreview() {
                 detailTabbedPanel.setSelectedIndex(0);
+            }
+            
+            @Override
+            public void favoriteChanged() {
+                loadFavoriteMenus();
             }
 
             @Override
@@ -217,6 +226,14 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     protected int getReasonCode() {
         return reasonCode;
     }
+    
+    protected void connectButtonAction() {
+        if (connectionStatus.equals(ConnectionStatus.CONNECTED)) {
+            disconnect();
+        } else if (connectionStatus.equals(ConnectionStatus.DISCONNECTED) || connectionStatus.equals(ConnectionStatus.FAILED)) {
+            connect();
+        }
+    }
 
     protected void onConnectionChanged(ConnectionStatus status) {
         connectionStatus = status;
@@ -234,7 +251,16 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             statusLabel.setToolTipText(null);
         }
         statusLabel.setText(LangUtil.getString(status.getText()));
-        connectButton.setEnabled(status.equals(ConnectionStatus.DISCONNECTED) || status.equals(ConnectionStatus.FAILED));
+        
+        connectButton.setEnabled(!status.equals(ConnectionStatus.CONNECTING) && !status.equals(ConnectionStatus.DISCONNECTING));
+        if (status.equals(ConnectionStatus.DISCONNECTED) || status.equals(ConnectionStatus.FAILED) || status.equals(ConnectionStatus.DISCONNECTING)) {
+            LangUtil.buttonText(connectButton, "Connect");
+            connectButton.setIcon(Icons.EXECUTE);
+        } else if (status.equals(ConnectionStatus.CONNECTED)) {
+            LangUtil.buttonText(connectButton, "Disconnect");
+            connectButton.setIcon(Icons.SUSPEND);
+        }
+        
         subscribeButton.setEnabled(status.equals(ConnectionStatus.CONNECTED));
         MainWindowForm.getInstance().onConnectionChanged(this);
         subscriptionListPanel.onConnectionChanged(status);
@@ -334,6 +360,23 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     @Override
     public void setPayloadFormat(String payloadFormat) {
         this.payloadFormat = payloadFormat;
+    }
+    
+    private void loadFavoriteMenus() {
+        favoriteMenu.removeAll();
+        List<FavoriteSubscription> favoriteSubscriptions = getProperties().getFavoriteSubscriptions();
+        if (favoriteSubscriptions != null && !favoriteSubscriptions.isEmpty()) {
+            favoriteSubscriptions.sort(Comparator.comparing(FavoriteSubscription::getTopic));
+            favoriteSubscriptions.forEach(favorite -> {
+                favoriteMenu.add(favorite.getTopic())
+                    .addActionListener(e -> {
+                        Subscription subscription = new Subscription(this, favorite.getTopic(), favorite.getQos(), favorite.getPayloadFormat(), Utils.generateRandomColor());
+                        subscriptionListPanel.doSubscribe(subscription);
+                    });
+            });
+        } else {
+            favoriteMenu.add(LangUtil.getString("NoSubscriptions"));
+        }
     }
 
     private void doLoadScript() {
