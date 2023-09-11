@@ -1,5 +1,6 @@
 package com.mqttinsight.mqtt;
 
+import com.mqttinsight.codec.CodecSupport;
 import java.awt.*;
 
 /**
@@ -16,6 +17,8 @@ public interface MqttMessage {
     String getPayloadFormat();
 
     String decodePayload(String format, boolean pretty);
+    
+    String decodePayload(CodecSupport codec, boolean pretty);
 
     default String payloadAsString(boolean pretty) {
         return decodePayload(getPayloadFormat(), pretty);

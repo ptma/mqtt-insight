@@ -8,6 +8,7 @@ import com.mqttinsight.ui.component.SingleLineBorder;
 import com.mqttinsight.ui.component.SyntaxTextEditor;
 import com.mqttinsight.ui.component.TextSearchToolbar;
 import com.mqttinsight.ui.component.model.MessageViewMode;
+import com.mqttinsight.ui.component.model.PayloadFormatComboBoxModel;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
@@ -18,6 +19,7 @@ import org.jdesktop.swingx.painter.RectanglePainter;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 
 /**
  * @author ptma
@@ -40,7 +42,8 @@ public class MessagePreviewPanel extends JPanel {
     private JXLabel timeLabel;
     private JXLabel qosLabel;
     private JXLabel retainedLabel;
-    private JCheckBox prettyCheckBox;
+    private JLabel formatLabel;
+    private JComboBox<String> formatComboBox;
     private JPanel payloadPanel;
 
     public MessagePreviewPanel(MqttInstance mqttInstance) {
@@ -59,7 +62,7 @@ public class MessagePreviewPanel extends JPanel {
 
         topPanelLayout = new MigLayout(
             "insets 0 0 5 0,gap 5",
-            "[grow][][][][]",
+            "[grow][][][][][][]",
             "[]"
         );
         topPanel.setLayout(topPanelLayout);
@@ -88,7 +91,7 @@ public class MessagePreviewPanel extends JPanel {
         timeLabel.setBackgroundPainter(badgePainter);
         timeLabel.setOpaque(false);
         timeLabel.setBorder(badgeBorder);
-        topPanel.add(timeLabel, "wmin 162px");
+        topPanel.add(timeLabel, "span 2,wmin 162px");
 
         qosLabel = new JXLabel(" ");
         qosLabel.setBackgroundPainter(badgePainter);
@@ -103,9 +106,13 @@ public class MessagePreviewPanel extends JPanel {
         retainedLabel.setBorder(badgeBorder);
         topPanel.add(retainedLabel, "hidemode 2");
 
-        prettyCheckBox = new JCheckBox(LangUtil.getString("Pretty"));
-        topPanel.add(prettyCheckBox, "");
-
+        formatLabel = new JLabel(LangUtil.getString("PayloadFormat"));
+        topPanel.add(formatLabel, "right");
+        formatComboBox = new JComboBox<>();
+        formatComboBox.setModel(new PayloadFormatComboBoxModel(true));
+        formatComboBox.setSelectedItem(CodecSupport.DEFAULT);
+        formatComboBox.addActionListener(e -> formatChanged(e));
+        topPanel.add(formatComboBox, "");
 
         payloadEditor = new SyntaxTextEditor();
         payloadEditor.textArea().setEditable(false);
@@ -125,12 +132,6 @@ public class MessagePreviewPanel extends JPanel {
         payloadEditor.textArea().registerKeyboardAction(e -> {
             closeFindToolbar();
         }, ESC_KEY, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-
-        prettyCheckBox.addActionListener(e -> {
-            if (previewedMessage != null) {
-                payloadEditor.setText(previewedMessage.payloadAsString(prettyCheckBox.isSelected()));
-            }
-        });
     }
 
     private void initEventListeners() {
@@ -144,15 +145,30 @@ public class MessagePreviewPanel extends JPanel {
 
     public void toggleViewMode(MessageViewMode viewMode) {
         if (viewMode == MessageViewMode.TABLE) {
-            topPanelLayout.setColumnConstraints("[grow][][][][right]");
+            topPanelLayout.setColumnConstraints("[grow][][][][][][right]");
             topPanelLayout.setRowConstraints("[]");
             topPanelLayout.setComponentConstraints(topicField, "growx");
-            topPanelLayout.setComponentConstraints(prettyCheckBox, "");
+            topPanelLayout.setComponentConstraints(formatLabel, "");
         } else {
-            topPanelLayout.setColumnConstraints("[][][][grow,right]");
+            topPanelLayout.setColumnConstraints("[][][][][][grow,right]");
             topPanelLayout.setRowConstraints("[][]");
             topPanelLayout.setComponentConstraints(topicField, "growx, span, wrap");
-            topPanelLayout.setComponentConstraints(prettyCheckBox, "newline");
+            topPanelLayout.setComponentConstraints(formatLabel, "newline");
+        }
+    }
+    
+    private void formatChanged(ActionEvent e) {
+        if (previewedMessage != null && "comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
+            String format = (String) formatComboBox.getSelectedItem();
+            if (CodecSupport.DEFAULT.equals(format)) {
+                payloadEditor.setText(previewedMessage.payloadAsString(true));
+                CodecSupport codec = CodecSupports.instance().getByName(previewedMessage.getPayloadFormat());
+                payloadEditor.setSyntax(codec.getSyntax());
+            } else {
+                CodecSupport codec = CodecSupports.instance().getByName(format);
+                payloadEditor.setText(previewedMessage.decodePayload(codec, true));
+                payloadEditor.setSyntax(codec.getSyntax());
+            }
         }
     }
 
@@ -170,10 +186,18 @@ public class MessagePreviewPanel extends JPanel {
                 retainedLabel.setVisible(message.isRetained());
                 qosLabel.setText(String.format("QoS %d",message.getQos()));
                 timeLabel.setText(message.getTime());
-                payloadEditor.setText(message.payloadAsString(prettyCheckBox.isSelected()));
-                CodecSupport codecSupport = CodecSupports.instance()
-                    .getByName(message.getPayloadFormat());
-                payloadEditor.setSyntax(codecSupport.getSyntax());
+                
+                String format = (String) formatComboBox.getSelectedItem();
+                if (CodecSupport.DEFAULT.equals(format)) {
+                    payloadEditor.setText(message.payloadAsString(true));
+                    CodecSupport codec = CodecSupports.instance().getByName(message.getPayloadFormat());
+                    payloadEditor.setSyntax(codec.getSyntax());
+                } else {
+                    CodecSupport codec = CodecSupports.instance().getByName(format);
+                    payloadEditor.setText(message.decodePayload(codec, true));
+                    payloadEditor.setSyntax(codec.getSyntax());
+                }
+                
                 if (toolbarPanel.isVisible()) {
                     textSearchToolbar.find(true);
                 }
