@@ -57,11 +57,12 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     private JPopupMenu favoriteMenu;
     private MessageToolbar messageToolbar;
 
+    protected MessageViewMode viewMode;
     protected SubscriptionListPanel subscriptionListPanel;
     protected MessageViewPanel messageViewPanel;
     protected MessagePublishPanel messagePublishPanel;
     protected MessagePreviewPanel messagePreviewPanel;
-
+    
     private final List<InstanceEventListener> eventListeners;
     
     private ScriptLoader scriptLoader;
@@ -312,6 +313,9 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     private void applyLayout(MessageViewMode viewMode) {
+        if (this.viewMode != null && this.viewMode.equals(viewMode)) {
+            return;
+        }
         if (viewMode == MessageViewMode.TABLE) {
             messageSplitPanel.setOrientation(JSplitPane.VERTICAL_SPLIT);
             Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_VERTICAL_DIVIDER, 500);
@@ -327,6 +331,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             detailTabbedPanel.setTabPlacement(JTabbedPane.TOP);
             detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.LEADING);
         }
+        this.viewMode = viewMode;
         messagePublishPanel.toggleViewMode(viewMode);
         messagePreviewPanel.toggleViewMode(viewMode);
     }
