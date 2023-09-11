@@ -186,7 +186,7 @@ tasks.register<PackageTask>("packageForWindows") {
         productName = applicationName
         productVersion = version
         fileVersion = version
-        isGenerateSetup = true
+        isGenerateSetup = false
         setupLanguages = innoSetupLanguageMap
         isCreateZipball = true
         isGenerateMsi = false
