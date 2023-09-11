@@ -22,12 +22,8 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
     protected Color buttonHoverArrowColor = UIManager.getColor("ComboBox.buttonHoverArrowColor");
     protected Color buttonPressedArrowColor = UIManager.getColor("ComboBox.buttonPressedArrowColor");
 
+    private static final int ARROW_SPACING = 16;
     private static final int ARROW_SIZE = 9;
-    /**
-     * Add spaces at the end of the text to increase the button width
-     */
-    private static final String TAIL_BLANK = "     ";
-    private static final String TAIL_BLANK_WITHOUT_TEXT = "    ";
 
     private boolean hover;
     private boolean pressed;
@@ -42,7 +38,6 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
 
     public AbstractPopupButton(Action action) {
         super(action);
-        super.setText(TAIL_BLANK);
         init();
     }
 
@@ -56,21 +51,12 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
 
     public AbstractPopupButton(String text, Icon icon) {
         super(text, icon);
-        if (text != null) {
-            super.setText(text + TAIL_BLANK);
-        } else {
-            super.setText(TAIL_BLANK_WITHOUT_TEXT);
-        }
         init();
     }
 
     @Override
     public void setText(String text) {
-        if (text != null) {
-            super.setText(text + TAIL_BLANK);
-        } else {
-            super.setText(TAIL_BLANK_WITHOUT_TEXT);
-        }
+        super.setText(text);
     }
 
     private void init() {
@@ -102,6 +88,23 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
                 }
             }
         });
+    }
+
+    @Override
+    public Insets getInsets() {
+        Insets insets = (Insets) super.getInsets().clone();
+        insets.right += ARROW_SPACING;
+        return insets;
+    }
+
+    @Override
+    public Insets getInsets(Insets insets) {
+        Insets insets1 = getInsets();
+        insets.left = insets1.left;
+        insets.right = insets1.right;
+        insets.bottom = insets1.bottom;
+        insets.top = insets1.top;
+        return insets1;
     }
 
     protected abstract JPopupMenu createPopup();
