@@ -26,8 +26,8 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.File;
-import java.util.Comparator;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -62,9 +62,9 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     protected MessageViewPanel messageViewPanel;
     protected MessagePublishPanel messagePublishPanel;
     protected MessagePreviewPanel messagePreviewPanel;
-    
+
     private final List<InstanceEventListener> eventListeners;
-    
+
     private ScriptLoader scriptLoader;
 
     public MqttInstanceTabPanel(MqttProperties properties) {
@@ -141,7 +141,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         connectButton.setEnabled(false);
         connectButton.addActionListener(e -> connectButtonAction());
         leftToolbar.add(connectButton);
-        
+
         subscribeButton = new SplitButton();
         subscribeButton.setIcon(Icons.SUBSCRIBE);
         LangUtil.buttonText(subscribeButton, "NewSubscription");
@@ -151,7 +151,6 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             openSubscriptionForm();
         });
         favoriteMenu = new JPopupMenu();
-        // TODO: 收藏的订阅列表菜单加载并监听变更
         loadFavoriteMenus();
         subscribeButton.setPopupMenu(favoriteMenu);
         leftToolbar.add(subscribeButton);
@@ -178,7 +177,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             public void requestFocusPreview() {
                 detailTabbedPanel.setSelectedIndex(0);
             }
-            
+
             @Override
             public void favoriteChanged() {
                 loadFavoriteMenus();
@@ -227,7 +226,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     protected int getReasonCode() {
         return reasonCode;
     }
-    
+
     protected void connectButtonAction() {
         if (connectionStatus.equals(ConnectionStatus.CONNECTED)) {
             disconnect();
@@ -252,7 +251,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             statusLabel.setToolTipText(null);
         }
         statusLabel.setText(LangUtil.getString(status.getText()));
-        
+
         connectButton.setEnabled(!status.equals(ConnectionStatus.CONNECTING) && !status.equals(ConnectionStatus.DISCONNECTING));
         if (status.equals(ConnectionStatus.DISCONNECTED) || status.equals(ConnectionStatus.FAILED) || status.equals(ConnectionStatus.DISCONNECTING)) {
             LangUtil.buttonText(connectButton, "Connect");
@@ -261,7 +260,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             LangUtil.buttonText(connectButton, "Disconnect");
             connectButton.setIcon(Icons.SUSPEND);
         }
-        
+
         subscribeButton.setEnabled(status.equals(ConnectionStatus.CONNECTED));
         MainWindowForm.getInstance().onConnectionChanged(this);
         subscriptionListPanel.onConnectionChanged(status);
@@ -366,7 +365,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     public void setPayloadFormat(String payloadFormat) {
         this.payloadFormat = payloadFormat;
     }
-    
+
     private void loadFavoriteMenus() {
         favoriteMenu.removeAll();
         List<FavoriteSubscription> favoriteSubscriptions = getProperties().getFavoriteSubscriptions();
