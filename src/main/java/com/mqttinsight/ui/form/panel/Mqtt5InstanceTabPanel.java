@@ -16,6 +16,8 @@ import org.eclipse.paho.mqttv5.common.packet.MqttReturnCode;
 import javax.swing.*;
 import java.io.File;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
+import java.util.List;
 
 /**
  * MQTT5 客户端实例组件
@@ -98,17 +100,23 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
     @Override
     public boolean subscribe(final Subscription subscription) {
         try {
-            IMqttToken token = mqttClient.subscribe(new MqttSubscription(subscription.getTopic(), subscription.getQos()), (topic, message) -> {
-                ReceivedMqttMessage mqttMessage = ReceivedMqttMessage.of(subscription,
-                    topic,
-                    message.getPayload(),
-                    message.getQos(),
-                    message.isRetained(),
-                    message.isDuplicate()
-                );
-                subscription.incrementMessageCount();
-                messageReceived(mqttMessage);
-            });
+            org.eclipse.paho.mqttv5.common.packet.MqttProperties prop = new org.eclipse.paho.mqttv5.common.packet.MqttProperties();
+            prop.setSubscriptionIdentifiers(List.of(0));
+            IMqttToken token = mqttClient.subscribe(new MqttSubscription(subscription.getTopic(), subscription.getQos()),
+                null,
+                null,
+                (topic, message) -> {
+                    ReceivedMqttMessage mqttMessage = ReceivedMqttMessage.of(subscription,
+                        topic,
+                        message.getPayload(),
+                        message.getQos(),
+                        message.isRetained(),
+                        message.isDuplicate()
+                    );
+                    subscription.incrementMessageCount();
+                    messageReceived(mqttMessage);
+                },
+                prop);
             boolean successed = token.getException() == null;
             if (successed) {
                 log.info("Subscribe topic successed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
@@ -126,7 +134,16 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
     @Override
     public boolean unsubscribe(final Subscription subscription) {
         try {
-            IMqttToken token = mqttClient.unsubscribe(subscription.getTopic());
+            IMqttToken token;
+            try {
+                token = mqttClient.unsubscribe(subscription.getTopic());
+            } catch (ConcurrentModificationException e) {
+                /*
+                 * unsubscribe again
+                 * Issues #986 https://githubfast.com/eclipse/paho.mqtt.java/issues/986
+                 */
+                token = mqttClient.unsubscribe(subscription.getTopic());
+            }
             boolean successed = token.getException() == null;
             if (successed) {
                 log.info("Unsubscribe topic successed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
@@ -134,7 +151,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
                 log.warn("Unsubscribe topic failed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
             }
             return successed;
-        } catch (MqttException e) {
+        } catch (Exception e) {
             Utils.Toast.error(e.getMessage());
             log.error(e.getMessage(), e);
             return false;
