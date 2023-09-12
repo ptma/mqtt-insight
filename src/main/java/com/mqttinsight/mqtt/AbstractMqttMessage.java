@@ -16,11 +16,11 @@ public abstract class AbstractMqttMessage implements MqttMessage {
         CodecSupport codec = CodecSupports.instance().getByName(decodeFormat);
         return decodePayload(codec, pretty);
     }
-    
+
     @Override
     public String decodePayload(CodecSupport codec, boolean pretty) {
-        if (this.decodeFormat == null || !this.decodeFormat.equals(decodeFormat) || decodedPayload == null) {
-            this.decodeFormat = decodeFormat;
+        if (this.decodeFormat == null || !this.decodeFormat.equals(codec.getName()) || decodedPayload == null) {
+            this.decodeFormat = codec.getName();
             decodedPayload = codec.toString(payloadAsBytes());
         }
         if (pretty) {
