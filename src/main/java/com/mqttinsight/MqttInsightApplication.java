@@ -40,6 +40,7 @@ public class MqttInsightApplication {
         SwingUtilities.invokeLater(() -> {
             FlatLaf.registerCustomDefaultsSource("com.mqttinsight");
             ToolTipManager.sharedInstance().setInitialDelay(300);
+            ToolTipManager.sharedInstance().setDismissDelay(20000);
             ToolTipManager.sharedInstance().setLightWeightPopupEnabled(true);
             FlatJetBrainsMonoFont.install();
             // FlatInspector.install("ctrl shift alt X");
