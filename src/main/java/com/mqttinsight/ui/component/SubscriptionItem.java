@@ -26,7 +26,7 @@ import java.awt.event.MouseListener;
  * @author ptma
  */
 @EqualsAndHashCode(callSuper = false)
-public class SubscriptionListItem extends JPanel implements MouseListener {
+public class SubscriptionItem extends JPanel implements MouseListener {
 
     private final Color borderColor = UIManager.getColor("Component.borderColor");
 
@@ -48,7 +48,7 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
     private JMenuItem resubscribeMenu;
     private JMenu formatMenu;
 
-    public SubscriptionListItem(SubscriptionListPanel parent, Subscription subscription, UnsubscribeListener unsubscribeListener) {
+    public SubscriptionItem(SubscriptionListPanel parent, Subscription subscription, UnsubscribeListener unsubscribeListener) {
         super();
         this.parent = parent;
         this.subscription = subscription;
@@ -169,7 +169,7 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
             parent.getMqttInstance().getEventListeners().forEach(InstanceEventListener::favoriteChanged);
             Configuration.instance().changed();
         });
-        
+
         muteButton.addActionListener(e -> {
             if (subscription.isMuted()) {
                 subscription.setMuted(false);
@@ -231,7 +231,7 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
         resubscribeMenu.setEnabled(!subscribed);
         unsubscribeMenu.setEnabled(subscribed);
     }
-    
+
     public boolean isSubscribed() {
         return subscribed;
     }
@@ -252,8 +252,6 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
         SwingUtilities.invokeLater(() -> {
             if (parent.getMqttInstance().subscribe(subscription)) {
                 setSubscribed(true);
-                this.revalidate();
-                this.repaint();
             }
         });
     }
@@ -349,8 +347,6 @@ public class SubscriptionListItem extends JPanel implements MouseListener {
     }
 
     public interface UnsubscribeListener {
-
-        public void unsubscribe(boolean closable);
-
+        void unsubscribe(boolean closable);
     }
 }

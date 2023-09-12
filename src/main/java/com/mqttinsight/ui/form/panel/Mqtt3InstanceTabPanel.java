@@ -1,5 +1,6 @@
 package com.mqttinsight.ui.form.panel;
 
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ArrayUtil;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.*;
@@ -11,7 +12,6 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
-import javax.swing.*;
 import java.io.File;
 import java.util.Collections;
 
@@ -47,7 +47,7 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
 
     @Override
     public void connect() {
-        SwingUtilities.invokeLater(() -> {
+        ThreadUtil.execute(() -> {
             try {
                 if (mqttClient == null) {
                     initMqttClient();

@@ -235,34 +235,36 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     protected void onConnectionChanged(ConnectionStatus status) {
-        connectionStatus = status;
-        if (status.equals(ConnectionStatus.FAILED)) {
-            statusLabel.setIcon(Icons.ERROR);
-            String reasonKey = String.format("MqttReasonCode_%d", reasonCode);
-            if (LangUtil.contains(reasonKey)) {
-                statusLabel.setToolTipText(LangUtil.getString(reasonKey));
+        SwingUtilities.invokeLater(() -> {
+            connectionStatus = status;
+            if (status.equals(ConnectionStatus.FAILED)) {
+                statusLabel.setIcon(Icons.ERROR);
+                String reasonKey = String.format("MqttReasonCode_%d", reasonCode);
+                if (LangUtil.contains(reasonKey)) {
+                    statusLabel.setToolTipText(LangUtil.getString(reasonKey));
+                } else {
+                    statusLabel.setToolTipText(String.format("Code: %d, %s", reasonCode, lastCauseMessage));
+                }
             } else {
-                statusLabel.setToolTipText(String.format("Code: %d, %s", reasonCode, lastCauseMessage));
+                this.reasonCode = 0;
+                statusLabel.setIcon(status.getIcon());
+                statusLabel.setToolTipText(null);
             }
-        } else {
-            this.reasonCode = 0;
-            statusLabel.setIcon(status.getIcon());
-            statusLabel.setToolTipText(null);
-        }
-        statusLabel.setText(LangUtil.getString(status.getText()));
+            statusLabel.setText(LangUtil.getString(status.getText()));
 
-        connectButton.setEnabled(!status.equals(ConnectionStatus.CONNECTING) && !status.equals(ConnectionStatus.DISCONNECTING));
-        if (status.equals(ConnectionStatus.DISCONNECTED) || status.equals(ConnectionStatus.FAILED) || status.equals(ConnectionStatus.DISCONNECTING)) {
-            LangUtil.buttonText(connectButton, "Connect");
-            connectButton.setIcon(Icons.EXECUTE);
-        } else if (status.equals(ConnectionStatus.CONNECTED)) {
-            LangUtil.buttonText(connectButton, "Disconnect");
-            connectButton.setIcon(Icons.SUSPEND);
-        }
+            connectButton.setEnabled(!status.equals(ConnectionStatus.CONNECTING) && !status.equals(ConnectionStatus.DISCONNECTING));
+            if (status.equals(ConnectionStatus.DISCONNECTED) || status.equals(ConnectionStatus.FAILED) || status.equals(ConnectionStatus.DISCONNECTING)) {
+                LangUtil.buttonText(connectButton, "Connect");
+                connectButton.setIcon(Icons.EXECUTE);
+            } else if (status.equals(ConnectionStatus.CONNECTED)) {
+                LangUtil.buttonText(connectButton, "Disconnect");
+                connectButton.setIcon(Icons.SUSPEND);
+            }
 
-        subscribeButton.setEnabled(status.equals(ConnectionStatus.CONNECTED));
-        MainWindowForm.getInstance().onConnectionChanged(this);
-        subscriptionListPanel.onConnectionChanged(status);
+            subscribeButton.setEnabled(status.equals(ConnectionStatus.CONNECTED));
+            subscriptionListPanel.onConnectionChanged(status);
+            MainWindowForm.getInstance().onConnectionChanged(this);
+        });
     }
 
     protected void onConnectionChanged(final ConnectionStatus status, int reasonCode, String causeMessage) {

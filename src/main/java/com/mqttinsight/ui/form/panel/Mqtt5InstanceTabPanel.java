@@ -1,5 +1,6 @@
 package com.mqttinsight.ui.form.panel;
 
+import cn.hutool.core.thread.ThreadUtil;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.*;
 import com.mqttinsight.mqtt.options.Mqtt5Options;
@@ -13,7 +14,6 @@ import org.eclipse.paho.mqttv5.common.MqttMessage;
 import org.eclipse.paho.mqttv5.common.MqttSubscription;
 import org.eclipse.paho.mqttv5.common.packet.MqttReturnCode;
 
-import javax.swing.*;
 import java.io.File;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
@@ -51,7 +51,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
 
     @Override
     public void connect() {
-        SwingUtilities.invokeLater(() -> {
+        ThreadUtil.execute(() -> {
             try {
                 if (mqttClient == null) {
                     initMqttClient();

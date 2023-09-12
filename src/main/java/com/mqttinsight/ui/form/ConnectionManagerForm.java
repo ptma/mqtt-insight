@@ -171,19 +171,13 @@ public class ConnectionManagerForm extends JDialog {
     }
 
     private void onConnectAction() {
-        SwingUtilities.invokeLater(() -> {
-            TreePath selectedPath = treeTable.getTreeSelectionModel().getSelectionPath();
-            if (selectedPath != null) {
-                final ConnectionNode selectedNode = (ConnectionNode) selectedPath.getLastPathComponent();
-                if (selectedNode != null && !selectedNode.isGroup()) {
-                    Configuration.instance().appendRecentConnection(selectedNode.getProperties().getId());
-                    Configuration.instance().changed();
-
-                    MainWindowForm.getInstance().addTabActionPerformed(selectedNode.getProperties(), this::closeWindow);
-
-                }
+        TreePath selectedPath = treeTable.getTreeSelectionModel().getSelectionPath();
+        if (selectedPath != null) {
+            final ConnectionNode selectedNode = (ConnectionNode) selectedPath.getLastPathComponent();
+            if (selectedNode != null && !selectedNode.isGroup()) {
+                MainWindowForm.getInstance().addTabActionPerformed(selectedNode.getProperties(), this::closeWindow);
             }
-        });
+        }
     }
 
     private void onDuplicateAction() {
