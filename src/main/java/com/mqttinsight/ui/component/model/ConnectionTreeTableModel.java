@@ -182,9 +182,7 @@ public class ConnectionTreeTableModel extends AbstractTreeTableModel {
             path.add(0, node);
             node = node.parentNode();
         }
-        if (node == root) {
-            path.add(0, node);
-        }
+        path.add(0, node);
         return path.toArray(new ConnectionNode[0]);
     }
 }

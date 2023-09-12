@@ -12,8 +12,8 @@ import java.util.function.Function;
  */
 public class CodecWrapper {
 
-    private ScriptCodec scriptCodec;
-    private String scriptPath;
+    private final ScriptCodec scriptCodec;
+    private final String scriptPath;
 
     public CodecWrapper(String scriptPath, ScriptCodec scriptCodec) {
         this.scriptPath = scriptPath;

@@ -74,8 +74,6 @@ public class ScriptCodec {
      * });
      * </code>
      * </pre>
-     *
-     * @param scriptingDecoder
      */
     public void decode(String scriptPath, Function<SimpleMqttMessage, Object> scriptingDecoder) {
         decode(scriptPath, "*", scriptingDecoder);
@@ -95,8 +93,6 @@ public class ScriptCodec {
      * });
      * </code>
      * </pre>
-     *
-     * @param scriptingDecoder
      */
     public void decode(String scriptPath, String topic, Function<SimpleMqttMessage, Object> scriptingDecoder) {
         if (decodersGroupMap.containsKey(scriptPath)) {

@@ -7,9 +7,9 @@ import com.mqttinsight.mqtt.Subscription;
  */
 public class DecoderContext {
 
-    private Subscription subscription;
+    private final Subscription subscription;
 
-    private SimpleMqttMessage message;
+    private final SimpleMqttMessage message;
 
     public DecoderContext(Subscription subscription, SimpleMqttMessage message) {
         this.subscription = subscription;

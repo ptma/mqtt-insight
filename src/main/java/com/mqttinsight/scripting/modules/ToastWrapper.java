@@ -3,6 +3,9 @@ package com.mqttinsight.scripting.modules;
 import cn.hutool.core.util.StrUtil;
 import com.mqttinsight.util.Utils;
 
+/**
+ * @author ptma
+ */
 public class ToastWrapper {
 
     public void info(String message) {

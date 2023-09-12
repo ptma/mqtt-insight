@@ -36,12 +36,13 @@ public class SecureSocketUtils {
      * @throws IOException Thrown when cannot read the file
      */
     public static byte[] loadPemFileAsBytes(final String file) throws IOException {
-        final PemReader pemReader = new PemReader(new FileReader(file));
-        final PemObject pemObject = pemReader.readPemObject();
-        final byte[] content = pemObject.getContent();
-        logger.debug("Reading PEM file {}, type = {}", file, pemObject.getType());
-        pemReader.close();
-        return content;
+        try (PemReader pemReader = new PemReader(new FileReader(file))) {
+            final PemObject pemObject = pemReader.readPemObject();
+            final byte[] content = pemObject.getContent();
+            logger.debug("Reading PEM file {}, type = {}", file, pemObject.getType());
+            pemReader.close();
+            return content;
+        }
     }
 
     /**
@@ -52,11 +53,7 @@ public class SecureSocketUtils {
      * @throws IOException Thrown when cannot read the file
      */
     public static byte[] loadBinaryFileAsBytes(final String file) throws IOException {
-        final FileInputStream inputStream = new FileInputStream(file);
-        final byte[] data = new byte[inputStream.available()];
-        inputStream.read(data);
-        inputStream.close();
-        return data;
+        return FileUtil.readBytes(file);
     }
 
     /**
@@ -64,8 +61,7 @@ public class SecureSocketUtils {
      */
     public static PrivateKey loadPrivateKeyFromPemFile(final String keyFile) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         final PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(loadPemFileAsBytes(keyFile));
-        final PrivateKey privateKey = KeyFactory.getInstance(ALGORITHM).generatePrivate(privateKeySpec);
-        return privateKey;
+        return KeyFactory.getInstance(ALGORITHM).generatePrivate(privateKeySpec);
     }
 
     /**
@@ -73,19 +69,17 @@ public class SecureSocketUtils {
      */
     public static PrivateKey loadPrivateKeyFromBinaryFile(final String keyFile) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         final PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(loadBinaryFileAsBytes(keyFile));
-        final PrivateKey privateKey = KeyFactory.getInstance(ALGORITHM).generatePrivate(privateKeySpec);
-        return privateKey;
+        return KeyFactory.getInstance(ALGORITHM).generatePrivate(privateKeySpec);
     }
 
     /**
      * Loads an X509 certificate from the given location.
      */
     public static X509Certificate loadX509Certificate(final String certificateFile) throws IOException, CertificateException {
-        final CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        final InputStream inputStream = FileUtil.getInputStream(certificateFile);
-        final X509Certificate certificate = (X509Certificate) cf.generateCertificate(inputStream);
-        inputStream.close();
-        return certificate;
+        try (InputStream inputStream = FileUtil.getInputStream(certificateFile)) {
+            final CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            return (X509Certificate) cf.generateCertificate(inputStream);
+        }
     }
 
     /**
