@@ -24,10 +24,10 @@ public interface InstanceEventListener {
 
     void toggleAutoScroll(boolean autoScroll);
 
-    void tableSelectionChanged();
+    void tableSelectionChanged(MqttMessage message);
 
     void requestFocusPreview();
-    
+
     void favoriteChanged();
 
     void fireLoadScript();

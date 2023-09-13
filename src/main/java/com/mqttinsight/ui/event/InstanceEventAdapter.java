@@ -44,16 +44,16 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
     }
 
     @Override
-    public void tableSelectionChanged() {
+    public void tableSelectionChanged(MqttMessage message) {
     }
 
     @Override
     public void requestFocusPreview() {
     }
-    
+
     @Override
     public void favoriteChanged() {
-        
+
     }
 
     @Override

@@ -33,6 +33,8 @@ public class TextSearchToolbar extends JPanel {
     private JButton previousButton;
     private JButton nextButton;
     private JButton closeButton;
+    private SearchContext context;
+    private boolean searching = false;
 
     public TextSearchToolbar(final MessagePreviewPanel parent, final JTextArea textArea) {
         super();
@@ -169,6 +171,7 @@ public class TextSearchToolbar extends JPanel {
             cancelSearch();
             return;
         }
+        searching = true;
         boolean found = doSearch(searchText, forward);
         if (found) {
             searchField.setForeground(FOUND_TEXT_COLOR);
@@ -180,7 +183,9 @@ public class TextSearchToolbar extends JPanel {
     }
 
     protected boolean doSearch(String searchText, boolean forward) {
-        SearchContext context = new SearchContext();
+        if (context == null) {
+            context = new SearchContext();
+        }
         context.setSearchFor(searchText);
         context.setMatchCase(matchCaseButton.isSelected());
         context.setWholeWord(wholeWordsButton.isSelected());
@@ -193,9 +198,12 @@ public class TextSearchToolbar extends JPanel {
     }
 
     public void cancelSearch() {
-        doSearch(null, true);
-        previousButton.setEnabled(false);
-        nextButton.setEnabled(false);
+        if (searching) {
+            doSearch(null, true);
+            previousButton.setEnabled(false);
+            nextButton.setEnabled(false);
+            searching = false;
+        }
     }
 
 }

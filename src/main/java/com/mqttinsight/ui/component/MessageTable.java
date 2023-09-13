@@ -247,7 +247,6 @@ public class MessageTable extends JXTable {
     }
 
     public void deleteSelectedRow() {
-        int selectedRow = getSelectedRow();
         int modelIndex = convertRowIndexToModel(getSelectedRow());
         tableModel.remove(modelIndex);
     }

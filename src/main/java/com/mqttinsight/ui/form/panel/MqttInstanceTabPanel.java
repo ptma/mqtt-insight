@@ -336,11 +336,6 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         messagePreviewPanel.toggleViewMode(viewMode);
     }
 
-    @Override
-    public void previewMessage(MqttMessage message) {
-        messagePreviewPanel.previewMessage(message);
-    }
-
     public abstract boolean doPublishMessage(PublishedMqttMessage message);
 
     @Override

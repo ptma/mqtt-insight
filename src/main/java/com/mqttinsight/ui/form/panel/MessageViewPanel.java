@@ -182,9 +182,6 @@ public class MessageViewPanel {
 
     private void clearMessages(Subscription subscription) {
         messageTableModel.cleanMessages(subscription);
-        if (messageTable.getSelectedRow() < 0) {
-            mqttInstance.previewMessage(null);
-        }
     }
 
     private void exportMessages(Subscription subscription) {
@@ -249,9 +246,11 @@ public class MessageViewPanel {
             int selectedRow = lsm.getMaxSelectionIndex();
             if (selectedRow >= 0 && selectedRow != lastSelectedRow) {
                 lastSelectedRow = selectedRow;
-                mqttInstance.previewMessage(messageTableModel.get(messageTable.convertRowIndexToModel(selectedRow)));
+                final MqttMessage message = messageTableModel.get(messageTable.convertRowIndexToModel(selectedRow));
+                mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(message));
+            } else {
+                mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(null));
             }
-            mqttInstance.getEventListeners().forEach(InstanceEventListener::tableSelectionChanged);
         }
     }
 

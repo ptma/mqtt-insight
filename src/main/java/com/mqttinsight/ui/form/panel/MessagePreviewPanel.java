@@ -1,5 +1,6 @@
 package com.mqttinsight.ui.form.panel;
 
+import cn.hutool.core.thread.ThreadUtil;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
@@ -20,6 +21,8 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author ptma
@@ -45,6 +48,8 @@ public class MessagePreviewPanel extends JPanel {
     private JLabel formatLabel;
     private JComboBox<String> formatComboBox;
     private JPanel payloadPanel;
+    
+    private ExecutorService previewExcutorService = ThreadUtil.newFixedExecutor(1, 2, "Preview", new ThreadPoolExecutor.DiscardOldestPolicy());
 
     public MessagePreviewPanel(MqttInstance mqttInstance) {
         this.mqttInstance = mqttInstance;
@@ -140,6 +145,11 @@ public class MessagePreviewPanel extends JPanel {
             public void clearAllMessages() {
                 previewMessage(null);
             }
+
+            @Override
+            public void tableSelectionChanged(MqttMessage message) {
+                previewMessage(message);
+            }
         });
     }
 
@@ -156,7 +166,7 @@ public class MessagePreviewPanel extends JPanel {
             topPanelLayout.setComponentConstraints(formatLabel, "newline");
         }
     }
-    
+
     private void formatChanged(ActionEvent e) {
         if (previewedMessage != null && "comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
             String format = (String) formatComboBox.getSelectedItem();
@@ -172,37 +182,40 @@ public class MessagePreviewPanel extends JPanel {
         }
     }
 
-    public void previewMessage(MqttMessage message) {
-        SwingUtilities.invokeLater(() -> {
-            previewedMessage = message;
+    private void previewMessage(final MqttMessage message) {
+        previewedMessage = message;
+        previewExcutorService.execute(() -> {
             if (message == null) {
-                topicField.setText(" ");
-                retainedLabel.setVisible(false);
-                qosLabel.setText(" ");
-                timeLabel.setText(" ");
-                payloadEditor.setText("");
+                SwingUtilities.invokeLater(() -> {
+                    topicField.setText(" ");
+                    retainedLabel.setVisible(false);
+                    qosLabel.setText(" ");
+                    timeLabel.setText(" ");
+                    payloadEditor.setText("");
+                });
             } else {
-                topicField.setText(message.getTopic());
-                retainedLabel.setVisible(message.isRetained());
-                qosLabel.setText(String.format("QoS %d",message.getQos()));
-                timeLabel.setText(message.getTime());
-                
                 String format = (String) formatComboBox.getSelectedItem();
                 if (CodecSupport.DEFAULT.equals(format)) {
-                    payloadEditor.setText(message.payloadAsString(true));
-                    CodecSupport codec = CodecSupports.instance().getByName(message.getPayloadFormat());
-                    payloadEditor.setSyntax(codec.getSyntax());
-                } else {
-                    CodecSupport codec = CodecSupports.instance().getByName(format);
-                    payloadEditor.setText(message.decodePayload(codec, true));
-                    payloadEditor.setSyntax(codec.getSyntax());
+                    format = message.getPayloadFormat();
                 }
-                
-                if (toolbarPanel.isVisible()) {
-                    textSearchToolbar.find(true);
-                }
+                CodecSupport codec = CodecSupports.instance().getByName(format);
+                String previewText = message.decodePayload(codec, true);
+
+                SwingUtilities.invokeLater(() -> {
+                    topicField.setText(message.getTopic());
+                    retainedLabel.setVisible(message.isRetained());
+                    qosLabel.setText(String.format("QoS %d", message.getQos()));
+                    timeLabel.setText(message.getTime());
+                    payloadEditor.setText(previewText);
+                    payloadEditor.setSyntax(codec.getSyntax());
+
+                    if (toolbarPanel.isVisible()) {
+                        textSearchToolbar.find(true);
+                    }
+                });
             }
         });
+        
     }
 
     public void activeFindToolbar() {

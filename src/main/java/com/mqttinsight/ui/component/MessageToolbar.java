@@ -322,7 +322,7 @@ public class MessageToolbar extends JToolBar {
             }
 
             @Override
-            public void tableSelectionChanged() {
+            public void tableSelectionChanged(MqttMessage message) {
                 updateMessageNavigation();
             }
 

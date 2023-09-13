@@ -39,8 +39,6 @@ public interface MqttInstance {
 
     void messageReceived(MqttMessage message);
 
-    void previewMessage(MqttMessage message);
-
     void publishMessage(PublishedMqttMessage message);
 
     void close();
