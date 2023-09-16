@@ -14,6 +14,7 @@ import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.function.Consumer;
 
 /**
  * MQTT3 客户端实例组件
@@ -115,27 +116,38 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
             }
             return successed;
         } catch (MqttException e) {
-            Utils.Toast.error(e.getMessage());
-            log.error(e.getMessage(), e);
+            String causeMessage = getCauseMessage(e);
+            Utils.Toast.error(causeMessage);
+            log.error(causeMessage, e);
             return false;
         }
     }
 
     @Override
-    public boolean unsubscribe(final Subscription subscription) {
+    public void unsubscribe(final Subscription subscription, Consumer<Boolean> unsubscribed) {
         try {
-            IMqttToken token = mqttClient.unsubscribe(subscription.getTopic());
-            boolean successed = token.getException() == null;
-            if (successed) {
-                log.info("Unsubscribe topic successed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
-            } else {
-                log.warn("Unsubscribe topic failed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
-            }
-            return successed;
+            mqttClient.unsubscribe(subscription.getTopic(),
+                null,
+                new IMqttActionListener() {
+
+                    @Override
+                    public void onSuccess(IMqttToken token) {
+                        unsubscribed.accept(Boolean.TRUE);
+                        log.info("Unsubscribe topic successed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken token, Throwable exception) {
+                        unsubscribed.accept(Boolean.FALSE);
+                        log.warn("Unsubscribe topic failed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
+                    }
+                }
+            );
         } catch (MqttException e) {
-            Utils.Toast.error(e.getMessage());
-            log.error(e.getMessage(), e);
-            return false;
+            String causeMessage = getCauseMessage(e);
+            Utils.Toast.error(causeMessage);
+            log.error(causeMessage, e);
+            unsubscribed.accept(Boolean.FALSE);
         }
     }
 
@@ -172,9 +184,10 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
                 log.warn("Publish message failed. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained(), token.getException());
             }
             return successed;
-        } catch (Exception e) {
-            Utils.Toast.error(e.getMessage());
-            log.error(e.getMessage(), e);
+        } catch (MqttException e) {
+            String causeMessage = getCauseMessage(e);
+            Utils.Toast.error(causeMessage);
+            log.error(causeMessage, e);
             return false;
         }
     }
@@ -189,8 +202,9 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
         @Override
         public void onFailure(IMqttToken asyncActionToken, Throwable cause) {
             MqttException ex = (MqttException) cause;
-            Mqtt3InstanceTabPanel.this.onConnectionFailed(ex.getReasonCode(), ex.getMessage());
-            log.warn("Connect to {} failed: {}, code: {}.", properties.completeServerURI(), ex.getMessage(), ex.getReasonCode());
+            String causeMessage = getCauseMessage(ex);
+            Mqtt3InstanceTabPanel.this.onConnectionFailed(ex.getReasonCode(), causeMessage);
+            log.warn("Connect to {} failed: {}, code: {}.", properties.completeServerURI(), causeMessage, ex.getReasonCode());
         }
     }
 
@@ -199,12 +213,13 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
         @Override
         public void connectionLost(Throwable cause) {
             MqttException ex = (MqttException) cause;
-            Mqtt3InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.FAILED, ex.getReasonCode(), ex.getMessage());
+            String causeMessage = getCauseMessage(ex);
+            Mqtt3InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.FAILED, ex.getReasonCode(), causeMessage);
             log.warn("Disconnect with error from {}, code: {}.", properties.completeServerURI(), ex.getReasonCode(), ex);
         }
 
         @Override
-        public void messageArrived(String topic, MqttMessage message) throws Exception {
+        public void messageArrived(String topic, MqttMessage message) {
             log.debug("messageArrived: topic: {}.", topic);
         }
 
@@ -214,4 +229,11 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
         }
     }
 
+    private String getCauseMessage(MqttException exception) {
+        String causeMessage = exception.getMessage();
+        if (exception.getCause() != null) {
+            causeMessage = exception.getCause().getMessage();
+        }
+        return causeMessage;
+    }
 }

@@ -5,6 +5,7 @@ import com.mqttinsight.ui.component.MessageTable;
 import com.mqttinsight.ui.event.InstanceEventListener;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * @author ptma
@@ -25,7 +26,7 @@ public interface MqttInstance {
 
     boolean subscribe(final Subscription subscription);
 
-    boolean unsubscribe(final Subscription subscription);
+    void unsubscribe(final Subscription subscription, Consumer<Boolean> unsubscribed);
 
     void setPayloadFormat(String format);
 
