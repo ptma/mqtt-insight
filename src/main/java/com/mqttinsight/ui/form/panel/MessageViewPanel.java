@@ -61,13 +61,18 @@ public class MessageViewPanel {
     }
 
     private void initializeMessageTable() {
+        RowFilter rowFilter = null;
         if (messageTable != null) {
+            rowFilter = messageTable.getRowFilter();
             messageTable.resetKeyboardActions();
             scrollPanel.remove(messageTable);
             messageTable = null;
             System.gc();
         }
         messageTable = new MessageTable(mqttInstance, messageTableModel);
+        if (rowFilter != null) {
+            messageTable.setRowFilter(rowFilter);
+        }
         messageTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
