@@ -261,7 +261,7 @@ public class MessageToolbar extends JToolBar {
         addSeparator();
 
         autoScrollButton = new JToggleButton(Icons.DOWN_ARRAW);
-        LangUtil.buttonText(autoScrollButton, "Autoscroll");
+        autoScrollButton.setToolTipText(LangUtil.getString("Autoscroll"));
         autoScrollButton.addActionListener(this::toggleAutoScroll);
         add(autoScrollButton);
 
@@ -269,7 +269,7 @@ public class MessageToolbar extends JToolBar {
 
         // More dropdown memnu
         moreMenuButton = new PopupMenuButton(Icons.MORE);
-        LangUtil.buttonText(moreMenuButton, "More");
+        moreMenuButton.setToolTipText(LangUtil.getString("More"));
 
         {
             scriptMenu = new JMenu();
