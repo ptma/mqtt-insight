@@ -35,7 +35,7 @@ val copyright: String = "copyright 2023 ptma@163.com"
 val supportUrl: String = "https://github.com/ptma/mqtt-insight"
 
 
-val flatlafVersion = "3.1.1"
+val flatlafVersion = "3.2.1"
 val fatJar = false
 
 val requireModules = listOf(

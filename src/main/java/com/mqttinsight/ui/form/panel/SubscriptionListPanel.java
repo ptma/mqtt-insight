@@ -122,24 +122,26 @@ public class SubscriptionListPanel {
 
     private void unsubscribe(Subscription subscription, boolean closable) {
         SwingUtilities.invokeLater(() -> {
-            if (mqttInstance.unsubscribe(subscription)) {
-                for (SubscriptionItem listItem : subscriptionList) {
-                    if (listItem.hasSubscription(subscription)) {
-                        listItem.setSubscribed(false);
-                        if (closable) {
-                            containerPanel.remove(listItem);
-                            subscriptionList.remove(listItem);
-                            if (selectedItem != null && selectedItem.equals(listItem)) {
-                                selectedItem = null;
+            mqttInstance.unsubscribe(subscription, (success) -> {
+                if (success) {
+                    for (SubscriptionItem listItem : subscriptionList) {
+                        if (listItem.hasSubscription(subscription)) {
+                            listItem.setSubscribed(false);
+                            if (closable) {
+                                containerPanel.remove(listItem);
+                                subscriptionList.remove(listItem);
+                                if (selectedItem != null && selectedItem.equals(listItem)) {
+                                    selectedItem = null;
+                                }
+                                if (mqttInstance.getProperties().isClearUnsubMessage()) {
+                                    clearMessages(subscription);
+                                }
                             }
-                            if (mqttInstance.getProperties().isClearUnsubMessage()) {
-                                clearMessages(subscription);
-                            }
+                            return;
                         }
-                        return;
                     }
                 }
-            }
+            });
         });
     }
 
