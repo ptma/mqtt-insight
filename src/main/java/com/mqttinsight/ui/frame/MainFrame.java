@@ -65,7 +65,7 @@ public class MainFrame extends JXFrame {
         UIManager.put("PasswordField.showRevealButton", true);
 
         UIManager.put("Table.intercellSpacing", new Dimension(0, 1));
-
+        UIManager.put("Table.cellMargins", new Insets(2, 5, 2, 5));
 
         UIManager.put("TabbedPane.closeArc", 999);
         UIManager.put("TabbedPane.closeCrossFilledSize", 5.5f);

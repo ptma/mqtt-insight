@@ -65,6 +65,7 @@ public class MqttProperties implements Serializable, Cloneable {
     protected ReconnectionSettings reconnection = new ReconnectionSettings();
     protected List<String> searchHistory;
     protected List<FavoriteSubscription> favoriteSubscriptions;
+    protected List<String> publishedTopics;
     protected Integer maxMessageStored = Const.MESSAGES_STORED_MAX_SIZE;
     protected String payloadFormat;
     protected boolean clearUnsubMessage = true;
