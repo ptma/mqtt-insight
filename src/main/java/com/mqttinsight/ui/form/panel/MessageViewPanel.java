@@ -61,13 +61,18 @@ public class MessageViewPanel {
     }
 
     private void initializeMessageTable() {
+        RowFilter rowFilter = null;
         if (messageTable != null) {
+            rowFilter = messageTable.getRowFilter();
             messageTable.resetKeyboardActions();
             scrollPanel.remove(messageTable);
             messageTable = null;
             System.gc();
         }
         messageTable = new MessageTable(mqttInstance, messageTableModel);
+        if (rowFilter != null) {
+            messageTable.setRowFilter(rowFilter);
+        }
         messageTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
@@ -124,8 +129,10 @@ public class MessageViewPanel {
     }
 
     private void toggleViewMode(MessageViewMode viewMode) {
-        messageTableModel.setViewMode(viewMode);
-        initializeMessageTable();
+        if (!messageTableModel.getViewMode().equals(viewMode)) {
+            messageTableModel.setViewMode(viewMode);
+            initializeMessageTable();
+        }
     }
 
     public MessageTable getMessageTable() {
@@ -180,9 +187,6 @@ public class MessageViewPanel {
 
     private void clearMessages(Subscription subscription) {
         messageTableModel.cleanMessages(subscription);
-        if (messageTable.getSelectedRow() < 0) {
-            mqttInstance.previewMessage(null);
-        }
     }
 
     private void exportMessages(Subscription subscription) {
@@ -247,9 +251,11 @@ public class MessageViewPanel {
             int selectedRow = lsm.getMaxSelectionIndex();
             if (selectedRow >= 0 && selectedRow != lastSelectedRow) {
                 lastSelectedRow = selectedRow;
-                mqttInstance.previewMessage(messageTableModel.get(messageTable.convertRowIndexToModel(selectedRow)));
+                final MqttMessage message = messageTableModel.get(messageTable.convertRowIndexToModel(selectedRow));
+                mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(message));
+            } else {
+                mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(null));
             }
-            mqttInstance.getEventListeners().forEach(InstanceEventListener::tableSelectionChanged);
         }
     }
 

@@ -46,6 +46,8 @@ public final class Icons {
     public static final Icon EDIT = new FlatSVGIcon("svg/icons/edit.svg");
     public static final Icon REMOVE = new FlatSVGIcon("svg/icons/remove.svg");
     public static final Icon EXECUTE = new FlatSVGIcon("svg/icons/execute.svg");
+    public static final Icon SUSPEND = new FlatSVGIcon("svg/icons/suspend.svg");
+    
 
     public static final Icon CHECKBOX = new FlatSVGIcon("svg/icons/checkbox.svg");
     public static final Icon CHECKBOX_CHECKED = new FlatSVGIcon("svg/icons/checkbox_checked.svg");

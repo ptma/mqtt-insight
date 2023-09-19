@@ -18,10 +18,9 @@ import java.util.Map;
 @Slf4j
 public class ScriptEngine {
 
-    private IJavetEngine<NodeRuntime> javetEngine;
-    private Logger logger;
-    private NodeRuntime nodeRuntime;
-    private boolean running = false;
+    private final IJavetEngine<NodeRuntime> javetEngine;
+    private final Logger logger;
+    private final NodeRuntime nodeRuntime;
     private boolean closing = false;
 
     public ScriptEngine(IJavetEngine<NodeRuntime> javetEngine, IJavetConverter converter, Logger logger) throws JavetException {
@@ -48,9 +47,8 @@ public class ScriptEngine {
             if (resultListener != null) {
                 resultListener.onResult(ScriptResult.success());
             }
-            running = true;
 
-            while (running && !closing) {
+            while (!closing) {
                 nodeRuntime.await(V8AwaitMode.RunOnce);
             }
 

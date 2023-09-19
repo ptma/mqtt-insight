@@ -12,6 +12,7 @@ import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
 import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.io.IOException;
@@ -44,6 +45,15 @@ public class SyntaxTextEditor extends RTextScrollPane {
             Font font = StyleContext.getDefaultStyleContext().getFont(fontName, Font.PLAIN, fontSize);
             this.textArea.setFont(font);
         }
+        this.textArea.addHyperlinkListener(e -> {
+            if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                try {
+                    Desktop.getDesktop().browse(e.getURL().toURI());
+                } catch (Exception e1) {
+                    // ignore
+                }
+            }
+        });
         this.setViewportView(textArea);
         this.setLineNumbersEnabled(true);
         this.setFoldIndicatorEnabled(true);

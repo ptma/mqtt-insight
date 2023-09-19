@@ -7,10 +7,10 @@ import java.nio.charset.StandardCharsets;
  */
 public class SimpleMqttMessage {
 
-    private String topic;
-    private byte[] payload;
-    private int qos;
-    private boolean retained;
+    private final String topic;
+    private final byte[] payload;
+    private final int qos;
+    private final boolean retained;
 
     public SimpleMqttMessage(String topic, byte[] payload, int qos, boolean retained) {
         this.topic = topic;

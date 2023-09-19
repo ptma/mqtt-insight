@@ -16,6 +16,8 @@ import java.util.Random;
  */
 public class Utils {
 
+    private static final Random RANDOM = new Random(System.currentTimeMillis());
+
     public static class Toast {
 
         public static void info(String message) {
@@ -175,11 +177,10 @@ public class Utils {
     }
 
     public static Color generateRandomColor() {
-        Random random = new Random(System.currentTimeMillis());
-        float lightness = 0.5f;
-        float randomHue = random.nextInt(360) / 360f;
+        float lightness = (RANDOM.nextInt(40) + 30) / 100f;//0.3--0.7
+        float randomHue = RANDOM.nextInt(360) / 360f;
         Color color = ColorUtilities.HSLtoRGB(randomHue, 1.0f, lightness);
-        int randomAlpha = random.nextInt(15) + 25; // 25 - 40
+        int randomAlpha = RANDOM.nextInt(20) + 20; // 20--40
         return Utils.mixColorsWithAlpha(UIManager.getColor("Table.background"), color, randomAlpha);
     }
 

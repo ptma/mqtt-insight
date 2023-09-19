@@ -175,11 +175,7 @@ public class ConnectionManagerForm extends JDialog {
         if (selectedPath != null) {
             final ConnectionNode selectedNode = (ConnectionNode) selectedPath.getLastPathComponent();
             if (selectedNode != null && !selectedNode.isGroup()) {
-                Configuration.instance().appendRecentConnection(selectedNode.getProperties().getId());
-                Configuration.instance().changed();
-                SwingUtilities.invokeLater(() -> {
-                    MainWindowForm.getInstance().addTabActionPerformed(selectedNode.getProperties(), () -> this.closeWindow());
-                });
+                MainWindowForm.getInstance().addTabActionPerformed(selectedNode.getProperties(), this::closeWindow);
             }
         }
     }
@@ -275,9 +271,10 @@ public class ConnectionManagerForm extends JDialog {
 
     private void changeMenuItemsEnableStatus(ConnectionNode node) {
         menuConnect.setEnabled(node != null && !node.isGroup());
-        menuNewGroup.setEnabled(node == null || node.isGroup());
+        menuNewGroup.setEnabled(node != null && node.isGroup());
         menuNewConnection.setEnabled(node != null && node.isGroup());
         menuDuplicate.setEnabled(node != null && !node.isGroup());
+        menuEdit.setEnabled(node != null);
         menuDelete.setEnabled(node != null && node.getChildCount() == 0);
     }
 
@@ -297,6 +294,7 @@ public class ConnectionManagerForm extends JDialog {
         treeTable.setRowSelectionAllowed(true);
         treeTable.setColumnSelectionAllowed(false);
         treeTable.setRowHeight(25);
+        treeTable.setShowHorizontalLines(true);
         scrollPanel.setViewportView(treeTable);
 
         treeTable.addTreeSelectionListener((e) -> {
@@ -328,10 +326,11 @@ public class ConnectionManagerForm extends JDialog {
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
                     final int rowIndex = treeTable.rowAtPoint(e.getPoint());
-                    if (rowIndex < 0) {
-                        return;
+                    if (rowIndex >= 0) {
+                        treeTable.setRowSelectionInterval(rowIndex, rowIndex);
+                    } else {
+                        changeMenuItemsEnableStatus(null);
                     }
-                    treeTable.setRowSelectionInterval(rowIndex, rowIndex);
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }

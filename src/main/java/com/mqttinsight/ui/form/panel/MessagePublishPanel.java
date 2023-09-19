@@ -2,19 +2,24 @@ package com.mqttinsight.ui.form.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.mqttinsight.codec.CodecSupports;
+import com.mqttinsight.config.Configuration;
 import com.mqttinsight.exception.VerificationException;
 import com.mqttinsight.mqtt.PublishedMqttMessage;
 import com.mqttinsight.ui.component.SyntaxTextEditor;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.component.model.PayloadFormatComboBoxModel;
+import com.mqttinsight.ui.component.renderer.TextableListRenderer;
 import com.mqttinsight.util.*;
 import net.miginfocom.swing.MigLayout;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaDefaultInputMap;
+import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author ptma
@@ -60,8 +65,11 @@ public class MessagePublishPanel extends JPanel {
 
         topicComboBox = new JComboBox<>();
         topicComboBox.setEditable(true);
-        topicComboBox.setSelectedItem("");
         topicComboBox.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, LangUtil.getString("Topic"));
+        loadPublishedTopics();
+        topicComboBox.setSelectedItem("");
+        topicComboBox.setRenderer(new TextableListRenderer());
+        AutoCompleteDecorator.decorate(topicComboBox);
         topPanel.add(topicComboBox, "growx");
 
         qosLabel = new JLabel("QoS");
@@ -108,6 +116,31 @@ public class MessagePublishPanel extends JPanel {
             JComponent.WHEN_IN_FOCUSED_WINDOW
         );
     }
+    
+    private void loadPublishedTopics() {
+        List<String> publishedTopics = mqttInstance.getProperties().getPublishedTopics();
+        if (publishedTopics != null) {
+            topicComboBox.removeAllItems();
+            publishedTopics.sort(String::compareTo);
+            publishedTopics.forEach(topic -> topicComboBox.addItem(topic));
+        }
+    }
+    
+    private void addPublishedTopic(String newTopic) {
+        List<String> publishedTopics = mqttInstance.getProperties().getPublishedTopics();
+        if (publishedTopics == null) {
+            publishedTopics = new ArrayList<>();
+            mqttInstance.getProperties().setPublishedTopics(publishedTopics);
+            Configuration.instance().changed();
+        }
+        if (!publishedTopics.contains(newTopic)) {
+            publishedTopics.add(newTopic);
+            topicComboBox.removeAllItems();
+            publishedTopics.sort(String::compareTo);
+            publishedTopics.forEach(topic -> topicComboBox.addItem(topic));
+            topicComboBox.setSelectedItem(newTopic);
+        }
+    }
 
     public void toggleViewMode(MessageViewMode viewMode) {
         if (viewMode == MessageViewMode.TABLE) {
@@ -145,6 +178,7 @@ public class MessagePublishPanel extends JPanel {
                 retainedCheckBox.isSelected(),
                 format
             ));
+            addPublishedTopic(topic);
         });
     }
 

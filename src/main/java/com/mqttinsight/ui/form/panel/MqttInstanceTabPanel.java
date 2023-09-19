@@ -7,10 +7,7 @@ import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.*;
 import com.mqttinsight.scripting.ScriptLoader;
-import com.mqttinsight.ui.component.FileExtensionsFilter;
-import com.mqttinsight.ui.component.MessageTable;
-import com.mqttinsight.ui.component.MessageToolbar;
-import com.mqttinsight.ui.component.SingleLineBorder;
+import com.mqttinsight.ui.component.*;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.ui.event.InstanceEventListener;
@@ -30,6 +27,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -55,9 +53,11 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     private JLabel statusLabel;
     private JButton connectButton;
-    private JButton subscribeButton;
+    private SplitButton subscribeButton;
+    private JPopupMenu favoriteMenu;
     private MessageToolbar messageToolbar;
 
+    protected MessageViewMode viewMode;
     protected SubscriptionListPanel subscriptionListPanel;
     protected MessageViewPanel messageViewPanel;
     protected MessagePublishPanel messagePublishPanel;
@@ -76,7 +76,6 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         add(rootPanel, BorderLayout.CENTER);
         initComponents();
         initEventListeners();
-        initMqttClient();
     }
 
     private void initComponents() {
@@ -139,16 +138,22 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         connectButton = new JButton(Icons.EXECUTE);
         LangUtil.buttonText(connectButton, "Connect");
         connectButton.setEnabled(false);
-        connectButton.addActionListener(e -> connect());
+        connectButton.addActionListener(e -> connectButtonAction());
         leftToolbar.add(connectButton);
-        subscribeButton = new JButton(Icons.SUBSCRIBE);
+
+        subscribeButton = new SplitButton();
+        subscribeButton.setIcon(Icons.SUBSCRIBE);
         LangUtil.buttonText(subscribeButton, "NewSubscription");
         subscribeButton.setToolTipText(LangUtil.getString("NewSubscription") + " (Ctrl + Shift + S)");
         subscribeButton.setEnabled(false);
         subscribeButton.addActionListener(e -> {
             openSubscriptionForm();
         });
+        favoriteMenu = new JPopupMenu();
+        loadFavoriteMenus();
+        subscribeButton.setPopupMenu(favoriteMenu);
         leftToolbar.add(subscribeButton);
+
         leftToolbar.addSeparator();
 
         topPanel.add(leftToolbar, "cell 0 0");
@@ -170,6 +175,11 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             @Override
             public void requestFocusPreview() {
                 detailTabbedPanel.setSelectedIndex(0);
+            }
+
+            @Override
+            public void favoriteChanged() {
+                loadFavoriteMenus();
             }
 
             @Override
@@ -216,26 +226,45 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         return reasonCode;
     }
 
-    protected void onConnectionChanged(ConnectionStatus status) {
-        connectionStatus = status;
-        if (status.equals(ConnectionStatus.FAILED)) {
-            statusLabel.setIcon(Icons.ERROR);
-            String reasonKey = String.format("MqttReasonCode_%d", reasonCode);
-            if (LangUtil.contains(reasonKey)) {
-                statusLabel.setToolTipText(LangUtil.getString(reasonKey));
-            } else {
-                statusLabel.setToolTipText(String.format("Code: %d, %s", reasonCode, lastCauseMessage));
-            }
-        } else {
-            this.reasonCode = 0;
-            statusLabel.setIcon(status.getIcon());
-            statusLabel.setToolTipText(null);
+    protected void connectButtonAction() {
+        if (connectionStatus.equals(ConnectionStatus.CONNECTED)) {
+            disconnect();
+        } else if (connectionStatus.equals(ConnectionStatus.DISCONNECTED) || connectionStatus.equals(ConnectionStatus.FAILED)) {
+            connect();
         }
-        statusLabel.setText(LangUtil.getString(status.getText()));
-        connectButton.setEnabled(status.equals(ConnectionStatus.DISCONNECTED) || status.equals(ConnectionStatus.FAILED));
-        subscribeButton.setEnabled(status.equals(ConnectionStatus.CONNECTED));
-        MainWindowForm.getInstance().onConnectionChanged(this);
-        subscriptionListPanel.onConnectionChanged(status);
+    }
+
+    protected void onConnectionChanged(ConnectionStatus status) {
+        SwingUtilities.invokeLater(() -> {
+            connectionStatus = status;
+            if (status.equals(ConnectionStatus.FAILED)) {
+                statusLabel.setIcon(Icons.ERROR);
+                String reasonKey = String.format("MqttReasonCode_%d", reasonCode);
+                if (LangUtil.contains(reasonKey)) {
+                    statusLabel.setToolTipText(LangUtil.getString(reasonKey));
+                } else {
+                    statusLabel.setToolTipText(String.format("Code: %d, %s", reasonCode, lastCauseMessage));
+                }
+            } else {
+                this.reasonCode = 0;
+                statusLabel.setIcon(status.getIcon());
+                statusLabel.setToolTipText(null);
+            }
+            statusLabel.setText(LangUtil.getString(status.getText()));
+
+            connectButton.setEnabled(!status.equals(ConnectionStatus.CONNECTING) && !status.equals(ConnectionStatus.DISCONNECTING));
+            if (status.equals(ConnectionStatus.DISCONNECTED) || status.equals(ConnectionStatus.FAILED) || status.equals(ConnectionStatus.DISCONNECTING)) {
+                LangUtil.buttonText(connectButton, "Connect");
+                connectButton.setIcon(Icons.EXECUTE);
+            } else if (status.equals(ConnectionStatus.CONNECTED)) {
+                LangUtil.buttonText(connectButton, "Disconnect");
+                connectButton.setIcon(Icons.SUSPEND);
+            }
+
+            subscribeButton.setEnabled(status.equals(ConnectionStatus.CONNECTED));
+            subscriptionListPanel.onConnectionChanged(status);
+            MainWindowForm.getInstance().onConnectionChanged(this);
+        });
     }
 
     protected void onConnectionChanged(final ConnectionStatus status, int reasonCode, String causeMessage) {
@@ -284,6 +313,9 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     private void applyLayout(MessageViewMode viewMode) {
+        if (this.viewMode != null && this.viewMode.equals(viewMode)) {
+            return;
+        }
         if (viewMode == MessageViewMode.TABLE) {
             messageSplitPanel.setOrientation(JSplitPane.VERTICAL_SPLIT);
             Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_VERTICAL_DIVIDER, 500);
@@ -299,13 +331,9 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             detailTabbedPanel.setTabPlacement(JTabbedPane.TOP);
             detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.LEADING);
         }
+        this.viewMode = viewMode;
         messagePublishPanel.toggleViewMode(viewMode);
         messagePreviewPanel.toggleViewMode(viewMode);
-    }
-
-    @Override
-    public void previewMessage(MqttMessage message) {
-        messagePreviewPanel.previewMessage(message);
     }
 
     public abstract boolean doPublishMessage(PublishedMqttMessage message);
@@ -332,6 +360,23 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     @Override
     public void setPayloadFormat(String payloadFormat) {
         this.payloadFormat = payloadFormat;
+    }
+
+    private void loadFavoriteMenus() {
+        favoriteMenu.removeAll();
+        List<FavoriteSubscription> favoriteSubscriptions = getProperties().getFavoriteSubscriptions();
+        if (favoriteSubscriptions != null && !favoriteSubscriptions.isEmpty()) {
+            favoriteSubscriptions.sort(Comparator.comparing(FavoriteSubscription::getTopic));
+            favoriteSubscriptions.forEach(favorite -> {
+                favoriteMenu.add(favorite.getTopic())
+                    .addActionListener(e -> {
+                        Subscription subscription = new Subscription(this, favorite.getTopic(), favorite.getQos(), favorite.getPayloadFormat(), Utils.generateRandomColor());
+                        subscriptionListPanel.doSubscribe(subscription);
+                    });
+            });
+        } else {
+            favoriteMenu.add(LangUtil.getString("NoSubscriptions"));
+        }
     }
 
     private void doLoadScript() {

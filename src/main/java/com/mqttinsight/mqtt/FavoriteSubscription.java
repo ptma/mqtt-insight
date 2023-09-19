@@ -18,19 +18,23 @@ public class FavoriteSubscription implements Textable {
 
     private int qos;
 
-    private String payloadFormat = CodecSupport.AUTO;
+    private String payloadFormat = CodecSupport.DEFAULT;
 
     public FavoriteSubscription() {
     }
 
     public FavoriteSubscription(final String topic, final int qos) {
-        this(topic, qos, CodecSupport.AUTO);
+        this(topic, qos, CodecSupport.DEFAULT);
     }
 
     public FavoriteSubscription(final String topic, final int qos, final String payloadFormat) {
         this.topic = topic;
         this.qos = qos;
         this.payloadFormat = payloadFormat;
+    }
+
+    public void setPayloadFormat(String payloadFormat) {
+        this.payloadFormat = payloadFormat == null || "Auto".equals(payloadFormat) ? CodecSupport.DEFAULT : payloadFormat;
     }
 
     @Override

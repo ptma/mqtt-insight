@@ -19,10 +19,10 @@ public class CodecSupports {
 
     private Map<String, CodecSupport> supports = new LinkedHashMap<>();
 
-    private PlainCodecSupport defaultCodec = new PlainCodecSupport();
+    private PlainCodecSupport plainCodec = new PlainCodecSupport();
 
     private CodecSupports() {
-        register(defaultCodec);
+        register(plainCodec);
         register(new HexCodecSupport());
         register(new JsonCodecSupport());
     }
@@ -36,10 +36,10 @@ public class CodecSupports {
     }
 
     public CodecSupport getByName(String name) {
-        return supports.getOrDefault(name.toLowerCase(), defaultCodec);
+        return supports.getOrDefault(name.toLowerCase(), plainCodec);
     }
 
     public PlainCodecSupport getDefaultCodec() {
-        return defaultCodec;
+        return plainCodec;
     }
 }

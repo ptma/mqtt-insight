@@ -4,6 +4,10 @@ import com.mqttinsight.ui.component.Textable;
 import com.mqttinsight.util.LangUtil;
 import lombok.Getter;
 
+/**
+ * @author ptma
+ */
+
 @Getter
 public enum MessageViewMode implements Textable {
 

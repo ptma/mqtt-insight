@@ -2,6 +2,7 @@ package com.mqttinsight.ui.form;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.components.FlatTabbedPane;
+import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttProperties;
 import com.mqttinsight.mqtt.Version;
 import com.mqttinsight.ui.component.ShortcutManager;
@@ -86,30 +87,18 @@ public class MainWindowForm {
     }
 
     public void addTabActionPerformed(final MqttProperties mqttProperties, Runnable afterConnected) {
-        SwingWorker<MqttProperties, Integer> addTabWorker = new SwingWorker<>() {
+        SwingWorker<MqttInstanceTabPanel, Integer> addTabWorker = new SwingWorker<>() {
             @Override
             protected void done() {
                 try {
-                    MqttProperties properties = get();
-                    for (int tabIndex = 0; tabIndex < tabPanel.getTabCount(); tabIndex++) {
-                        if (isMqttInstanceAtTab(tabIndex) && getMqttInstanceAtTab(tabIndex).getProperties().getId().equals(properties.getId())) {
-                            Utils.Toast.info(LangUtil.getString("ConnectionExists"));
-                            tabPanel.setSelectedIndex(tabIndex);
-                            return;
-                        }
+                    MqttInstanceTabPanel mqttInstance = get();
+                    if (mqttInstance != null) {
+                        tabPanel.addTab(mqttProperties.getName(), mqttInstance);
+                        int tabIndex = tabPanel.getTabCount() - 1;
+                        tabPanel.setIconAt(tabIndex, mqttInstance.getConnectionStatus().getSmallIcon());
+                        tabPanel.setSelectedIndex(tabIndex);
+                        mqttInstance.connect();
                     }
-                    MqttInstanceTabPanel mqttInstance;
-                    if (properties.getVersion().equals(Version.MQTT_5)) {
-                        mqttInstance = Mqtt5InstanceTabPanel.newInstance(properties);
-                    } else {
-                        mqttInstance = Mqtt3InstanceTabPanel.newInstance(properties);
-                    }
-                    tabPanel.addTab(properties.getName(), mqttInstance);
-                    int tabIndex = tabPanel.getTabCount() - 1;
-                    tabPanel.setIconAt(tabIndex, mqttInstance.getConnectionStatus().getSmallIcon());
-                    tabPanel.setSelectedIndex(tabIndex);
-                    mqttInstance.connect();
-                    afterConnected.run();
                 } catch (Exception ex) {
                     log.error(ex.getMessage(), ex);
                     if (ex.getCause() != null) {
@@ -121,8 +110,26 @@ public class MainWindowForm {
             }
 
             @Override
-            protected MqttProperties doInBackground() throws Exception {
-                return mqttProperties;
+            protected MqttInstanceTabPanel doInBackground() throws Exception {
+                for (int tabIndex = 0; tabIndex < tabPanel.getTabCount(); tabIndex++) {
+                    if (isMqttInstanceAtTab(tabIndex) && getMqttInstanceAtTab(tabIndex).getProperties().getId().equals(mqttProperties.getId())) {
+                        Utils.Toast.info(LangUtil.getString("ConnectionExists"));
+                        tabPanel.setSelectedIndex(tabIndex);
+                        return null;
+                    }
+                }
+                afterConnected.run();
+
+                Configuration.instance().appendRecentConnection(mqttProperties.getId());
+                Configuration.instance().changed();
+
+                MqttInstanceTabPanel mqttInstance;
+                if (mqttProperties.getVersion().equals(Version.MQTT_5)) {
+                    mqttInstance = Mqtt5InstanceTabPanel.newInstance(mqttProperties);
+                } else {
+                    mqttInstance = Mqtt3InstanceTabPanel.newInstance(mqttProperties);
+                }
+                return mqttInstance;
             }
         };
         addTabWorker.execute();
@@ -133,8 +140,6 @@ public class MainWindowForm {
             for (int tabIndex = 0; tabIndex < tabPanel.getTabCount(); tabIndex++) {
                 if (isMqttInstanceAtTab(tabIndex) && getMqttInstanceAtTab(tabIndex).equals(mqttInstance)) {
                     tabPanel.setIconAt(tabIndex, mqttInstance.getConnectionStatus().getSmallIcon());
-                    tabPanel.revalidate();
-                    tabPanel.repaint();
                     return;
                 }
             }
