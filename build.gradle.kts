@@ -27,7 +27,7 @@ buildscript {
 
 plugins.apply("io.github.fvarrui.javapackager.plugin")
 
-version = "1.0.0"
+version = "1.0.1"
 
 val applicationName: String = "MqttInsight"
 val organization: String = "ptma@163.com"
