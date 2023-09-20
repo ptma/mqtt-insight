@@ -27,7 +27,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.REPO_TOKEN }}
-        file:  app/build/MqttInsight*
+        file: ./build/MqttInsight*
         tag: ${{ github.ref }}
         release_name: ${{ github.ref }}
         overwrite: true
@@ -52,7 +52,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.REPO_TOKEN }}
-        file:  app/build/*.dmg
+        file: ./build/*.dmg
         tag: ${{ github.ref }}
         release_name: ${{ github.ref }}
         overwrite: true
@@ -75,7 +75,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.REPO_TOKEN }}
-        file:  app/build/*.zip
+        file: ./build/*.zip
         tag: ${{ github.ref }}
         release_name: ${{ github.ref }}
         overwrite: true
