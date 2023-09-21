@@ -6,14 +6,19 @@
 
 MqttInsight is a swing based MQTT gui client.
 
-Features:
+## Features:
 
 * Support MQTT3 and MQTT5;
 * Provide two message views: table and dialogue;
 * Support Node.js JavaScript (Javet);
 * Supports PlainText, JSON, XML, HEX, and Base64 regular message encoding and decoding, as well as SPI extended codecs;
 
+## Screenshots
+
 ![Screenshot1](screenshots/table_view.png)
 ![Screenshot1](screenshots/dialogue_view.png)
 
-[Scripting](Scripting.md)
+## Documents
+
+* [Scripting](Scripting.md)
+* [Changelog](Changelog.md)
