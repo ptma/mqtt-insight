@@ -261,6 +261,7 @@ fun getIconFile(fileName: String): File {
 }
 
 fun updateVersion() {
-    val jsonFile = File(projectDir.absolutePath + File.separator + "assets" + File.separator + "version.json")
+    val jsonFile =
+        File(projectDir.absolutePath + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "version.json")
     jsonFile.writeText("{\"version\": \"${appliactionVersion}\"}", Charset.forName("utf-8"))
 }
