@@ -249,10 +249,12 @@ public class MessageViewPanel {
         ListSelectionModel lsm = (ListSelectionModel) e.getSource();
         if (!e.getValueIsAdjusting()) {
             int selectedRow = lsm.getMaxSelectionIndex();
-            if (selectedRow >= 0 && selectedRow != lastSelectedRow) {
-                lastSelectedRow = selectedRow;
-                final MqttMessage message = messageTableModel.get(messageTable.convertRowIndexToModel(selectedRow));
-                mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(message));
+            if (selectedRow >= 0) {
+                if (selectedRow != lastSelectedRow) {
+                    lastSelectedRow = selectedRow;
+                    final MqttMessage message = messageTableModel.get(messageTable.convertRowIndexToModel(selectedRow));
+                    mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(message));
+                }
             } else {
                 mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(null));
             }
