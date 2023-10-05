@@ -27,8 +27,7 @@ buildscript {
 
 plugins.apply("io.github.fvarrui.javapackager.plugin")
 
-version = "1.0.1"
-
+val appliactionVersion: String = "1.0.1"
 val applicationName: String = "MqttInsight"
 val organization: String = "ptma@163.com"
 val copyright: String = "copyright 2023 ptma@163.com"
@@ -175,6 +174,7 @@ tasks.register<PackageTask>("packageForWindows") {
 
     organizationName = organization
     organizationUrl = supportUrl
+    version = appliactionVersion;
 
     platform = Platform.windows
     isCreateZipball = false
@@ -205,6 +205,7 @@ tasks.register<PackageTask>("packageForLinux") {
 
     organizationName = organization
     organizationUrl = supportUrl
+    version = appliactionVersion;
 
     linuxConfig(
         closureOf<LinuxConfig> {
@@ -225,6 +226,7 @@ tasks.register<PackageTask>("packageForMac_M1") {
 
     organizationName = organization
     organizationUrl = supportUrl
+    version = appliactionVersion;
 
     macConfig(
         closureOf<MacConfig> {
@@ -242,6 +244,7 @@ tasks.register<PackageTask>("packageForMac") {
 
     organizationName = organization
     organizationUrl = supportUrl
+    version = appliactionVersion;
 
     macConfig(
         closureOf<MacConfig> {
@@ -258,6 +261,7 @@ fun getIconFile(fileName: String): File {
 }
 
 fun updateVersion() {
-    val jsonFile = File(projectDir.absolutePath + File.separator + "assets" + File.separator + "version.json")
-    jsonFile.writeText("{\"version\": \"${version}\"}", Charset.forName("utf-8"))
+    val jsonFile =
+        File(projectDir.absolutePath + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "version.json")
+    jsonFile.writeText("{\"version\": \"${appliactionVersion}\"}", Charset.forName("utf-8"))
 }

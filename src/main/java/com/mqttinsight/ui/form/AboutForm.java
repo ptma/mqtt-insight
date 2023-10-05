@@ -1,5 +1,8 @@
 package com.mqttinsight.ui.form;
 
+import cn.hutool.core.io.resource.ResourceUtil;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -55,7 +58,8 @@ public class AboutForm extends JDialog {
         logoLabel.setText("");
         nameLabel.setText(Const.APP_NAME);
         nameLabel.putClientProperty("FlatLaf.styleClass", "h2");
-        versionLabel.setText(Const.VERSION);
+        JSONObject json = JSONUtil.parseObj(ResourceUtil.readUtf8Str("version.json"));
+        versionLabel.setText("v" + json.getStr("version"));
         nameLabel.putClientProperty("FlatLaf.styleClass", "h3");
         String githubLink = "https://github.com/ptma/mqtt-insight";
         githubLinkLabel.setText("<html><a href=\"#\">" + githubLink + "</a></html>");
