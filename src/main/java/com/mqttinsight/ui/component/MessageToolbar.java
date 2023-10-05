@@ -463,6 +463,7 @@ public class MessageToolbar extends JToolBar {
         }
         if (found) {
             mqttInstance.getMessageTable().goAndSelectRow(foundIndex);
+            searchField.setForeground(FOUND_TEXT_COLOR);
         } else {
             searchField.setForeground(NOTFOUND_TEXT_COLOR);
         }
