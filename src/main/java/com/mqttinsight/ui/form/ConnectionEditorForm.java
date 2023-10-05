@@ -14,6 +14,8 @@ import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.config.ConnectionNode;
 import com.mqttinsight.exception.VerificationException;
 import com.mqttinsight.mqtt.*;
+import com.mqttinsight.mqtt.options.Mqtt3Options;
+import com.mqttinsight.mqtt.options.Mqtt5Options;
 import com.mqttinsight.ui.component.SyntaxTextEditor;
 import com.mqttinsight.ui.component.model.PayloadFormatComboBoxModel;
 import com.mqttinsight.ui.component.model.PropertiesTableModel;
@@ -22,6 +24,10 @@ import com.mqttinsight.ui.form.panel.*;
 import com.mqttinsight.util.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.mqttv5.client.MqttConnectionOptions;
 import org.jdesktop.swingx.combobox.EnumComboBoxModel;
 
 import javax.swing.*;
@@ -119,6 +125,7 @@ public class ConnectionEditorForm extends JDialog {
     private JLabel maxMessagesStoredLabel;
     private JLabel defaultPayloadFormatLabel;
     private JCheckBox clearUnsubMessageCheckBox;
+    private JButton buttonTest;
     private SyntaxTextEditor payloadField;
 
     private ConnectionNode editingNode;
@@ -261,6 +268,7 @@ public class ConnectionEditorForm extends JDialog {
     }
 
     private void initComponentsAction() {
+        buttonTest.addActionListener(e -> onTest());
         buttonOk.addActionListener(e -> onOk());
         buttonCancel.addActionListener(e -> onCancel());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -474,6 +482,7 @@ public class ConnectionEditorForm extends JDialog {
             }
         }
 
+        LangUtil.buttonText(buttonTest, "TestConnection");
         LangUtil.buttonText(buttonOk, "&Ok");
         LangUtil.buttonText(buttonCancel, "&Cancel");
     }
@@ -518,7 +527,7 @@ public class ConnectionEditorForm extends JDialog {
         }
     }
 
-    private void onOk() {
+    private void verifyProperties(Consumer<MqttProperties> consumer) {
         try {
             verifyFields();
         } catch (VerificationException e) {
@@ -598,17 +607,82 @@ public class ConnectionEditorForm extends JDialog {
         properties.setMaxMessageStored((Integer) maxMessagesStoredField.getValue());
         properties.setPayloadFormat((String) defaultPayloadFormatComboBox.getSelectedItem());
         properties.setClearUnsubMessage(clearUnsubMessageCheckBox.isSelected());
+        consumer.accept(properties);
+    }
 
-        if (editingNode == null) {
-            editingNode = new ConnectionNode(properties);
-        } else {
-            properties.setId(editingNode.getProperties().getId());
-            editingNode.setProperties(properties);
-        }
-        if (consumer != null) {
-            consumer.accept(editingNode);
-        }
-        dispose();
+    private void onTest() {
+        SwingUtilities.invokeLater(() -> {
+            verifyProperties(properties -> {
+                buttonTest.setEnabled(false);
+                try {
+                    if (properties.getVersion().equals(Version.MQTT_5)) {
+                        org.eclipse.paho.mqttv5.client.MqttClient mqttClient = new org.eclipse.paho.mqttv5.client.MqttClient(
+                            properties.completeServerURI(),
+                            properties.getClientId()
+                        );
+                        mqttClient.setTimeToWait(5000L);
+                        MqttConnectionOptions options = Mqtt5Options.fromProperties(properties);
+                        options.setConnectionTimeout(10);
+                        org.eclipse.paho.mqttv5.client.IMqttToken token = mqttClient.connectWithResult(options);
+                        token.waitForCompletion();
+                        if (token.getException() != null) {
+                            String causeMessage = token.getException().getMessage();
+                            if (token.getException().getCause() != null) {
+                                causeMessage = token.getException().getCause().getMessage();
+                            }
+                            Utils.Toast.warn(String.format(LangUtil.getString("TestConnectionFailed"), token.getException().getReasonCode(), causeMessage));
+                        } else {
+                            Utils.Toast.success(LangUtil.getString("TestConnectionSuccessful"));
+                        }
+                        if (mqttClient.isConnected()) {
+                            mqttClient.disconnect();
+                            mqttClient.close();
+                        }
+                    } else {
+                        MqttClient mqttClient = new MqttClient(
+                            properties.completeServerURI(),
+                            properties.getClientId()
+                        );
+                        mqttClient.setTimeToWait(5000L);
+                        MqttConnectOptions options = Mqtt3Options.fromProperties(properties);
+                        options.setConnectionTimeout(10);
+                        IMqttToken token = mqttClient.connectWithResult(options);
+                        token.waitForCompletion();
+                        if (token.getException() != null) {
+                            String causeMessage = token.getException().getMessage();
+                            if (token.getException().getCause() != null) {
+                                causeMessage = token.getException().getCause().getMessage();
+                            }
+                            Utils.Toast.warn(String.format(LangUtil.getString("TestConnectionFailed"), token.getException().getReasonCode(), causeMessage));
+                        } else {
+                            Utils.Toast.success(LangUtil.getString("TestConnectionSuccessful"));
+                        }
+                        if (mqttClient.isConnected()) {
+                            mqttClient.disconnect();
+                            mqttClient.close(true);
+                        }
+                    }
+                } catch (Exception e) {
+                    Utils.Toast.warn(String.format(LangUtil.getString("TestConnectionError"), e.getMessage()));
+                }
+                buttonTest.setEnabled(true);
+            });
+        });
+    }
+
+    private void onOk() {
+        verifyProperties(properties -> {
+            if (editingNode == null) {
+                editingNode = new ConnectionNode(properties);
+            } else {
+                properties.setId(editingNode.getProperties().getId());
+                editingNode.setProperties(properties);
+            }
+            if (consumer != null) {
+                consumer.accept(editingNode);
+            }
+            dispose();
+        });
     }
 
     private void onCancel() {
@@ -627,13 +701,13 @@ public class ConnectionEditorForm extends JDialog {
         contentPanel = new JPanel();
         contentPanel.setLayout(new GridLayoutManager(2, 1, new Insets(10, 10, 10, 10), -1, -1));
         bottomPanel = new JPanel();
-        bottomPanel.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        bottomPanel.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         contentPanel.add(bottomPanel, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
-        bottomPanel.add(spacer1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        bottomPanel.add(spacer1, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         bottomButtonPanel = new JPanel();
         bottomButtonPanel.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1, true, false));
-        bottomPanel.add(bottomButtonPanel, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        bottomPanel.add(bottomButtonPanel, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         buttonOk = new JButton();
         buttonOk.setEnabled(true);
         buttonOk.setText("OK");
@@ -641,6 +715,9 @@ public class ConnectionEditorForm extends JDialog {
         buttonCancel = new JButton();
         buttonCancel.setText("Cancel");
         bottomButtonPanel.add(buttonCancel, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        buttonTest = new JButton();
+        buttonTest.setText("Test Connection");
+        bottomPanel.add(buttonTest, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         bodyPanel = new JPanel();
         bodyPanel.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         contentPanel.add(bodyPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
