@@ -14,7 +14,7 @@ MqttInsight 仅提供了一些基本的 MQTT 功能，用户可以通过编写�
 
 加载的脚本的作用域为当前 MQTT 连接的标签页。
 
-脚本中如果使用了第三方的 npm 包, 需要在脚本所在目录执行 npm install xxx, 目前还**不支持 Node.js 的全局包(global)**  
+脚本中如果使用了第三方的 npm 包, 需要在脚本所在目录执行 npm install xxx, 目前还**不支持 Node.js 的全局包(global)**
 
 ### 示例脚本1
 
@@ -29,7 +29,7 @@ mqttClient.on("connect", () => {
 });
 codec.decode("testtopic/#", (message) => {
     // 将 testtopic/# 主题下的消息转发到 mqtt://127.0.0.1:1883
-    mqttClient.publish(message.getTopic(), message.getPayload());
+    mqttClient.publish(message.getTopic(), Buffer.from(message.getPayload()));
 });
 
 // 订阅相应的主题， 也可以通过 UI 手动添加订阅
@@ -84,11 +84,11 @@ mqtt.subscribe("test/sample", 1);
 #### codec.decode([String topic], callback)
 
 * `topic` - string, 匹配的主题，可选
-* `callback` - function (message), 消息处理回调方法，返回结果可选。 
+* `callback` - function (message), 消息处理回调方法，返回结果可选。
     - `message` - 收到的 MQTT 消息, 具有的方法如下:
         - `getTopic()` - string, 消息的主题
         - `getQos()` - int, 消息的 QoS
-        - `isRetained()` - boolean,  是否为保留消息
+        - `isRetained()` - boolean, 是否为保留消息
         - `getPayload()` - Int8Array, 消息的载荷
         - `payloadAsString()` - string, 消息的字符串形式的载荷
     - `return` - 返回的类型可以是:
@@ -106,7 +106,6 @@ toast 工具可以在 UI 上弹出各种提示消息, 格式化文本 `format` �
 #### toast.warn(String format, [Object... arguments])
 
 #### toast.error(String format, [Object... arguments])
-
 
 ### 4. logger
 
