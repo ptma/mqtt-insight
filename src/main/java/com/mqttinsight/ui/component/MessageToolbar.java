@@ -290,10 +290,10 @@ public class MessageToolbar extends JToolBar {
         }
 
         moreMenuButton.addSeparator();
-        JMenuItem clearMessageMenu = new JMenuItem();
+        JMenuItem clearMessageMenu = new JMenuItem(Icons.CLEAR);
         LangUtil.buttonText(clearMessageMenu, "ClearAllMessages");
         moreMenuButton.addMunuItem(clearMessageMenu).addActionListener(this::clearAllMessages);
-        JMenuItem exportMenu = new JMenuItem();
+        JMenuItem exportMenu = new JMenuItem(Icons.EXPORT);
         LangUtil.buttonText(exportMenu, "ExportAllMessages");
         moreMenuButton.addMunuItem(exportMenu).addActionListener(this::exportAllMessages);
         add(moreMenuButton);

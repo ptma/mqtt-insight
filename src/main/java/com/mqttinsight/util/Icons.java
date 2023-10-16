@@ -16,9 +16,6 @@ public final class Icons {
 
     public static final Icon LOGO = new FlatSVGIcon("svg/logo.svg", 64, 64);
 
-    // Common
-    public static final Icon GEAR = new FlatSVGIcon("svg/icons/gear.svg");
-
     // Main form
     public static final Icon LOG_VERBOSE = new FlatSVGIcon("svg/icons/logVerbose.svg");
 
@@ -47,7 +44,7 @@ public final class Icons {
     public static final Icon REMOVE = new FlatSVGIcon("svg/icons/remove.svg");
     public static final Icon EXECUTE = new FlatSVGIcon("svg/icons/execute.svg");
     public static final Icon SUSPEND = new FlatSVGIcon("svg/icons/suspend.svg");
-    
+
 
     public static final Icon CHECKBOX = new FlatSVGIcon("svg/icons/checkbox.svg");
     public static final Icon CHECKBOX_CHECKED = new FlatSVGIcon("svg/icons/checkbox_checked.svg");
@@ -90,5 +87,7 @@ public final class Icons {
     public static final Icon SEND = new FlatSVGIcon("svg/icons/send.svg");
     public static final Icon SEND_GREEN = new FlatSVGIcon("svg/icons/send_green.svg");
     public static final Icon CANCEL = new FlatSVGIcon("svg/icons/cancel.svg");
+    public static final Icon CLEAR = new FlatSVGIcon("svg/icons/clear.svg");
+    public static final Icon EXPORT = new FlatSVGIcon("svg/icons/export.svg");
 
 }

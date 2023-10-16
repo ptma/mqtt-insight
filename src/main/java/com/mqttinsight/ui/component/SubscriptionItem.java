@@ -111,17 +111,17 @@ public class SubscriptionItem extends JPanel implements MouseListener {
 
         moreButton.addSeparator();
 
-        JMenuItem clearMessageMenu = new JMenuItem();
+        JMenuItem clearMessageMenu = new JMenuItem(Icons.CLEAR);
         LangUtil.buttonText(clearMessageMenu, "ClearMessages");
         moreButton.addMunuItem(clearMessageMenu).addActionListener(this::clearMessages);
 
-        JMenuItem exportMessageMenu = new JMenuItem();
+        JMenuItem exportMessageMenu = new JMenuItem(Icons.EXPORT);
         LangUtil.buttonText(exportMessageMenu, "ExportMessages");
         moreButton.addMunuItem(exportMessageMenu).addActionListener(this::exportMessages);
 
         moreButton.addSeparator();
 
-        JMenuItem closeMenu = new JMenuItem();
+        JMenuItem closeMenu = new JMenuItem(Icons.CANCEL);
         LangUtil.buttonText(closeMenu, "Close");
         moreButton.addMunuItem(closeMenu).addActionListener(this::close);
 

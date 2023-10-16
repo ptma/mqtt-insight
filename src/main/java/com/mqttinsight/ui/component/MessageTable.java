@@ -9,6 +9,7 @@ import com.mqttinsight.ui.component.renderer.DialogueViewRendererProvider;
 import com.mqttinsight.ui.component.renderer.TableViewRendererProvider;
 import com.mqttinsight.ui.event.InstanceEventListener;
 import com.mqttinsight.ui.form.panel.MqttInstance;
+import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -104,12 +105,15 @@ public class MessageTable extends JXTable {
         menuCopy = Utils.UI.createMenuItem(LangUtil.getString("Copy&Payload"), (e) -> copyPayload());
         popupMenu.add(menuCopy);
         menuDelete = Utils.UI.createMenuItem(LangUtil.getString("&Delete"), (e) -> deleteSelectedRow());
+        menuDelete.setIcon(Icons.REMOVE);
         popupMenu.add(menuDelete);
         popupMenu.add(new JSeparator());
 
         JMenuItem menuClear = Utils.UI.createMenuItem(LangUtil.getString("ClearAllMessages"), (e) -> mqttInstance.getEventListeners().forEach(InstanceEventListener::clearAllMessages));
+        menuClear.setIcon(Icons.CANCEL);
         popupMenu.add(menuClear);
         JMenuItem menuExport = Utils.UI.createMenuItem(LangUtil.getString("ExportAllMessages"), (e) -> mqttInstance.getEventListeners().forEach(InstanceEventListener::exportAllMessages));
+        menuExport.setIcon(Icons.EXPORT);
         popupMenu.add(menuExport);
 
         this.addMouseListener(new MouseAdapter() {

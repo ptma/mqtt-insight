@@ -252,20 +252,26 @@ public class ConnectionManagerForm extends JDialog {
     private void initPopupMenu() {
         popupMenu = new FlatPopupMenu();
         menuConnect = Utils.UI.createMenuItem(LangUtil.getString("&OpenConnection"), (e) -> onConnectAction());
+        menuConnect.setIcon(Icons.EXECUTE);
         popupMenu.add(menuConnect);
         popupMenu.addSeparator();
         JMenuItem menuNewRootGroup = Utils.UI.createMenuItem(LangUtil.getString("New&RootGroup"), (e) -> onNewGroupAction(true));
+        menuNewRootGroup.setIcon(Icons.FOLDER);
         popupMenu.add(menuNewRootGroup);
         menuNewGroup = Utils.UI.createMenuItem(LangUtil.getString("New&Group"), (e) -> onNewGroupAction(false));
+        menuNewGroup.setIcon(Icons.FOLDER);
         popupMenu.add(menuNewGroup);
         menuNewConnection = Utils.UI.createMenuItem(LangUtil.getString("New&Connection"), (e) -> onNewConnectionAction());
+        menuNewConnection.setIcon(Icons.CONNECTION);
         popupMenu.add(menuNewConnection);
         menuDuplicate = Utils.UI.createMenuItem(LangUtil.getString("Du&plicate"), (e) -> onDuplicateAction());
         popupMenu.add(menuDuplicate);
         popupMenu.addSeparator();
         menuEdit = Utils.UI.createMenuItem(LangUtil.getString("&Edit"), (e) -> onEditAction());
+        menuEdit.setIcon(Icons.EDIT);
         popupMenu.add(menuEdit);
         menuDelete = Utils.UI.createMenuItem(LangUtil.getString("&Delete"), (e) -> onDeleteAction());
+        menuDelete.setIcon(Icons.REMOVE);
         popupMenu.add(menuDelete);
     }
 
