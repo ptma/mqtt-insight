@@ -110,7 +110,7 @@ public class MessageTable extends JXTable {
         popupMenu.add(new JSeparator());
 
         JMenuItem menuClear = Utils.UI.createMenuItem(LangUtil.getString("ClearAllMessages"), (e) -> mqttInstance.getEventListeners().forEach(InstanceEventListener::clearAllMessages));
-        menuClear.setIcon(Icons.CANCEL);
+        menuClear.setIcon(Icons.CLEAR);
         popupMenu.add(menuClear);
         JMenuItem menuExport = Utils.UI.createMenuItem(LangUtil.getString("ExportAllMessages"), (e) -> mqttInstance.getEventListeners().forEach(InstanceEventListener::exportAllMessages));
         menuExport.setIcon(Icons.EXPORT);
