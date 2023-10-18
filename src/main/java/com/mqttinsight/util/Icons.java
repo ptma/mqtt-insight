@@ -55,6 +55,7 @@ public final class Icons {
     public static final Icon FAVORITE_FILL = new FlatSVGIcon("svg/icons/star-fill.svg");
     public static final Icon EYE = new FlatSVGIcon("svg/icons/eye.svg");
     public static final Icon EYE_CLOSE = new FlatSVGIcon("svg/icons/eye-close.svg");
+    public static final Icon PALETTE = new FlatSVGIcon("svg/icons/palette.svg");
     public static final Icon MORE = new FlatSVGIcon("svg/icons/list.svg");
 
     // MessageGrid

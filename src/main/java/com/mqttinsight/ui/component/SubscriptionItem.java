@@ -43,6 +43,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     private JXLabel counterLabel;
     private JButton favoriteButton;
     private JButton muteButton;
+    private PopupColorButton paletteButton;
     private PopupMenuButton moreButton;
     private JMenuItem unsubscribeMenu;
     private JMenuItem resubscribeMenu;
@@ -87,6 +88,11 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         muteButton.setToolTipText(LangUtil.getString("Mute"));
         muteButton.putClientProperty("FlatLaf.styleClass", "small");
         toolBar.add(muteButton);
+
+        paletteButton = new PopupColorButton(Icons.PALETTE, false);
+        paletteButton.setMoreText(LangUtil.getString("MoreColor"));
+        paletteButton.setDialogTitle(LangUtil.getString("ChooseColor"));
+        toolBar.add(paletteButton);
 
         // More Menu
         moreButton = new PopupMenuButton(Icons.MORE);
@@ -140,21 +146,6 @@ public class SubscriptionItem extends JPanel implements MouseListener {
 
         topicLabel.putClientProperty("FlatLaf.styleClass", "h4");
 
-        RectanglePainter badgePainter = new RectanglePainter();
-        badgePainter.setRounded(true);
-        badgePainter.setRoundWidth(16);
-        badgePainter.setRoundHeight(16);
-        boolean isDarkTheme = UIManager.getBoolean("laf.dark");
-        Color bgColor = subscription.getColor();
-        Color badgeColor;
-        if (isDarkTheme) {
-            badgeColor = Utils.brighter(bgColor, 0.7f);
-        } else {
-            badgeColor = Utils.darker(bgColor, 0.85f);
-        }
-        badgePainter.setFillPaint(badgeColor);
-        badgePainter.setBorderPaint(new Color(badgeColor.getRed(), badgeColor.getGreen(), badgeColor.getBlue(), 128));
-        counterLabel.setBackgroundPainter(badgePainter);
         counterLabel.setOpaque(false);
         counterLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
 
@@ -180,11 +171,16 @@ public class SubscriptionItem extends JPanel implements MouseListener {
             }
         });
 
+        paletteButton.addColorSelectionListener(color -> {
+            subscription.setColor(color);
+            updateComponents();
+        });
+
         topicLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    moreButton.getPopup().show(e.getComponent(), e.getX(), e.getY());
+                    moreButton.getPopupMenu().show(e.getComponent(), e.getX(), e.getY());
                 }
             }
         });
@@ -192,7 +188,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    moreButton.getPopup().show(e.getComponent(), e.getX(), e.getY());
+                    moreButton.getPopupMenu().show(e.getComponent(), e.getX(), e.getY());
                 }
             }
         });
@@ -292,11 +288,27 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     }
 
     public void updateComponents() {
+        RectanglePainter badgePainter = new RectanglePainter();
+        badgePainter.setRounded(true);
+        badgePainter.setRoundWidth(16);
+        badgePainter.setRoundHeight(16);
+        boolean isDarkTheme = UIManager.getBoolean("laf.dark");
         Color bgColor = subscription.getColor();
         Color fgColor = Utils.getReverseForegroundColor(bgColor);
+        Color badgeColor;
+        if (isDarkTheme) {
+            badgeColor = Utils.brighter(bgColor, 0.7f);
+        } else {
+            badgeColor = Utils.darker(bgColor, 0.85f);
+        }
+        badgePainter.setFillPaint(badgeColor);
+        badgePainter.setBorderPaint(new Color(badgeColor.getRed(), badgeColor.getGreen(), badgeColor.getBlue(), 128));
+        counterLabel.setBackgroundPainter(badgePainter);
+        counterLabel.setForeground(fgColor);
+
         topicLabel.setBackground(bgColor);
         topicLabel.setForeground(fgColor);
-        counterLabel.setForeground(fgColor);
+
         this.setBackground(bgColor);
         favoriteButton.setIcon(isFavorite() ? Icons.FAVORITE_FILL : Icons.FAVORITE);
         muteButton.setIcon(subscription.isMuted() ? Icons.EYE_CLOSE : Icons.EYE);

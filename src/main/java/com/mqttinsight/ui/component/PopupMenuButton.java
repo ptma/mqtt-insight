@@ -8,28 +8,27 @@ import javax.swing.*;
 public class PopupMenuButton extends AbstractPopupButton {
 
     public PopupMenuButton(String text) {
-        this(text, null);
+        this(text, null, true);
     }
 
-    public PopupMenuButton(Action action) {
-        super(action);
+    public PopupMenuButton(String text, boolean showArrow) {
+        this(text, null, showArrow);
     }
 
     public PopupMenuButton(Icon icon) {
-        this(null, icon);
+        this(null, icon, true);
+    }
+
+    public PopupMenuButton(Icon icon, boolean showArrow) {
+        this(null, icon, showArrow);
     }
 
     public PopupMenuButton() {
-        this(null, null);
+        this(null, null, true);
     }
 
-    public PopupMenuButton(String text, Icon icon) {
-        super(text, icon);
-    }
-
-    @Override
-    protected JPopupMenu createPopup() {
-        return new JPopupMenu();
+    public PopupMenuButton(String text, Icon icon, boolean showArrow) {
+        super(text, icon, showArrow);
     }
 
     public JMenuItem addMunuItem(String menuText) {
@@ -37,10 +36,11 @@ public class PopupMenuButton extends AbstractPopupButton {
     }
 
     public JMenuItem addMunuItem(JMenuItem menuItem) {
-        return getPopup().add(menuItem);
+        return getPopupMenu().add(menuItem);
     }
 
     public void addSeparator() {
-        getPopup().addSeparator();
+        getPopupMenu().addSeparator();
     }
+
 }

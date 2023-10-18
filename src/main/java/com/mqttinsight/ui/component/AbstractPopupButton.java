@@ -30,27 +30,34 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
 
     private boolean roundBorderAutoXOffset = true;
 
-    private JPopupMenu popup;
+    private JPopupMenu popupMenu;
+
+    private boolean showArrow;
 
     public AbstractPopupButton(String text) {
-        this(text, null);
+        this(text, null, true);
     }
 
-    public AbstractPopupButton(Action action) {
-        super(action);
-        init();
+    public AbstractPopupButton(String text, boolean showArrow) {
+        this(text, null, showArrow);
     }
 
     public AbstractPopupButton(Icon icon) {
-        this(null, icon);
+        this(null, icon, true);
+    }
+
+    public AbstractPopupButton(Icon icon, boolean showArrow) {
+        this(null, icon, showArrow);
     }
 
     public AbstractPopupButton() {
-        this(null, null);
+        this(null, null, true);
     }
 
-    public AbstractPopupButton(String text, Icon icon) {
+
+    public AbstractPopupButton(String text, Icon icon, boolean showArrow) {
         super(text, icon);
+        this.showArrow = showArrow;
         init();
     }
 
@@ -61,7 +68,7 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
 
     private void init() {
         this.setHorizontalAlignment(SwingConstants.LEFT);
-        this.popup = createPopup();
+        this.popupMenu = new JPopupMenu();
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -93,7 +100,9 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
     @Override
     public Insets getInsets() {
         Insets insets = (Insets) super.getInsets().clone();
-        insets.right += ARROW_SPACING;
+        if (showArrow) {
+            insets.right += ARROW_SPACING;
+        }
         return insets;
     }
 
@@ -107,10 +116,8 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
         return insets1;
     }
 
-    protected abstract JPopupMenu createPopup();
-
-    public JPopupMenu getPopup() {
-        return this.popup;
+    public JPopupMenu getPopupMenu() {
+        return this.popupMenu;
     }
 
     @Override
@@ -128,20 +135,20 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
 
     public void hidePopup() {
         if (isEnabled()) {
-            if (popup == null) {
+            if (popupMenu == null) {
                 return;
             }
-            popup.setVisible(false);
+            popupMenu.setVisible(false);
         }
     }
 
     private void showPopup() {
         if (isEnabled()) {
-            if (popup == null) {
+            if (popupMenu == null) {
                 return;
             }
             Point loc = adjustPopupLocationToFitScreen(0, this.getHeight());
-            popup.show(this, loc.x, loc.y);
+            popupMenu.show(this, loc.x, loc.y);
         }
     }
 
@@ -159,7 +166,7 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
         }
         Rectangle scrBounds = gc.getBounds();
 
-        Dimension popupSize = popup.getPreferredSize();
+        Dimension popupSize = popupMenu.getPreferredSize();
         long popupRightX = (long) popupLocation.x + (long) popupSize.width;
         long popupBottomY = (long) popupLocation.y + (long) popupSize.height;
         int scrWidth = scrBounds.width;
@@ -232,12 +239,14 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
     @Override
     public void paint(Graphics g) {
         super.paint(g);
-        Object[] oldRenderingHints = FlatUIUtils.setRenderingHints(g);
-        Color oldColor = g.getColor();
-        g.setColor(FlatUIUtils.deriveColor(getArrowColor(), getArrowColor()));
-        paintArrow((Graphics2D) g);
-        g.setColor(oldColor);
-        FlatUIUtils.resetRenderingHints(g, oldRenderingHints);
+        if (showArrow) {
+            Object[] oldRenderingHints = FlatUIUtils.setRenderingHints(g);
+            Color oldColor = g.getColor();
+            g.setColor(FlatUIUtils.deriveColor(getArrowColor(), getArrowColor()));
+            paintArrow((Graphics2D) g);
+            g.setColor(oldColor);
+            FlatUIUtils.resetRenderingHints(g, oldRenderingHints);
+        }
     }
 
     protected void paintArrow(Graphics2D g) {
