@@ -42,6 +42,7 @@ public class MessageViewPanel {
 
     private MessageTable messageTable;
     private int lastSelectedRow = -1;
+    private boolean autoScroll;
 
     public MessageViewPanel(final MqttInstance mqttInstance, MessageViewMode viewMode) {
         this.mqttInstance = mqttInstance;
@@ -70,6 +71,7 @@ public class MessageViewPanel {
             System.gc();
         }
         messageTable = new MessageTable(mqttInstance, messageTableModel);
+        messageTable.setAutoScroll(autoScroll);
         if (rowFilter != null) {
             messageTable.setRowFilter(rowFilter);
         }
@@ -144,6 +146,7 @@ public class MessageViewPanel {
     }
 
     private void toggleAutoScroll(boolean autoScroll) {
+        this.autoScroll = autoScroll;
         messageTable.setAutoScroll(autoScroll);
         if (messageTable.isAutoScroll()) {
             messageTable.goAndSelectRow(messageTable.getRowCount() - 1);
