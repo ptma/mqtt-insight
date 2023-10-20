@@ -32,7 +32,8 @@ public class ScriptCodec {
                 receivedMessage.getTopic(),
                 receivedMessage.payloadAsBytes(),
                 receivedMessage.getQos(),
-                receivedMessage.isRetained()
+                receivedMessage.isRetained(),
+                receivedMessage.isDuplicate()
             );
             DecoderContext context = new DecoderContext(receivedMessage.getSubscription(), mqttMessage);
             decodersGroupMap.values().forEach(decodersMap -> {
