@@ -211,7 +211,7 @@ public class MessageTable extends JXTable {
         TableColumnExt colQos = this.getColumnExt(3);
         colQos.setWidth(45);
         colQos.setPreferredWidth(45);
-        colQos.setMinWidth(45);
+        colQos.setMinWidth(20);
         colQos.setMaxWidth(50);
         colQos.putClientProperty("columnIndex", MessageTableModel.COLUMN_QOS);
 
@@ -219,9 +219,8 @@ public class MessageTable extends JXTable {
         TableColumnExt colRetained = this.getColumnExt(4);
         colRetained.setWidth(65);
         colRetained.setPreferredWidth(65);
-        colRetained.setMinWidth(65);
+        colRetained.setMinWidth(20);
         colRetained.setMaxWidth(65);
-        colRetained.setResizable(false);
         colRetained.setCellRenderer(tableRenderer);
         colRetained.putClientProperty("columnIndex", MessageTableModel.COLUMN_RETAINED);
 
@@ -229,7 +228,7 @@ public class MessageTable extends JXTable {
         TableColumnExt colTime = this.getColumnExt(5);
         colTime.setWidth(160);
         colTime.setPreferredWidth(160);
-        colTime.setMinWidth(160);
+        colTime.setMinWidth(100);
         colTime.setMaxWidth(160);
         colTime.putClientProperty("columnIndex", MessageTableModel.COLUMN_TIME);
 

@@ -63,11 +63,13 @@ public class MessageTableModel extends AbstractTableModel {
             switch (column) {
                 case MessageTableModel.COLUMN_PAYLOAD:
                     return messages.get(row).getPayload();
+                case MessageTableModel.COLUMN_TOPIC:
+                    return messages.get(row).getTopic();
                 default:
                     return "";
             }
         } else {
-            return messages.get(row).getPayload();
+            return messages.get(row).getTopic() + " " + messages.get(row).getPayload();
         }
 
     }
@@ -110,7 +112,7 @@ public class MessageTableModel extends AbstractTableModel {
     }
 
     public void add(MqttMessage message) {
-        while (messages.size() > messages.getMaximum() - 1) {
+        while (messages.isMaximum()) {
             messages.remove(0);
             fireTableRowsDeleted(0, 0);
         }
