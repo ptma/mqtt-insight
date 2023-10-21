@@ -93,7 +93,10 @@ mqtt.subscribe("test/sample", 1);
         - `payloadAsString()` - string, 消息的字符串形式的载荷
     - `return` - 返回的类型可以是:
         - `string` - 消息体的文本
-        - `json` - 消息体及消息格式对象, 例如: `{payload: "payload as json text ...", format: "json"}`
+        - `json` - 消息对象, 例如: ```{payload: "payload as json text ...", format: "json"}```, 消息对象支持的属性有:
+            * `payload` - string|Object, 消息体
+            * `format` - string, 值可以是 `plain`|`json`|`hex`|`xml`
+            * `color` - string, Hex 颜色代码, 例如```#FF0000```
 
 ### 3. toast
 

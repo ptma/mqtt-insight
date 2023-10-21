@@ -1,5 +1,6 @@
 package com.mqttinsight.scripting;
 
+import cn.hutool.core.img.ColorUtil;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.mqtt.AbstractMqttMessage;
 import com.mqttinsight.mqtt.MessageType;
@@ -21,6 +22,8 @@ public class DecodedMqttMessage extends AbstractMqttMessage implements MqttMessa
 
     private String format;
 
+    private String color;
+
     public DecodedMqttMessage(String topic, byte[] payload, int qos, boolean retained, boolean duplicate) {
         super(topic, payload, qos, retained, duplicate);
         this.payload = payload;
@@ -28,7 +31,7 @@ public class DecodedMqttMessage extends AbstractMqttMessage implements MqttMessa
 
     @Override
     public Color getColor() {
-        return subscription.getColor();
+        return color != null ? ColorUtil.hexToColor(color) : subscription.getColor();
     }
 
     @Override
@@ -59,6 +62,10 @@ public class DecodedMqttMessage extends AbstractMqttMessage implements MqttMessa
 
     public void setPayload(byte[] payload) {
         this.payload = payload;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public static DecodedMqttMessage copyFrom(SimpleMqttMessage message) {
