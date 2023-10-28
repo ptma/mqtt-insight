@@ -20,7 +20,6 @@ import org.jdesktop.swingx.painter.RectanglePainter;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -47,8 +46,9 @@ public class MessagePreviewPanel extends JPanel {
     private JXLabel retainedLabel;
     private JLabel formatLabel;
     private JComboBox<String> formatComboBox;
+    private JCheckBox prettyChechbox;
     private JPanel payloadPanel;
-    
+
     private ExecutorService previewExcutorService = ThreadUtil.newFixedExecutor(1, 2, "Preview", new ThreadPoolExecutor.DiscardOldestPolicy());
 
     public MessagePreviewPanel(MqttInstance mqttInstance) {
@@ -67,7 +67,7 @@ public class MessagePreviewPanel extends JPanel {
 
         topPanelLayout = new MigLayout(
             "insets 0 0 5 0,gap 5",
-            "[grow][][][][][][]",
+            "[grow][][][][][][][]",
             "[]"
         );
         topPanel.setLayout(topPanelLayout);
@@ -116,8 +116,13 @@ public class MessagePreviewPanel extends JPanel {
         formatComboBox = new JComboBox<>();
         formatComboBox.setModel(new PayloadFormatComboBoxModel(true));
         formatComboBox.setSelectedItem(CodecSupport.DEFAULT);
-        formatComboBox.addActionListener(e -> formatChanged(e));
+        formatComboBox.addActionListener(e -> this.updatePreviewMessage());
         topPanel.add(formatComboBox, "");
+
+        prettyChechbox = new JCheckBox(LangUtil.getString("Pretty"));
+        prettyChechbox.setSelected(true);
+        prettyChechbox.addActionListener(e -> this.updatePreviewMessage());
+        topPanel.add(prettyChechbox, "");
 
         payloadEditor = new SyntaxTextEditor();
         payloadEditor.textArea().setEditable(false);
@@ -155,28 +160,29 @@ public class MessagePreviewPanel extends JPanel {
 
     public void toggleViewMode(MessageViewMode viewMode) {
         if (viewMode == MessageViewMode.TABLE) {
-            topPanelLayout.setColumnConstraints("[grow][][][][][][right]");
+            topPanelLayout.setColumnConstraints("[grow][][][][][][right][]");
             topPanelLayout.setRowConstraints("[]");
             topPanelLayout.setComponentConstraints(topicField, "growx");
             topPanelLayout.setComponentConstraints(formatLabel, "");
         } else {
-            topPanelLayout.setColumnConstraints("[][][][][][grow,right]");
+            topPanelLayout.setColumnConstraints("[][][][][][grow,right][]");
             topPanelLayout.setRowConstraints("[][]");
             topPanelLayout.setComponentConstraints(topicField, "growx, span, wrap");
             topPanelLayout.setComponentConstraints(formatLabel, "newline");
         }
     }
 
-    private void formatChanged(ActionEvent e) {
-        if (previewedMessage != null && "comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
+    private void updatePreviewMessage() {
+        if (previewedMessage != null) {
             String format = (String) formatComboBox.getSelectedItem();
+            boolean pretty = prettyChechbox.isSelected();
             if (CodecSupport.DEFAULT.equals(format)) {
-                payloadEditor.setText(previewedMessage.payloadAsString(true));
+                payloadEditor.setText(previewedMessage.payloadAsString(pretty));
                 CodecSupport codec = CodecSupports.instance().getByName(previewedMessage.getPayloadFormat());
                 payloadEditor.setSyntax(codec.getSyntax());
             } else {
                 CodecSupport codec = CodecSupports.instance().getByName(format);
-                payloadEditor.setText(previewedMessage.decodePayload(codec, true));
+                payloadEditor.setText(previewedMessage.decodePayload(codec, pretty));
                 payloadEditor.setSyntax(codec.getSyntax());
             }
         }
@@ -199,7 +205,7 @@ public class MessagePreviewPanel extends JPanel {
                     format = message.getPayloadFormat();
                 }
                 CodecSupport codec = CodecSupports.instance().getByName(format);
-                String previewText = message.decodePayload(codec, true);
+                String previewText = message.decodePayload(codec, prettyChechbox.isSelected());
 
                 SwingUtilities.invokeLater(() -> {
                     topicField.setText(message.getTopic());
@@ -215,7 +221,7 @@ public class MessagePreviewPanel extends JPanel {
                 });
             }
         });
-        
+
     }
 
     public void activeFindToolbar() {

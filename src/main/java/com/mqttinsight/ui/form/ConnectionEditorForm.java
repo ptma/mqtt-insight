@@ -935,7 +935,7 @@ public class ConnectionEditorForm extends JDialog {
         defaultPayloadFormatComboBox = new JComboBox();
         otherPanel.add(defaultPayloadFormatComboBox, cc.xy(3, 3));
         clearUnsubMessageCheckBox = new JCheckBox();
-        clearUnsubMessageCheckBox.setText("Clear Messages On Unsubscribe From Topics");
+        clearUnsubMessageCheckBox.setText("Clear messages after unsubscribing");
         otherPanel.add(clearUnsubMessageCheckBox, cc.xyw(1, 5, 5));
     }
 

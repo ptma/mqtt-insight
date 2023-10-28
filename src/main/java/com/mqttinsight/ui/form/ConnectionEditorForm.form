@@ -783,7 +783,7 @@
                       <forms/>
                     </constraints>
                     <properties>
-                      <text value="Clear Messages On Unsubscribe From Topics"/>
+                      <text value="Clear messages after unsubscribing"/>
                     </properties>
                   </component>
                 </children>
