@@ -112,7 +112,10 @@ public class MainWindowForm {
             @Override
             protected MqttInstanceTabPanel doInBackground() throws Exception {
                 for (int tabIndex = 0; tabIndex < tabPanel.getTabCount(); tabIndex++) {
-                    if (isMqttInstanceAtTab(tabIndex) && getMqttInstanceAtTab(tabIndex).getProperties().getId().equals(mqttProperties.getId())) {
+                    if (isMqttInstanceAtTab(tabIndex)
+                        && getMqttInstanceAtTab(tabIndex).getProperties().getId().equals(mqttProperties.getId())
+                        && !mqttProperties.isRandomClientId()
+                    ) {
                         Utils.Toast.info(LangUtil.getString("ConnectionExists"));
                         tabPanel.setSelectedIndex(tabIndex);
                         return null;
