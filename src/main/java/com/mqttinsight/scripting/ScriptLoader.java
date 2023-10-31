@@ -2,6 +2,7 @@ package com.mqttinsight.scripting;
 
 import cn.hutool.core.io.FileUtil;
 import com.caoccao.javet.exceptions.JavetException;
+import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.ReceivedMqttMessage;
 import com.mqttinsight.scripting.modules.CodecWrapper;
 import com.mqttinsight.scripting.modules.MqttClientWrapper;
@@ -12,6 +13,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * @author ptma
@@ -29,7 +31,7 @@ public class ScriptLoader {
         this.scriptDecoder = new ScriptCodec();
     }
 
-    public void loadScript(File scriptFile, ResultListener resultListener) {
+    public void loadScript(File scriptFile, Consumer<ScriptResult> resultConsumer) {
         String scriptPath = scriptFile.getAbsolutePath();
         String scriptContent = FileUtil.readUtf8String(scriptFile);
 
@@ -45,17 +47,17 @@ public class ScriptLoader {
             modules.put("toast", TOAST_WRAPPER);
             modules.put("logger", ScriptEnginePool.instance().getLogger());
 
-            scriptEngine.execute(scriptPath, scriptContent, modules, resultListener);
+            scriptEngine.execute(scriptPath, scriptContent, modules, resultConsumer);
         } catch (JavetException e) {
             engines.remove(scriptPath);
-            if (resultListener != null) {
-                resultListener.onResult(ScriptResult.error(e));
+            if (resultConsumer != null) {
+                resultConsumer.accept(ScriptResult.error(e));
             }
         }
     }
 
-    public void decode(ReceivedMqttMessage receivedMessage, DecoderCallback callback) {
-        scriptDecoder.decode(receivedMessage, callback);
+    public void decode(ReceivedMqttMessage receivedMessage, Consumer<MqttMessage> decodedConsumer) {
+        scriptDecoder.decode(receivedMessage, decodedConsumer);
     }
 
     public void removeScript(String scriptPath) {

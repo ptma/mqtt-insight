@@ -1,13 +1,9 @@
 package com.mqttinsight.ui.component;
 
-import cn.hutool.core.img.ColorUtil;
 import com.formdev.flatlaf.FlatLightLaf;
-import com.mqttinsight.MqttInsightApplication;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import net.miginfocom.swing.MigLayout;
-import org.jdesktop.swingx.graphics.ColorUtilities;
 
 import javax.accessibility.Accessible;
 import javax.swing.*;
@@ -15,7 +11,6 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.plaf.basic.BasicComboPopup;
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 
 /**
@@ -24,12 +19,7 @@ import java.awt.event.ItemEvent;
 public class ColorPicker extends JComboBox<ColorPicker.ColorValue> {
 
     private final ColorValue value;
-    private JPanel popupPanel;
-    private JButton moreButton;
-    private String dialogTitle = "Choose Color";
-
-    private int gridRows = 11;
-    private int gridCols = 11;
+    private ColorGridPanel colorPanel;
 
     public ColorPicker(Color color) {
         super();
@@ -41,82 +31,13 @@ public class ColorPicker extends JComboBox<ColorPicker.ColorValue> {
         this.setRenderer(new ColorCellRenderer());
         this.addPopupMenuListener(new PickerPopupListener());
 
-        initPopupPanel();
-    }
-
-    private void initPopupPanel() {
-        int cellSize = 15;
-        int cellSpace = 1;
-        int borderInset = 10;
-        MigLayout migLayout = new MigLayout(
-            String.format("insets %d", borderInset),
-            String.format("[]%d[]", cellSpace),
-            String.format("[]%d[]", cellSpace)
-        );
-        popupPanel = new JPanel(migLayout);
-
-        ActionListener colorCellActionListener = e -> {
-            if (e.getSource() instanceof JButton) {
-                applyColor(((JButton) e.getSource()).getBackground());
-            }
+        colorPanel = new ColorGridPanel();
+        colorPanel.setColorValue(color);
+        colorPanel.addColorSelectionListener(c -> {
+            value.setColor(c);
+            selectedItemChanged();
             this.hidePopup();
-        };
-
-        JButton cellButton;
-        float saturation = 1.0f;
-        float lightness = 0.1f;
-
-        int colorCols = gridCols - 1;
-        for (int row = 0; row < gridRows; row++) {
-            float grayLightness = row * 1.0f / (gridRows - 1);
-            Color grayColor = ColorUtilities.HSLtoRGB(0, 0, grayLightness);
-            cellButton = new JButton();
-            cellButton.setToolTipText(ColorUtil.toHex(grayColor));
-            cellButton.setBackground(grayColor);
-            cellButton.addActionListener(colorCellActionListener);
-            popupPanel.add(cellButton, String.format("w %d!,h %d!", cellSize, cellSize));
-
-            float rowLightness = lightness + row * (1 - lightness) / gridRows;
-            for (int col = 0; col < colorCols; col++) {
-                float hue = col * 1.0f / colorCols;
-                Color color = ColorUtilities.HSLtoRGB(hue, saturation, rowLightness);
-                cellButton = new JButton();
-                cellButton.setToolTipText(ColorUtil.toHex(color));
-                cellButton.setBackground(color);
-                cellButton.addActionListener(colorCellActionListener);
-                if (col == colorCols - 1) {
-                    popupPanel.add(cellButton, String.format("w %d!,h %d!,wrap", cellSize, cellSize));
-                } else {
-                    popupPanel.add(cellButton, String.format("w %d!,h %d!", cellSize, cellSize));
-                }
-            }
-        }
-        moreButton = new JButton("More ...");
-        moreButton.addActionListener(e -> {
-            this.hidePopup();
-            JColorChooser colorChooser = new JColorChooser();
-            colorChooser.setColor(value.getColor());
-            JDialog dialog = JColorChooser.createDialog(MqttInsightApplication.frame,
-                dialogTitle,
-                true,
-                colorChooser,
-                e1 -> {
-                    applyColor(colorChooser.getColor());
-                },
-                null
-            );
-            dialog.setVisible(true);
         });
-        popupPanel.add(moreButton, "h 25!,gaptop 5,spanx,growx");
-
-        int width = cellSpace * (gridCols - 1) + cellSize * gridCols + borderInset * 2;
-        int height = cellSpace * (gridRows - 1) + cellSize * gridRows + borderInset * 2 + 5 + 25;
-        popupPanel.setPreferredSize(new Dimension(width, height));
-    }
-
-    private void applyColor(Color color) {
-        value.setColor(color);
-        selectedItemChanged();
     }
 
     public Color getColor() {
@@ -124,11 +45,11 @@ public class ColorPicker extends JComboBox<ColorPicker.ColorValue> {
     }
 
     public void setMoreText(String text) {
-        moreButton.setText(text);
+        colorPanel.setMoreText(text);
     }
 
     public void setDialogTitle(String title) {
-        dialogTitle = title;
+        colorPanel.setDialogTitle(title);
     }
 
     @Override
@@ -207,9 +128,9 @@ public class ColorPicker extends JComboBox<ColorPicker.ColorValue> {
         public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
             Accessible accPopup = getUI().getAccessibleChild(ColorPicker.this, 0);
             Container cPopup = (Container) accPopup;
-            if (cPopup.getComponentCount() != 1 || cPopup.getComponent(0) != popupPanel) {
+            if (cPopup.getComponentCount() != 1 || cPopup.getComponent(0) != colorPanel) {
                 cPopup.removeAll();
-                cPopup.add(popupPanel);
+                cPopup.add(colorPanel);
             }
         }
 

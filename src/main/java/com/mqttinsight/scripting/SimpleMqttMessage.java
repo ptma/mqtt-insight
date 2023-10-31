@@ -11,12 +11,14 @@ public class SimpleMqttMessage {
     private final byte[] payload;
     private final int qos;
     private final boolean retained;
+    private final boolean duplicate;
 
-    public SimpleMqttMessage(String topic, byte[] payload, int qos, boolean retained) {
+    public SimpleMqttMessage(String topic, byte[] payload, int qos, boolean retained, boolean duplicate) {
         this.topic = topic;
         this.payload = payload;
         this.qos = qos;
         this.retained = retained;
+        this.duplicate = duplicate;
     }
 
     public String getTopic() {
@@ -39,5 +41,7 @@ public class SimpleMqttMessage {
         return new String(payload, StandardCharsets.UTF_8);
     }
 
-
+    public boolean isDuplicate() {
+        return duplicate;
+    }
 }

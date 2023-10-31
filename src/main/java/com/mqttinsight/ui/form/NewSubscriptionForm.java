@@ -16,7 +16,6 @@ import com.mqttinsight.ui.component.model.PayloadFormatComboBoxModel;
 import com.mqttinsight.ui.component.renderer.TextableListRenderer;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.*;
-import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 import org.jdesktop.swingx.combobox.EnumComboBoxModel;
 
 import javax.swing.*;
@@ -91,7 +90,6 @@ public class NewSubscriptionForm extends JDialog {
                 }
             }
         });
-        AutoCompleteDecorator.decorate(topicComboBox);
 
         qosComboBox.setModel(new EnumComboBoxModel(MqttQos.class));
         qosComboBox.setSelectedItem(MqttQos.QOS_0);

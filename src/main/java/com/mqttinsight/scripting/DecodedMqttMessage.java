@@ -1,7 +1,6 @@
 package com.mqttinsight.scripting;
 
-import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.img.ColorUtil;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.mqtt.AbstractMqttMessage;
 import com.mqttinsight.mqtt.MessageType;
@@ -9,7 +8,6 @@ import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.Subscription;
 
 import java.awt.*;
-import java.util.Date;
 
 /**
  * @author ptma
@@ -20,67 +18,20 @@ public class DecodedMqttMessage extends AbstractMqttMessage implements MqttMessa
 
     private final MessageType messageType = MessageType.SCRIPT_DECODED;
 
-    private String topic;
-    private int qos;
-    private boolean retained;
     private byte[] payload;
+
     private String format;
 
-    private final Date messageTime;
+    private String color;
 
-    public DecodedMqttMessage() {
-        messageTime = new Date();
-    }
-
-    @Override
-    public String getTopic() {
-        return topic;
-    }
-
-    @Override
-    public byte[] payloadAsBytes() {
-        return payload;
-    }
-
-    public void setTopic(String topic) {
-        this.topic = topic;
-    }
-
-    @Override
-    public int getQos() {
-        return qos;
-    }
-
-    public void setQos(int qos) {
-        this.qos = qos;
-    }
-
-    @Override
-    public boolean isRetained() {
-        return retained;
-    }
-
-    @Override
-    public boolean isDuplicate() {
-        return false;
-    }
-
-    @Override
-    public String getTime() {
-        return DateUtil.format(messageTime, DatePattern.NORM_DATETIME_MS_FORMAT);
+    public DecodedMqttMessage(String topic, byte[] payload, int qos, boolean retained, boolean duplicate) {
+        super(topic, payload, qos, retained, duplicate);
+        this.payload = payload;
     }
 
     @Override
     public Color getColor() {
-        return subscription.getColor();
-    }
-
-    public void setRetained(boolean retained) {
-        this.retained = retained;
-    }
-
-    public void setPayload(byte[] payload) {
-        this.payload = payload;
+        return color != null ? ColorUtil.hexToColor(color) : subscription.getColor();
     }
 
     @Override
@@ -104,13 +55,27 @@ public class DecodedMqttMessage extends AbstractMqttMessage implements MqttMessa
             );
     }
 
+    @Override
+    public byte[] payloadAsBytes() {
+        return this.payload;
+    }
+
+    public void setPayload(byte[] payload) {
+        this.payload = payload;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
     public static DecodedMqttMessage copyFrom(SimpleMqttMessage message) {
-        DecodedMqttMessage m = new DecodedMqttMessage();
-        m.setTopic(message.getTopic());
-        m.setPayload(message.getPayload());
-        m.setQos(message.getQos());
-        m.setRetained(message.isRetained());
-        return m;
+        return new DecodedMqttMessage(
+            message.getTopic(),
+            message.getPayload(),
+            message.getQos(),
+            message.isRetained(),
+            message.isDuplicate()
+        );
     }
 
 }

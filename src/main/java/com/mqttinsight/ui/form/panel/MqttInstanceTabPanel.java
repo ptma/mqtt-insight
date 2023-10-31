@@ -305,7 +305,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             SwingUtilities.invokeLater(() -> {
                 scriptLoader.decode(receivedMessage, decodedMessage -> {
                     if (decodedMessage != null) {
-                        messageReceived(decodedMessage);
+                        getEventListeners().forEach(l -> l.onMessage(decodedMessage));
                     }
                 });
             });
@@ -366,6 +366,16 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         favoriteMenu.removeAll();
         List<FavoriteSubscription> favoriteSubscriptions = getProperties().getFavoriteSubscriptions();
         if (favoriteSubscriptions != null && !favoriteSubscriptions.isEmpty()) {
+            if (favoriteSubscriptions.size() > 1) {
+                favoriteMenu.add(LangUtil.getString("SubscribeAll"))
+                    .addActionListener(e -> {
+                        favoriteSubscriptions.forEach(favorite -> {
+                            Subscription subscription = new Subscription(this, favorite.getTopic(), favorite.getQos(), favorite.getPayloadFormat(), Utils.generateRandomColor());
+                            subscriptionListPanel.doSubscribe(subscription);
+                        });
+                    });
+                favoriteMenu.addSeparator();
+            }
             favoriteSubscriptions.sort(Comparator.comparing(FavoriteSubscription::getTopic));
             favoriteSubscriptions.forEach(favorite -> {
                 favoriteMenu.add(favorite.getTopic())

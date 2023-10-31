@@ -11,6 +11,7 @@ import com.mqttinsight.scripting.modules.Logger;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * @author ptma
@@ -36,7 +37,7 @@ public class ScriptEngine {
         console.register(nodeRuntime.getGlobalObject());
     }
 
-    public void execute(String scriptPath, String scriptContent, Map<String, Object> param, ResultListener resultListener) {
+    public void execute(String scriptPath, String scriptContent, Map<String, Object> param, Consumer<ScriptResult> resultConsumer) {
         try {
             for (Map.Entry<String, Object> entry : param.entrySet()) {
                 nodeRuntime.getGlobalObject().set(entry.getKey(), entry.getValue());
@@ -44,8 +45,8 @@ public class ScriptEngine {
             String warpedScript = String.format("(function(){\n%s\n})();", scriptContent);
             IV8Executor executor = nodeRuntime.getExecutor(warpedScript).setResourceName(scriptPath);
             executor.executeVoid();
-            if (resultListener != null) {
-                resultListener.onResult(ScriptResult.success());
+            if (resultConsumer != null) {
+                resultConsumer.accept(ScriptResult.success());
             }
 
             while (!closing) {
@@ -57,8 +58,8 @@ public class ScriptEngine {
             nodeRuntime.close(true);
             javetEngine.close();
         } catch (JavetException e) {
-            if (resultListener != null) {
-                resultListener.onResult(ScriptResult.error(e));
+            if (resultConsumer != null) {
+                resultConsumer.accept(ScriptResult.error(e));
             }
         }
     }

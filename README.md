@@ -2,7 +2,7 @@
 --
 ![JDK](https://img.shields.io/badge/JDK-17-blue.svg)
 ![Apache 2.0](https://img.shields.io/badge/Apache-2.0-blue.svg)
-![Release](https://img.shields.io/badge/Release-1.0.1-blue.svg)
+![Release](https://img.shields.io/badge/Release-1.0.2-blue.svg)
 
 MqttInsight is a swing based MQTT gui client.
 

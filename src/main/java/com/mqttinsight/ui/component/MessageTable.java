@@ -9,6 +9,7 @@ import com.mqttinsight.ui.component.renderer.DialogueViewRendererProvider;
 import com.mqttinsight.ui.component.renderer.TableViewRendererProvider;
 import com.mqttinsight.ui.event.InstanceEventListener;
 import com.mqttinsight.ui.form.panel.MqttInstance;
+import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -104,12 +105,15 @@ public class MessageTable extends JXTable {
         menuCopy = Utils.UI.createMenuItem(LangUtil.getString("Copy&Payload"), (e) -> copyPayload());
         popupMenu.add(menuCopy);
         menuDelete = Utils.UI.createMenuItem(LangUtil.getString("&Delete"), (e) -> deleteSelectedRow());
+        menuDelete.setIcon(Icons.REMOVE);
         popupMenu.add(menuDelete);
         popupMenu.add(new JSeparator());
 
         JMenuItem menuClear = Utils.UI.createMenuItem(LangUtil.getString("ClearAllMessages"), (e) -> mqttInstance.getEventListeners().forEach(InstanceEventListener::clearAllMessages));
+        menuClear.setIcon(Icons.CLEAR);
         popupMenu.add(menuClear);
         JMenuItem menuExport = Utils.UI.createMenuItem(LangUtil.getString("ExportAllMessages"), (e) -> mqttInstance.getEventListeners().forEach(InstanceEventListener::exportAllMessages));
+        menuExport.setIcon(Icons.EXPORT);
         popupMenu.add(menuExport);
 
         this.addMouseListener(new MouseAdapter() {
@@ -207,7 +211,7 @@ public class MessageTable extends JXTable {
         TableColumnExt colQos = this.getColumnExt(3);
         colQos.setWidth(45);
         colQos.setPreferredWidth(45);
-        colQos.setMinWidth(45);
+        colQos.setMinWidth(20);
         colQos.setMaxWidth(50);
         colQos.putClientProperty("columnIndex", MessageTableModel.COLUMN_QOS);
 
@@ -215,9 +219,8 @@ public class MessageTable extends JXTable {
         TableColumnExt colRetained = this.getColumnExt(4);
         colRetained.setWidth(65);
         colRetained.setPreferredWidth(65);
-        colRetained.setMinWidth(65);
+        colRetained.setMinWidth(20);
         colRetained.setMaxWidth(65);
-        colRetained.setResizable(false);
         colRetained.setCellRenderer(tableRenderer);
         colRetained.putClientProperty("columnIndex", MessageTableModel.COLUMN_RETAINED);
 
@@ -225,7 +228,7 @@ public class MessageTable extends JXTable {
         TableColumnExt colTime = this.getColumnExt(5);
         colTime.setWidth(160);
         colTime.setPreferredWidth(160);
-        colTime.setMinWidth(160);
+        colTime.setMinWidth(100);
         colTime.setMaxWidth(160);
         colTime.putClientProperty("columnIndex", MessageTableModel.COLUMN_TIME);
 

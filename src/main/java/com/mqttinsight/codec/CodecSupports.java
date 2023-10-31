@@ -36,6 +36,9 @@ public class CodecSupports {
     }
 
     public CodecSupport getByName(String name) {
+        if (name == null) {
+            return plainCodec;
+        }
         return supports.getOrDefault(name.toLowerCase(), plainCodec);
     }
 

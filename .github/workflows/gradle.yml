@@ -1,113 +1,113 @@
 name: Java CI with Gradle
 
 on:
-  push:
-    tags:
-      - '*'
+    push:
+        tags:
+            - 'V*'
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  build-on-linux:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew packageForLinux
-    - name: Upload binaries to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.REPO_TOKEN }}
-        file: ./build/MqttInsight*
-        tag: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        overwrite: true
-        file_glob: true
-        body: ""
-        
-  build-on-mac:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew packageForMac
-    - name: Upload binaries to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.REPO_TOKEN }}
-        file: ./build/*.dmg
-        tag: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        overwrite: true
-        file_glob: true
-        body: ""
-        
-  build-on-mac-m1:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew packageForMac_M1
-    - id: set_var
-      run: |
-        content=`cat ./assets/version.json`
-        echo "::set-output name=versionJson::$content"
-    - name: Upload binaries to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.REPO_TOKEN }}
-        file: ./build/MqttInsight_${{fromJson(steps.set_var.outputs.versionJson).version}}.dmg
-        asset_name: MqttInsight_${{fromJson(steps.set_var.outputs.versionJson).version}}_M1.dmg
-        tag: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        overwrite: true
-        file_glob: false
-        body: ""     
-        
-  build-on-windows:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
-    - name: Build with Gradle
-      run: ./gradlew packageForWindows
-    - name: Upload binaries to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.REPO_TOKEN }}
-        file: ./build/*.zip
-        tag: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        overwrite: true
-        file_glob: true
-        body: ""
+    build-on-linux:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v3
+            -   name: set up JDK 17
+                uses: actions/setup-java@v3
+                with:
+                    java-version: '17'
+                    distribution: 'temurin'
+                    cache: gradle
+            -   name: Grant execute permission for gradlew
+                run: chmod +x gradlew
+            -   name: Build with Gradle
+                run: ./gradlew packageForLinux
+            -   name: Upload binaries to release
+                uses: svenstaro/upload-release-action@v2
+                with:
+                    repo_token: ${{ secrets.REPO_TOKEN }}
+                    file: ./build/MqttInsight*
+                    tag: ${{ github.ref }}
+                    release_name: ${{ github.ref }}
+                    overwrite: true
+                    file_glob: true
+                    body: ""
+
+    build-on-mac:
+        runs-on: macos-latest
+        steps:
+            -   uses: actions/checkout@v3
+            -   name: set up JDK 17
+                uses: actions/setup-java@v3
+                with:
+                    java-version: '17'
+                    distribution: 'temurin'
+                    cache: gradle
+            -   name: Grant execute permission for gradlew
+                run: chmod +x gradlew
+            -   name: Build with Gradle
+                run: ./gradlew packageForMac
+            -   name: Upload binaries to release
+                uses: svenstaro/upload-release-action@v2
+                with:
+                    repo_token: ${{ secrets.REPO_TOKEN }}
+                    file: ./build/*.dmg
+                    tag: ${{ github.ref }}
+                    release_name: ${{ github.ref }}
+                    overwrite: true
+                    file_glob: true
+                    body: ""
+
+    build-on-mac-m1:
+        runs-on: macos-latest
+        steps:
+            -   uses: actions/checkout@v3
+            -   name: set up JDK 17
+                uses: actions/setup-java@v3
+                with:
+                    java-version: '17'
+                    distribution: 'temurin'
+                    cache: gradle
+            -   name: Grant execute permission for gradlew
+                run: chmod +x gradlew
+            -   name: Build with Gradle
+                run: ./gradlew packageForMac_M1
+            -   id: set_var
+                run: |
+                    content=`cat ./src/main/resources/version.json`
+                    echo "::set-output name=versionJson::$content"
+            -   name: Upload binaries to release
+                uses: svenstaro/upload-release-action@v2
+                with:
+                    repo_token: ${{ secrets.REPO_TOKEN }}
+                    file: ./build/MqttInsight_${{fromJson(steps.set_var.outputs.versionJson).version}}.dmg
+                    asset_name: MqttInsight_${{fromJson(steps.set_var.outputs.versionJson).version}}_M1.dmg
+                    tag: ${{ github.ref }}
+                    release_name: ${{ github.ref }}
+                    overwrite: true
+                    file_glob: false
+                    body: ""
+
+    build-on-windows:
+        runs-on: windows-latest
+        steps:
+            -   uses: actions/checkout@v3
+            -   name: set up JDK 17
+                uses: actions/setup-java@v3
+                with:
+                    java-version: '17'
+                    distribution: 'temurin'
+                    cache: gradle
+            -   name: Build with Gradle
+                run: ./gradlew packageForWindows
+            -   name: Upload binaries to release
+                uses: svenstaro/upload-release-action@v2
+                with:
+                    repo_token: ${{ secrets.REPO_TOKEN }}
+                    file: ./build/*.zip
+                    tag: ${{ github.ref }}
+                    release_name: ${{ github.ref }}
+                    overwrite: true
+                    file_glob: true
+                    body: ""

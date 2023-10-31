@@ -11,6 +11,7 @@ import com.mqttinsight.util.TopicUtil;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -26,13 +27,14 @@ public class ScriptCodec {
     public ScriptCodec() {
     }
 
-    public void decode(ReceivedMqttMessage receivedMessage, DecoderCallback callback) {
+    public void decode(ReceivedMqttMessage receivedMessage, Consumer<MqttMessage> decodedConsumer) {
         if (!decodersGroupMap.isEmpty()) {
             SimpleMqttMessage mqttMessage = new SimpleMqttMessage(
                 receivedMessage.getTopic(),
                 receivedMessage.payloadAsBytes(),
                 receivedMessage.getQos(),
-                receivedMessage.isRetained()
+                receivedMessage.isRetained(),
+                receivedMessage.isDuplicate()
             );
             DecoderContext context = new DecoderContext(receivedMessage.getSubscription(), mqttMessage);
             decodersGroupMap.values().forEach(decodersMap -> {
@@ -41,7 +43,7 @@ public class ScriptCodec {
                         if ("*".equals(key) || TopicUtil.match(key, context.getMessage().getTopic())) {
                             MqttMessage returnMessage = convert(context, decoder.apply(context.getMessage()));
                             if (returnMessage != null) {
-                                callback.onDecoderResult(returnMessage);
+                                decodedConsumer.accept(returnMessage);
                             }
                         }
                     } catch (Exception e) {
@@ -65,8 +67,8 @@ public class ScriptCodec {
      * <pre>
      * <code>
      * // Javascript
-     * codec.decode(function (context) {
-     *   var message = context.getMessage();
+     * codec.decode(function (message) {
+     *   // do something
      *   return {
      *     payload: "...",
      *     format: "json"
@@ -84,8 +86,8 @@ public class ScriptCodec {
      * <pre>
      * <code>
      * // Javascript
-     * codec.decode("/test/#", function (context) {
-     *   var message = context.getMessage();
+     * codec.decode("/test/#", function (message) {
+     *   // do something
      *   return {
      *     payload: "...",
      *     format: "json"
@@ -113,14 +115,16 @@ public class ScriptCodec {
     }
 
     private MqttMessage convert(DecoderContext context, Object data) {
+        if (data == null) {
+            return null;
+        }
+        DecodedMqttMessage msg = DecodedMqttMessage.copyFrom(context.getMessage());
         if (data instanceof String) {
-            DecodedMqttMessage msg = DecodedMqttMessage.copyFrom(context.getMessage());
             msg.setSubscription(context.getSubscription());
             msg.setPayload(((String) data).getBytes());
-            return msg;
+
         } else if (data instanceof Map) {
             Map<String, Object> map = (Map<String, Object>) data;
-            DecodedMqttMessage msg = DecodedMqttMessage.copyFrom(context.getMessage());
             msg.setSubscription(context.getSubscription());
             if (map.containsKey("payload")) {
                 Object payload = map.get("payload");
@@ -134,10 +138,17 @@ public class ScriptCodec {
             if (map.containsKey("format")) {
                 msg.setFormat((String) map.get("format"));
             }
-            return msg;
+            if (map.containsKey("color")) {
+                String color = (String) map.get("color");
+                if (color.matches("^#[0-9A-F]{6}$")) {
+                    msg.setColor(color);
+                }
+            }
         } else {
-            return null;
+            msg.setPayload(JSONUtil.toJsonStr(convertToJavaObject(data)).getBytes());
+            msg.setFormat(CodecSupport.JSON);
         }
+        return msg;
     }
 
     private Object convertToJavaObject(Object scriptObj) {

@@ -32,7 +32,7 @@ public class Subscription {
     /**
      * 显示的颜色
      */
-    private final Color color;
+    private Color color;
 
     /**
      * 收到的消息数量
@@ -77,5 +77,9 @@ public class Subscription {
 
     public void resetMessageCount() {
         this.messageCount.set(0);
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
     }
 }

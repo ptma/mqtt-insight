@@ -1,6 +1,7 @@
 package com.mqttinsight.ui.form.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.exception.VerificationException;
@@ -12,7 +13,6 @@ import com.mqttinsight.ui.component.renderer.TextableListRenderer;
 import com.mqttinsight.util.*;
 import net.miginfocom.swing.MigLayout;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaDefaultInputMap;
-import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
 import javax.swing.*;
 import java.awt.*;
@@ -69,7 +69,6 @@ public class MessagePublishPanel extends JPanel {
         loadPublishedTopics();
         topicComboBox.setSelectedItem("");
         topicComboBox.setRenderer(new TextableListRenderer());
-        AutoCompleteDecorator.decorate(topicComboBox);
         topPanel.add(topicComboBox, "growx");
 
         qosLabel = new JLabel("QoS");
@@ -89,6 +88,13 @@ public class MessagePublishPanel extends JPanel {
         formatComboBox = new JComboBox<>();
         formatComboBox.setModel(new PayloadFormatComboBoxModel(false));
         formatComboBox.setSelectedItem(mqttInstance.getPayloadFormat());
+        formatComboBox.addActionListener(e -> {
+            if ("comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
+                String format = (String) formatComboBox.getSelectedItem();
+                CodecSupport codec = CodecSupports.instance().getByName(format);
+                payloadEditor.setSyntax(codec.getSyntax());
+            }
+        });
         topPanel.add(formatComboBox, "");
 
         payloadEditor = new SyntaxTextEditor();
@@ -116,7 +122,7 @@ public class MessagePublishPanel extends JPanel {
             JComponent.WHEN_IN_FOCUSED_WINDOW
         );
     }
-    
+
     private void loadPublishedTopics() {
         List<String> publishedTopics = mqttInstance.getProperties().getPublishedTopics();
         if (publishedTopics != null) {
@@ -125,7 +131,7 @@ public class MessagePublishPanel extends JPanel {
             publishedTopics.forEach(topic -> topicComboBox.addItem(topic));
         }
     }
-    
+
     private void addPublishedTopic(String newTopic) {
         List<String> publishedTopics = mqttInstance.getProperties().getPublishedTopics();
         if (publishedTopics == null) {

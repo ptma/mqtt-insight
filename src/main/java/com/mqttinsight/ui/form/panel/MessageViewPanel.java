@@ -42,6 +42,7 @@ public class MessageViewPanel {
 
     private MessageTable messageTable;
     private int lastSelectedRow = -1;
+    private boolean autoScroll;
 
     public MessageViewPanel(final MqttInstance mqttInstance, MessageViewMode viewMode) {
         this.mqttInstance = mqttInstance;
@@ -70,6 +71,7 @@ public class MessageViewPanel {
             System.gc();
         }
         messageTable = new MessageTable(mqttInstance, messageTableModel);
+        messageTable.setAutoScroll(autoScroll);
         if (rowFilter != null) {
             messageTable.setRowFilter(rowFilter);
         }
@@ -144,6 +146,7 @@ public class MessageViewPanel {
     }
 
     private void toggleAutoScroll(boolean autoScroll) {
+        this.autoScroll = autoScroll;
         messageTable.setAutoScroll(autoScroll);
         if (messageTable.isAutoScroll()) {
             messageTable.goAndSelectRow(messageTable.getRowCount() - 1);
@@ -249,10 +252,12 @@ public class MessageViewPanel {
         ListSelectionModel lsm = (ListSelectionModel) e.getSource();
         if (!e.getValueIsAdjusting()) {
             int selectedRow = lsm.getMaxSelectionIndex();
-            if (selectedRow >= 0 && selectedRow != lastSelectedRow) {
-                lastSelectedRow = selectedRow;
-                final MqttMessage message = messageTableModel.get(messageTable.convertRowIndexToModel(selectedRow));
-                mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(message));
+            if (selectedRow >= 0) {
+                if (selectedRow != lastSelectedRow) {
+                    lastSelectedRow = selectedRow;
+                    final MqttMessage message = messageTableModel.get(messageTable.convertRowIndexToModel(selectedRow));
+                    mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(message));
+                }
             } else {
                 mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(null));
             }
