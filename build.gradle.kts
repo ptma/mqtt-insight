@@ -4,7 +4,6 @@ import groovy.lang.Closure
 import io.github.fvarrui.javapackager.gradle.PackagePluginExtension
 import io.github.fvarrui.javapackager.gradle.PackageTask
 import io.github.fvarrui.javapackager.model.*
-import io.github.fvarrui.javapackager.model.Platform
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.internal.os.OperatingSystem
 import java.nio.charset.Charset
@@ -27,7 +26,7 @@ buildscript {
 
 plugins.apply("io.github.fvarrui.javapackager.plugin")
 
-val appliactionVersion: String = "1.0.1"
+val appliactionVersion: String = "1.0.2"
 val applicationName: String = "MqttInsight"
 val organization: String = "ptma@163.com"
 val copyright: String = "copyright 2023 ptma@163.com"
