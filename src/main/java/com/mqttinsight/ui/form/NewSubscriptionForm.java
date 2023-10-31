@@ -73,7 +73,6 @@ public class NewSubscriptionForm extends JDialog {
     }
 
     private void initComponents() {
-        //new EditableComboboxKeyListener(topicComboBox);
         List<FavoriteSubscription> favoriteSubscriptions = mqttInstance.getProperties().getFavoriteSubscriptions();
         if (favoriteSubscriptions != null) {
             favoriteSubscriptions.sort(Comparator.comparing(FavoriteSubscription::getTopic));
