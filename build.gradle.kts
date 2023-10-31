@@ -3,7 +3,12 @@
 import groovy.lang.Closure
 import io.github.fvarrui.javapackager.gradle.PackagePluginExtension
 import io.github.fvarrui.javapackager.gradle.PackageTask
-import io.github.fvarrui.javapackager.model.*
+import io.github.fvarrui.javapackager.model.LinuxConfig
+import io.github.fvarrui.javapackager.model.MacConfig
+import io.github.fvarrui.javapackager.model.Platform
+import io.github.fvarrui.javapackager.model.WindowsConfig
+import io.github.fvarrui.javapackager.model.HeaderType
+import io.github.fvarrui.javapackager.model.MacStartup
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.internal.os.OperatingSystem
 import java.nio.charset.Charset
