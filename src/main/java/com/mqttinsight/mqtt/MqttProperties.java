@@ -1,5 +1,6 @@
 package com.mqttinsight.mqtt;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
@@ -10,6 +11,7 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -65,7 +67,7 @@ public class MqttProperties implements Serializable, Cloneable {
     protected ReconnectionSettings reconnection = new ReconnectionSettings();
     protected List<String> searchHistory;
     protected List<FavoriteSubscription> favoriteSubscriptions;
-    protected List<String> publishedTopics;
+    protected List<PublishedItem> publishedHistory;
     protected Integer maxMessageStored = Const.MESSAGES_STORED_MAX_SIZE;
     protected String payloadFormat;
     protected boolean clearUnsubMessage = true;
@@ -127,8 +129,8 @@ public class MqttProperties implements Serializable, Cloneable {
 
     public boolean isFavorite(String topic) {
         if (favoriteSubscriptions != null) {
-            for (int i = 0; i < favoriteSubscriptions.size(); i++) {
-                if (favoriteSubscriptions.get(i).getTopic().equals(topic)) {
+            for (FavoriteSubscription favoriteSubscription : favoriteSubscriptions) {
+                if (favoriteSubscription.getTopic().equals(topic)) {
                     return true;
                 }
             }
@@ -159,6 +161,9 @@ public class MqttProperties implements Serializable, Cloneable {
     public MqttProperties clone() throws CloneNotSupportedException {
         MqttProperties clone = (MqttProperties) super.clone();
         clone.id = IdUtil.fastUUID();
+        clone.setSearchHistory(null);
+        clone.setPublishedHistory(null);
+        clone.setFavoriteSubscriptions(null);
         return clone;
     }
 }
