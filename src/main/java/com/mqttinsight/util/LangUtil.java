@@ -33,6 +33,15 @@ public class LangUtil {
         }
     }
 
+    public static String getString(String key, String defaultValue) {
+        ResourceBundle bundle = getBundle();
+        if (bundle.containsKey(key)) {
+            return bundle.getString(key);
+        } else {
+            return defaultValue;
+        }
+    }
+
     public static String format(String key, Object... args) {
         ResourceBundle bundle = getBundle();
         if (bundle.containsKey(key)) {

@@ -80,6 +80,10 @@ public final class Configuration implements Serializable {
         return userPath;
     }
 
+    public String getTempPath() {
+        return userPath + File.separator + "temp";
+    }
+
     public void appendRecentConnection(String id) {
         recentConnections.remove(id);
         recentConnections.add(0, id);

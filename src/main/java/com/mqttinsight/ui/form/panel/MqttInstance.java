@@ -18,7 +18,7 @@ public interface MqttInstance {
 
     void connect();
 
-    void disconnect();
+    void disconnect(boolean withFail);
 
     boolean isConnected();
 

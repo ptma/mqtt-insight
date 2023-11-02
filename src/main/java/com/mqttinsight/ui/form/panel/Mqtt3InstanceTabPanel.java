@@ -5,6 +5,7 @@ import cn.hutool.core.util.ArrayUtil;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.*;
 import com.mqttinsight.mqtt.options.Mqtt3Options;
+import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +13,6 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.function.Consumer;
 
@@ -37,7 +37,7 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
     @Override
     @SneakyThrows
     public void initMqttClient() {
-        MqttClientPersistence persistence = new MqttDefaultFilePersistence(Configuration.instance().getUserPath() + File.separator + "temp");
+        MqttClientPersistence persistence = new MqttDefaultFilePersistence(Configuration.instance().getTempPath());
         mqttClient = new MqttAsyncClient(
             properties.completeServerURI(),
             properties.getClientId(),
@@ -53,15 +53,15 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
                 if (mqttClient == null) {
                     initMqttClient();
                 }
-                if (mqttClient.isConnected()) {
-                    onConnectionChanged(ConnectionStatus.DISCONNECTING);
-                    mqttClient.disconnect();
-                }
                 onConnectionChanged(ConnectionStatus.CONNECTING);
-                mqttClient.connect(Mqtt3Options.fromProperties(properties),
-                    Collections.EMPTY_MAP,
-                    new Mqtt3ActionHandler()
-                );
+                if (mqttClient.isConnected()) {
+                    mqttClient.reconnect();
+                } else {
+                    mqttClient.connect(Mqtt3Options.fromProperties(properties),
+                        Collections.EMPTY_MAP,
+                        new Mqtt3ActionHandler()
+                    );
+                }
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }
@@ -70,8 +70,16 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
 
     @Override
     @SneakyThrows
-    public void disconnect() {
-        if (mqttClient.isConnected()) {
+    public void disconnect(boolean withFail) {
+        if (withFail) {
+            ThreadUtil.execute(() -> {
+                try {
+                    mqttClient.disconnectForcibly();
+                } catch (Exception e) {
+                    log.warn(e.getMessage(), e);
+                }
+            });
+        } else {
             onConnectionChanged(ConnectionStatus.DISCONNECTING);
             mqttClient.disconnect();
             onConnectionChanged(ConnectionStatus.DISCONNECTED);
@@ -129,7 +137,6 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
             mqttClient.unsubscribe(subscription.getTopic(),
                 null,
                 new IMqttActionListener() {
-
                     @Override
                     public void onSuccess(IMqttToken token) {
                         unsubscribed.accept(Boolean.TRUE);
@@ -204,7 +211,7 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
             MqttException ex = (MqttException) cause;
             String causeMessage = getCauseMessage(ex);
             Mqtt3InstanceTabPanel.this.onConnectionFailed(ex.getReasonCode(), causeMessage);
-            log.warn("Connect to {} failed: {}, code: {}.", properties.completeServerURI(), causeMessage, ex.getReasonCode());
+            log.warn("Connect to {} failed: {}, errorCode: {}. {}", properties.completeServerURI(), causeMessage, ex.getReasonCode(), causeMessage);
         }
     }
 
@@ -215,7 +222,7 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
             MqttException ex = (MqttException) cause;
             String causeMessage = getCauseMessage(ex);
             Mqtt3InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.FAILED, ex.getReasonCode(), causeMessage);
-            log.warn("Disconnect with error from {}, code: {}.", properties.completeServerURI(), ex.getReasonCode(), ex);
+            log.warn("Disconnect with error from {}, errorCode: {}. {}", properties.completeServerURI(), ex.getReasonCode(), causeMessage);
         }
 
         @Override
@@ -230,10 +237,6 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
     }
 
     private String getCauseMessage(MqttException exception) {
-        String causeMessage = exception.getMessage();
-        if (exception.getCause() != null) {
-            causeMessage = exception.getCause().getMessage();
-        }
-        return causeMessage;
+        return LangUtil.getString("MqttReasonCode_" + exception.getReasonCode(), exception.getMessage());
     }
 }

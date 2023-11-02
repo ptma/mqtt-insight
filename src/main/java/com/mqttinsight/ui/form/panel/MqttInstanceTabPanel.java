@@ -203,7 +203,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     public void close() {
         if (isConnected()) {
             onConnectionChanged(ConnectionStatus.DISCONNECTING);
-            disconnect();
+            disconnect(false);
         }
     }
 
@@ -228,7 +228,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     protected void connectButtonAction() {
         if (connectionStatus.equals(ConnectionStatus.CONNECTED)) {
-            disconnect();
+            disconnect(false);
         } else if (connectionStatus.equals(ConnectionStatus.DISCONNECTED) || connectionStatus.equals(ConnectionStatus.FAILED)) {
             connect();
         }
@@ -245,6 +245,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                 } else {
                     statusLabel.setToolTipText(String.format("Code: %d, %s", reasonCode, lastCauseMessage));
                 }
+                this.disconnect(true);
             } else {
                 this.reasonCode = 0;
                 statusLabel.setIcon(status.getIcon());
@@ -303,11 +304,15 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                 return;
             }
             SwingUtilities.invokeLater(() -> {
-                scriptLoader.decode(receivedMessage, decodedMessage -> {
-                    if (decodedMessage != null) {
-                        getEventListeners().forEach(l -> l.onMessage(decodedMessage));
-                    }
-                });
+                try {
+                    scriptLoader.decode(receivedMessage, decodedMessage -> {
+                        if (decodedMessage != null) {
+                            getEventListeners().forEach(l -> l.onMessage(decodedMessage));
+                        }
+                    });
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                }
             });
         }
     }
