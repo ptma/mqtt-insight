@@ -1,6 +1,7 @@
 @file:Suppress("UNCHECKED_CAST")
 
 import groovy.lang.Closure
+import groovy.json.JsonSlurper
 import io.github.fvarrui.javapackager.gradle.PackagePluginExtension
 import io.github.fvarrui.javapackager.gradle.PackageTask
 import io.github.fvarrui.javapackager.model.LinuxConfig
@@ -12,6 +13,7 @@ import io.github.fvarrui.javapackager.model.MacStartup
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.internal.os.OperatingSystem
 import java.nio.charset.Charset
+import java.io.File
 
 plugins {
     `java-library`
@@ -31,12 +33,13 @@ buildscript {
 
 plugins.apply("io.github.fvarrui.javapackager.plugin")
 
-val appliactionVersion: String = "1.0.2"
+val versionConfig = "${rootProject.projectDir.path}/src/main/resources/version.json"
+val versionJson = JsonSlurper().parse(File(versionConfig)) as Map<String, String>
+val appliactionVersion = versionJson.get("version")
 val applicationName: String = "MqttInsight"
 val organization: String = "ptma@163.com"
-val copyright: String = "copyright 2023 ptma@163.com"
+val copyright: String = "Copyright 2023 ptma@163.com"
 val supportUrl: String = "https://github.com/ptma/mqtt-insight"
-
 
 val flatlafVersion = "3.2.1"
 val fatJar = false
@@ -117,19 +120,14 @@ tasks.compileJava {
     options.isDeprecation = false
 }
 
-tasks.processResources {
-    updateVersion()
-}
-
-
 tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     manifest {
         attributes("Main-Class" to "com.mqttinsight.MqttInsightApplication")
         attributes("Implementation-Vendor" to "https://github.com/ptma/mqtt-insight")
-        attributes("Implementation-Copyright" to "MqttInsight")
-        attributes("Implementation-Version" to project.version)
+        attributes("Implementation-Copyright" to copyright)
+        attributes("Implementation-Version" to appliactionVersion)
         attributes("Multi-Release" to "true")
     }
 
@@ -264,8 +262,3 @@ fun getIconFile(fileName: String): File {
     return File(projectDir.absolutePath + File.separator + "assets" + File.separator + fileName)
 }
 
-fun updateVersion() {
-    val jsonFile =
-        File(projectDir.absolutePath + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "version.json")
-    jsonFile.writeText("{\"version\": \"${appliactionVersion}\"}", Charset.forName("utf-8"))
-}
