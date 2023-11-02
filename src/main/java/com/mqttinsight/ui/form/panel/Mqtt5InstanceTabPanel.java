@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
 
     protected MqttAsyncClient mqttClient;
+    private MqttClientPersistence persistence;
 
     public Mqtt5InstanceTabPanel(MqttProperties properties) {
         super(properties);
@@ -41,7 +42,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
     @Override
     @SneakyThrows
     public void initMqttClient() {
-        MqttClientPersistence persistence = new MqttDefaultFilePersistence(Configuration.instance().getTempPath());
+        persistence = new MqttDefaultFilePersistence(Configuration.instance().getTempPath());
         mqttClient = new MqttAsyncClient(
             properties.completeServerURI(),
             properties.getClientId(),
@@ -96,6 +97,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
         super.close();
         try {
             mqttClient.close(true);
+            persistence.close();
         } catch (Exception ignore) {
 
         }

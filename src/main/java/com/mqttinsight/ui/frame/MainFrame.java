@@ -130,6 +130,7 @@ public class MainFrame extends JXFrame {
     public void close() {
         Configuration.instance().save();
         MainWindowForm.getInstance().close();
+        Configuration.instance().clearTempPath();
         this.dispose();
     }
 
