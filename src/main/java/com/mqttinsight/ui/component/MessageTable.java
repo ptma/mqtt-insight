@@ -228,7 +228,7 @@ public class MessageTable extends JXTable {
         TableColumnExt colTime = this.getColumnExt(5);
         colTime.setWidth(160);
         colTime.setPreferredWidth(160);
-        colTime.setMinWidth(100);
+        colTime.setMinWidth(50);
         colTime.setMaxWidth(160);
         colTime.putClientProperty("columnIndex", MessageTableModel.COLUMN_TIME);
 

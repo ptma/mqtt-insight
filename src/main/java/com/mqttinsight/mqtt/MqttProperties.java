@@ -1,6 +1,5 @@
 package com.mqttinsight.mqtt;
 
-import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
@@ -11,7 +10,6 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -71,6 +69,7 @@ public class MqttProperties implements Serializable, Cloneable {
     protected Integer maxMessageStored = Const.MESSAGES_STORED_MAX_SIZE;
     protected String payloadFormat;
     protected boolean clearUnsubMessage = true;
+    protected boolean prettyDuringPreview = true;
 
     /* ============== Getter and Setter ============== */
     public String getUsername() {

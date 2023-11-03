@@ -4,6 +4,7 @@ import cn.hutool.core.thread.ThreadUtil;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
+import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.ui.component.SingleLineBorder;
 import com.mqttinsight.ui.component.SyntaxTextEditor;
@@ -120,7 +121,7 @@ public class MessagePreviewPanel extends JPanel {
         topPanel.add(formatComboBox, "");
 
         prettyChechbox = new JCheckBox(LangUtil.getString("Pretty"));
-        prettyChechbox.setSelected(true);
+        prettyChechbox.setSelected(mqttInstance.getProperties().isPrettyDuringPreview());
         prettyChechbox.addActionListener(e -> this.updatePreviewMessage());
         topPanel.add(prettyChechbox, "");
 
@@ -173,9 +174,9 @@ public class MessagePreviewPanel extends JPanel {
     }
 
     private void updatePreviewMessage() {
+        boolean pretty = prettyChechbox.isSelected();
         if (previewedMessage != null) {
             String format = (String) formatComboBox.getSelectedItem();
-            boolean pretty = prettyChechbox.isSelected();
             if (CodecSupport.DEFAULT.equals(format)) {
                 payloadEditor.setText(previewedMessage.payloadAsString(pretty));
                 CodecSupport codec = CodecSupports.instance().getByName(previewedMessage.getPayloadFormat());
@@ -186,6 +187,8 @@ public class MessagePreviewPanel extends JPanel {
                 payloadEditor.setSyntax(codec.getSyntax());
             }
         }
+        mqttInstance.getProperties().setPrettyDuringPreview(pretty);
+        Configuration.instance().changed();
     }
 
     private void previewMessage(final MqttMessage message) {
