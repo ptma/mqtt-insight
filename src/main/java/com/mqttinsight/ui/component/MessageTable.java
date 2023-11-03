@@ -181,7 +181,6 @@ public class MessageTable extends JXTable {
     }
 
     private void initTableViewColumns() {
-        TableColumnExt column;
         // Icon column
         TableColumnExt colDirection = this.getColumnExt(0);
         colDirection.setWidth(25);
