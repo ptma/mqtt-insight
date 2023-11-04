@@ -157,7 +157,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
                 parent.getProperties().addFavorite(subscription.getTopic(), subscription.getQos(), subscription.getSelfPayloadFormat());
                 favoriteButton.setIcon(Icons.FAVORITE_FILL);
             }
-            parent.getMqttInstance().getEventListeners().forEach(InstanceEventListener::favoriteChanged);
+            parent.getMqttInstance().applyEvent(InstanceEventListener::favoriteChanged);
             Configuration.instance().changed();
         });
 

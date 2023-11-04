@@ -29,6 +29,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 
 @Slf4j
 public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstance {
@@ -218,8 +219,8 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     @Override
-    public List<InstanceEventListener> getEventListeners() {
-        return eventListeners;
+    public void applyEvent(Consumer<InstanceEventListener> action) {
+        eventListeners.forEach(action);
     }
 
     protected int getReasonCode() {
@@ -297,7 +298,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     @Override
     public void messageReceived(MqttMessage message) {
-        getEventListeners().forEach(l -> l.onMessage(message));
+        applyEvent(l -> l.onMessage(message));
         if (scriptLoader != null && message instanceof ReceivedMqttMessage) {
             ReceivedMqttMessage receivedMessage = (ReceivedMqttMessage) message;
             if (receivedMessage.getSubscription().isMuted()) {
@@ -307,7 +308,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                 try {
                     scriptLoader.decode(receivedMessage, decodedMessage -> {
                         if (decodedMessage != null) {
-                            getEventListeners().forEach(l -> l.onMessage(decodedMessage));
+                            applyEvent(l -> l.onMessage(decodedMessage));
                         }
                     });
                 } catch (Exception e) {
@@ -348,7 +349,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         SwingUtilities.invokeLater(() -> {
             try {
                 if (doPublishMessage(message)) {
-                    getEventListeners().forEach(l -> l.onMessage(message));
+                    applyEvent(l -> l.onMessage(message));
                 }
             } catch (RuntimeException e) {
                 Utils.Toast.warn(e.getMessage());
@@ -426,7 +427,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             scriptLoader.loadScript(scriptFile, (result) -> {
                 if (result.isSuccess()) {
                     if (!isReload) {
-                        getEventListeners().forEach(l -> l.scriptLoaded(scriptFile));
+                        applyEvent(l -> l.scriptLoaded(scriptFile));
                     }
                     String message = LangUtil.format("ScriptSuccess", scriptFile.getAbsolutePath());
                     log.debug(message);

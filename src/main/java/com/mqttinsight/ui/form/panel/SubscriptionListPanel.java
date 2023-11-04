@@ -178,13 +178,13 @@ public class SubscriptionListPanel {
     }
 
     public void clearMessages(Subscription subscription) {
-        mqttInstance.getEventListeners().forEach(eventListener -> {
+        mqttInstance.applyEvent(eventListener -> {
             eventListener.clearMessages(subscription);
         });
     }
 
     public void exportMessages(Subscription subscription) {
-        mqttInstance.getEventListeners().forEach(eventListener -> {
+        mqttInstance.applyEvent(eventListener -> {
             eventListener.exportMessages(subscription);
         });
     }

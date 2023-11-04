@@ -82,7 +82,7 @@ public class MessageViewPanel {
             @Override
             public void mouseReleased(MouseEvent e) {
                 if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
-                    mqttInstance.getEventListeners().forEach(InstanceEventListener::requestFocusPreview);
+                    mqttInstance.applyEvent(InstanceEventListener::requestFocusPreview);
                 }
             }
         });
@@ -91,7 +91,7 @@ public class MessageViewPanel {
         if (lastSelectedRow >= 0) {
             messageTable.goAndSelectRow(lastSelectedRow);
         }
-        mqttInstance.getEventListeners().forEach(InstanceEventListener::viewInitializeCompleted);
+        mqttInstance.applyEvent(InstanceEventListener::viewInitializeCompleted);
     }
 
     private void initEventListeners() {
@@ -291,10 +291,10 @@ public class MessageViewPanel {
                 if (selectedRow != lastSelectedRow) {
                     lastSelectedRow = selectedRow;
                     final MqttMessage message = messageTableModel.get(messageTable.convertRowIndexToModel(selectedRow));
-                    mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(message));
+                    mqttInstance.applyEvent(l -> l.tableSelectionChanged(message));
                 }
             } else {
-                mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(null));
+                mqttInstance.applyEvent(l -> l.tableSelectionChanged(null));
             }
         }
     }
