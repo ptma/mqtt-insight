@@ -7,6 +7,7 @@
     </appender>
 
     <logger name="io.netty.util" level="ERROR"/>
+    <logger name="com.mqttinsight.scripting.modules.Logger" level="INFO"/>
 
     <root level="debug">
         <appender-ref ref="STDOUT"/>

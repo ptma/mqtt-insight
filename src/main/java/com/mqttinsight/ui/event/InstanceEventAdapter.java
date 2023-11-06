@@ -24,6 +24,10 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
     }
 
     @Override
+    public void onMessage(MqttMessage message, MqttMessage parent) {
+    }
+
+    @Override
     public void clearAllMessages() {
     }
 

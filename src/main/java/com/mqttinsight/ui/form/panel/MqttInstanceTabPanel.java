@@ -17,8 +17,9 @@ import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -30,8 +31,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-@Slf4j
 public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstance {
+
+    protected static final Logger log = LoggerFactory.getLogger(MqttInstanceTabPanel.class);
 
     private static final int PREVIEW_PANEL_MIN_HEIGHT = 105;
     private static final int PREVIEW_PANEL_MIN_WIDTH = 370;
@@ -307,7 +309,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                 try {
                     scriptLoader.decode(receivedMessage, decodedMessage -> {
                         if (decodedMessage != null) {
-                            getEventListeners().forEach(l -> l.onMessage(decodedMessage));
+                            getEventListeners().forEach(l -> l.onMessage(decodedMessage, message));
                         }
                     });
                 } catch (Exception e) {
@@ -429,7 +431,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                         getEventListeners().forEach(l -> l.scriptLoaded(scriptFile));
                     }
                     String message = LangUtil.format("ScriptSuccess", scriptFile.getAbsolutePath());
-                    log.debug(message);
+                    log.info(message);
                     Utils.Toast.success(message);
                 } else if (result.getException() != null) {
                     String error = LangUtil.format("ScriptError", scriptFile.getAbsolutePath());

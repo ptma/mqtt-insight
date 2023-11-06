@@ -115,6 +115,7 @@ public class SubscriptionListPanel {
                     unsubscribe(subscription, closable);
                 });
                 containerPanel.add(itemPanel);
+                containerPanel.revalidate();
                 subscriptionList.add(itemPanel);
             }
         });

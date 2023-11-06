@@ -7,7 +7,6 @@ import com.mqttinsight.mqtt.options.Mqtt5Options;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.mqttv5.client.*;
 import org.eclipse.paho.mqttv5.client.persist.MqttDefaultFilePersistence;
 import org.eclipse.paho.mqttv5.common.MqttException;
@@ -25,7 +24,6 @@ import java.util.function.Consumer;
  *
  * @author ptma
  */
-@Slf4j
 public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
 
     protected MqttAsyncClient mqttClient;

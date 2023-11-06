@@ -8,7 +8,6 @@ import com.mqttinsight.mqtt.options.Mqtt3Options;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
@@ -21,7 +20,6 @@ import java.util.function.Consumer;
  *
  * @author ptma
  */
-@Slf4j
 public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
 
     protected MqttAsyncClient mqttClient;

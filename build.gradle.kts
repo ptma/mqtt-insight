@@ -93,6 +93,7 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
     implementation("org.slf4j:slf4j-api:2.0.7")
+    implementation("org.slf4j:jul-to-slf4j:2.0.9")
     implementation("ch.qos.logback:logback-classic:1.4.8")
 
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")

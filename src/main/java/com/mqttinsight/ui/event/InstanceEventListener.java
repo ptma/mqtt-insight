@@ -14,6 +14,8 @@ public interface InstanceEventListener {
 
     void onMessage(MqttMessage message);
 
+    void onMessage(MqttMessage message, MqttMessage parent);
+
     void clearAllMessages();
 
     void clearMessages(Subscription subscription);

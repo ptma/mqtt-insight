@@ -108,7 +108,12 @@ public class MessageViewPanel {
 
             @Override
             public void onMessage(MqttMessage message) {
-                MessageViewPanel.this.messageReceived(message);
+                MessageViewPanel.this.messageReceived(message, null);
+            }
+
+            @Override
+            public void onMessage(MqttMessage message, MqttMessage parent) {
+                MessageViewPanel.this.messageReceived(message, parent);
             }
 
             @Override
@@ -268,15 +273,24 @@ public class MessageViewPanel {
     /**
      * When received or published a message
      */
-    private void messageReceived(MqttMessage message) {
+    private void messageReceived(MqttMessage message, MqttMessage parent) {
         SwingUtilities.invokeLater(() -> {
             if (message instanceof ReceivedMqttMessage) {
-                ReceivedMqttMessage subscriptionMessage = (ReceivedMqttMessage) message;
-                if (subscriptionMessage.getSubscription().isMuted()) {
+                ReceivedMqttMessage receivedMessage = (ReceivedMqttMessage) message;
+                if (receivedMessage.getSubscription().isMuted()) {
                     return;
                 }
             }
-            messageTableModel.add(message);
+            if (parent != null) {
+                int parentIndex = messageTableModel.lastIndexOf(parent);
+                if (parentIndex >= 0) {
+                    messageTableModel.add(parentIndex + 1, message);
+                } else {
+                    messageTableModel.add(message);
+                }
+            } else {
+                messageTableModel.add(message);
+            }
             if (messageTable.isAutoScroll()) {
                 messageTable.goAndSelectRow(messageTable.getRowCount() - 1);
             }

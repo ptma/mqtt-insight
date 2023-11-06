@@ -140,6 +140,10 @@ public class MessageTable extends JXTable {
         }
     }
 
+    public int getModelRowCount() {
+        return tableModel.getRowCount();
+    }
+
     @Override
     protected void createDefaultRenderers() {
         super.createDefaultRenderers();

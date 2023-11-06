@@ -117,8 +117,29 @@ public class MessageTableModel extends AbstractTableModel {
             fireTableRowsDeleted(0, 0);
         }
         messages.add(message);
-        int index = messages.size() - 1;
-        fireTableRowsInserted(index, index);
+        int lastIndex = messages.size() - 1;
+        fireTableRowsInserted(lastIndex, lastIndex);
+    }
+
+    public void add(int index, MqttMessage message) {
+        int insertIndex = index;
+        while (messages.isMaximum()) {
+            messages.remove(0);
+            fireTableRowsDeleted(0, 0);
+            insertIndex--;
+        }
+        if (insertIndex >= 0) {
+            messages.add(index, message);
+            fireTableRowsInserted(index, index);
+        } else {
+            messages.add(message);
+            int lastIndex = messages.size() - 1;
+            fireTableRowsInserted(lastIndex, lastIndex);
+        }
+    }
+
+    public int lastIndexOf(MqttMessage message) {
+        return messages.lastIndexOf(message);
     }
 
     public void clear() {

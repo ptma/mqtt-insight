@@ -312,6 +312,11 @@ public class MessageToolbar extends JToolBar {
             }
 
             @Override
+            public void onMessage(MqttMessage message, MqttMessage parent) {
+                updateMessageNavigation();
+            }
+
+            @Override
             public void clearAllMessages() {
                 updateMessageNavigation();
             }
