@@ -126,13 +126,13 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
                     messageReceived(mqttMessage);
                 },
                 prop);
-            boolean successed = token.getException() == null;
-            if (successed) {
-                log.info("Subscribe topic successed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
+            boolean success = token.getException() == null;
+            if (success) {
+                log.info("Successfully subscribed topic. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
             } else {
                 log.warn("Subscribe topic failed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
             }
-            return successed;
+            return success;
         } catch (MqttException e) {
             String causeMessage = getCauseMessage(e);
             Utils.Toast.error(causeMessage);
@@ -148,7 +148,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
                 @Override
                 public void onSuccess(IMqttToken token) {
                     unsubscribed.accept(Boolean.TRUE);
-                    log.info("Unsubscribe topic successed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
+                    log.info("Successfully unsubscribed topic. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
                 }
 
                 @Override
@@ -201,13 +201,13 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
                 }
             );
             token.waitForCompletion();
-            boolean successed = token.getException() == null;
-            if (successed) {
-                log.info("Publish message successed. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained());
+            boolean success = token.getException() == null;
+            if (success) {
+                log.info("Successfully published message. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained());
             } else {
-                log.warn("Publish message failed. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained(), token.getException());
+                log.warn("Failed to publish message. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained(), token.getException());
             }
-            return successed;
+            return success;
         } catch (MqttException e) {
             String causeMessage = getCauseMessage(e);
             Utils.Toast.error(causeMessage);
@@ -220,7 +220,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
         @Override
         public void onSuccess(IMqttToken token) {
             onConnectionChanged(ConnectionStatus.CONNECTED);
-            log.info("Connect to {} successed.", properties.completeServerURI());
+            log.info("Successfully connected to {}.", properties.completeServerURI());
         }
 
         @Override
@@ -238,7 +238,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
             if (response.getReturnCode() == MqttReturnCode.RETURN_CODE_SUCCESS
                 || response.getReturnCode() == MqttReturnCode.RETURN_CODE_DISCONNECT_WITH_WILL_MESSAGE) {
                 Mqtt5InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.DISCONNECTED);
-                log.info("Disconnect to {} successed.", properties.completeServerURI());
+                log.info("Successfully disconnected from {}.", properties.completeServerURI());
             } else {
                 String causeMessage = getCauseMessage(response.getException());
                 Mqtt5InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.FAILED, response.getReturnCode(), causeMessage);
@@ -249,7 +249,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
         @Override
         public void mqttErrorOccurred(MqttException exception) {
             String causeMessage = getCauseMessage(exception);
-            log.warn("Mqtt error from {}, errorCode: {}. {}", properties.completeServerURI(), exception.getReasonCode(), causeMessage);
+            log.warn("Mqtt error occurred from {}, errorCode: {}. {}", properties.completeServerURI(), exception.getReasonCode(), causeMessage);
         }
 
         @Override
@@ -265,7 +265,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
         @Override
         public void connectComplete(boolean reconnect, String serverURI) {
             Mqtt5InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.CONNECTED);
-            log.info("Connect to {} successed.", serverURI);
+            log.info("Successfully connected to {}.", serverURI);
         }
 
         @Override

@@ -353,7 +353,7 @@ public class MessageToolbar extends JToolBar {
     }
 
     private void loadScript(ActionEvent e) {
-        mqttInstance.getEventListeners().forEach(InstanceEventListener::fireLoadScript);
+        mqttInstance.applyEvent(InstanceEventListener::fireLoadScript);
     }
 
     private void onScriptLoaded(final File scriptFile) {
@@ -365,7 +365,7 @@ public class MessageToolbar extends JToolBar {
                 if (filePath.equals(subMenu.getActionCommand())) {
                     int opt = Utils.Message.confirm(String.format(LangUtil.getString("ScriptReloadConfirm"), filePath));
                     if (JOptionPane.YES_OPTION == opt) {
-                        mqttInstance.getEventListeners().forEach(l -> l.fireScriptReload(scriptFile));
+                        mqttInstance.applyEvent(l -> l.fireScriptReload(scriptFile));
                     }
                     return;
                 }
@@ -404,10 +404,10 @@ public class MessageToolbar extends JToolBar {
 
             switch (choice) {
                 case 0:
-                    mqttInstance.getEventListeners().forEach(l -> l.fireScriptReload(scriptFile));
+                    mqttInstance.applyEvent(l -> l.fireScriptReload(scriptFile));
                     break;
                 case 1:
-                    mqttInstance.getEventListeners().forEach(l -> {
+                    mqttInstance.applyEvent(l -> {
                         l.fireScriptRemove(scriptFile);
                         scriptMenu.remove(menuItem);
                     });
@@ -535,7 +535,7 @@ public class MessageToolbar extends JToolBar {
         } else {
             viewMode = MessageViewMode.DIALOGUE;
         }
-        mqttInstance.getEventListeners().forEach(l -> l.onViewModeChanged(viewMode));
+        mqttInstance.applyEvent(l -> l.onViewModeChanged(viewMode));
     }
 
     private void updateMessageNavigation() {
@@ -565,7 +565,7 @@ public class MessageToolbar extends JToolBar {
     }
 
     private void toggleAutoScroll(ActionEvent e) {
-        mqttInstance.getEventListeners().forEach(l -> l.toggleAutoScroll(autoScrollButton.isSelected()));
+        mqttInstance.applyEvent(l -> l.toggleAutoScroll(autoScrollButton.isSelected()));
     }
 
     private void payloadFormatChanged(ActionEvent e) {
@@ -574,11 +574,11 @@ public class MessageToolbar extends JToolBar {
     }
 
     private void clearAllMessages(ActionEvent e) {
-        mqttInstance.getEventListeners().forEach(InstanceEventListener::clearAllMessages);
+        mqttInstance.applyEvent(InstanceEventListener::clearAllMessages);
     }
 
     private void exportAllMessages(ActionEvent e) {
-        mqttInstance.getEventListeners().forEach(InstanceEventListener::exportAllMessages);
+        mqttInstance.applyEvent(InstanceEventListener::exportAllMessages);
     }
 
     public static class RegexSearchCreator extends PatternModel.RegexCreator {

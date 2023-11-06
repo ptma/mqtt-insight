@@ -36,7 +36,7 @@ public interface MqttInstance {
 
     void addEventListeners(InstanceEventListener eventListener);
 
-    List<InstanceEventListener> getEventListeners();
+    void applyEvent(Consumer<InstanceEventListener> action);
 
     void messageReceived(MqttMessage message);
 
