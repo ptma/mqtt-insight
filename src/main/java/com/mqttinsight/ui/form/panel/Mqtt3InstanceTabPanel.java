@@ -103,7 +103,7 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
     }
 
     @Override
-    public boolean subscribe(final Subscription subscription) {
+    public boolean doSubscribe(final Subscription subscription) {
         try {
             IMqttToken token = mqttClient.subscribe(subscription.getTopic(), subscription.getQos(), (topic, message) -> {
                 ReceivedMqttMessage mqttMessage = ReceivedMqttMessage.of(subscription,

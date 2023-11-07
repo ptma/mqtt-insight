@@ -4,6 +4,7 @@ import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.ReceivedMqttMessage;
 import com.mqttinsight.mqtt.SizeLimitSynchronizedList;
 import com.mqttinsight.mqtt.Subscription;
+import com.mqttinsight.scripting.DecodedMqttMessage;
 import com.mqttinsight.util.LangUtil;
 
 import javax.swing.table.AbstractTableModel;
@@ -163,6 +164,8 @@ public class MessageTableModel extends AbstractTableModel {
         for (int i = len - 1; i >= 0; i--) {
             MqttMessage message = messages.get(i);
             if (message instanceof ReceivedMqttMessage && subscription.equals(((ReceivedMqttMessage) message).getSubscription())) {
+                remove(i);
+            } else if (message instanceof DecodedMqttMessage && subscription.equals(((DecodedMqttMessage) message).getSubscription())) {
                 remove(i);
             }
         }

@@ -291,9 +291,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     public void openSubscriptionForm() {
-        NewSubscriptionForm.open(this, (subscription) -> {
-            subscriptionListPanel.doSubscribe(subscription);
-        });
+        NewSubscriptionForm.open(this, this::doSubscribe);
     }
 
     @Override
@@ -349,6 +347,19 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     public abstract boolean doPublishMessage(PublishedMqttMessage message);
 
+    public abstract boolean doSubscribe(final Subscription subscription);
+
+    @Override
+    public boolean subscribe(final Subscription subscription) {
+        for (SubscriptionItem listItem : subscriptionListPanel.getSubscriptions()) {
+            if (listItem.hasTopic(subscription.getTopic())) {
+                Utils.Toast.info(LangUtil.getString("TopicSubscribed"));
+                return false;
+            }
+        }
+        return this.doSubscribe(subscription);
+    }
+
     @Override
     public void publishMessage(PublishedMqttMessage message) {
         SwingUtilities.invokeLater(() -> {
@@ -382,7 +393,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                     .addActionListener(e -> {
                         favoriteSubscriptions.forEach(favorite -> {
                             Subscription subscription = new Subscription(this, favorite.getTopic(), favorite.getQos(), favorite.getPayloadFormat(), Utils.generateRandomColor());
-                            subscriptionListPanel.doSubscribe(subscription);
+                            this.doSubscribe(subscription);
                         });
                     });
                 favoriteMenu.addSeparator();
@@ -392,7 +403,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                 favoriteMenu.add(favorite.getTopic())
                     .addActionListener(e -> {
                         Subscription subscription = new Subscription(this, favorite.getTopic(), favorite.getQos(), favorite.getPayloadFormat(), Utils.generateRandomColor());
-                        subscriptionListPanel.doSubscribe(subscription);
+                        this.doSubscribe(subscription);
                     });
             });
         } else {

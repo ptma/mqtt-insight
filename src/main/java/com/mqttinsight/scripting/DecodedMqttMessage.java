@@ -29,6 +29,10 @@ public class DecodedMqttMessage extends AbstractMqttMessage implements MqttMessa
         this.payload = payload;
     }
 
+    public Subscription getSubscription() {
+        return subscription;
+    }
+    
     @Override
     public Color getColor() {
         return color != null ? ColorUtil.hexToColor(color) : subscription.getColor();

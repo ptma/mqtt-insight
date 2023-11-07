@@ -107,7 +107,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
     }
 
     @Override
-    public boolean subscribe(final Subscription subscription) {
+    public boolean doSubscribe(final Subscription subscription) {
         try {
             org.eclipse.paho.mqttv5.common.packet.MqttProperties prop = new org.eclipse.paho.mqttv5.common.packet.MqttProperties();
             prop.setSubscriptionIdentifiers(List.of(0));
