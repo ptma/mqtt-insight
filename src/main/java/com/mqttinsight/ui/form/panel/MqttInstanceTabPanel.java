@@ -32,6 +32,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * @author ptma
+ */
 public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstance {
 
     protected static final Logger log = LoggerFactory.getLogger(MqttInstanceTabPanel.class);
@@ -168,6 +171,30 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         topPanel.add(messageToolbar, "cell 3 0");
     }
 
+    private void applyLayout(MessageViewMode viewMode) {
+        if (this.viewMode != null && this.viewMode.equals(viewMode)) {
+            return;
+        }
+        if (viewMode == MessageViewMode.TABLE) {
+            messageSplitPanel.setOrientation(JSplitPane.VERTICAL_SPLIT);
+            Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_VERTICAL_DIVIDER, 500);
+            int maxHeight = messageSplitPanel.getPreferredSize().height - PREVIEW_PANEL_MIN_HEIGHT;
+            messageSplitPanel.setDividerLocation(Math.min(divider, maxHeight));
+            detailTabbedPanel.setTabPlacement(JTabbedPane.LEFT);
+            detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.TOP);
+        } else {
+            messageSplitPanel.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
+            Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_HORIZONTAL_DIVIDER, 850);
+            int maxWidth = messageSplitPanel.getPreferredSize().width - PREVIEW_PANEL_MIN_WIDTH;
+            messageSplitPanel.setDividerLocation(Math.min(divider, maxWidth));
+            detailTabbedPanel.setTabPlacement(JTabbedPane.TOP);
+            detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.LEADING);
+        }
+        this.viewMode = viewMode;
+        messagePublishPanel.toggleViewMode(viewMode);
+        messagePreviewPanel.toggleViewMode(viewMode);
+    }
+
     private void initEventListeners() {
         addEventListeners(new InstanceEventAdapter() {
             @Override
@@ -291,7 +318,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     public void openSubscriptionForm() {
-        NewSubscriptionForm.open(this, this::doSubscribe);
+        NewSubscriptionForm.open(this, this::subscribe);
     }
 
     @Override
@@ -321,40 +348,20 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         }
     }
 
-    private void applyLayout(MessageViewMode viewMode) {
-        if (this.viewMode != null && this.viewMode.equals(viewMode)) {
-            return;
-        }
-        if (viewMode == MessageViewMode.TABLE) {
-            messageSplitPanel.setOrientation(JSplitPane.VERTICAL_SPLIT);
-            Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_VERTICAL_DIVIDER, 500);
-            int maxHeight = messageSplitPanel.getPreferredSize().height - PREVIEW_PANEL_MIN_HEIGHT;
-            messageSplitPanel.setDividerLocation(Math.min(divider, maxHeight));
-            detailTabbedPanel.setTabPlacement(JTabbedPane.LEFT);
-            detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.TOP);
-        } else {
-            messageSplitPanel.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
-            Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_HORIZONTAL_DIVIDER, 850);
-            int maxWidth = messageSplitPanel.getPreferredSize().width - PREVIEW_PANEL_MIN_WIDTH;
-            messageSplitPanel.setDividerLocation(Math.min(divider, maxWidth));
-            detailTabbedPanel.setTabPlacement(JTabbedPane.TOP);
-            detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.LEADING);
-        }
-        this.viewMode = viewMode;
-        messagePublishPanel.toggleViewMode(viewMode);
-        messagePreviewPanel.toggleViewMode(viewMode);
-    }
-
     public abstract boolean doPublishMessage(PublishedMqttMessage message);
 
     public abstract boolean doSubscribe(final Subscription subscription);
 
     @Override
     public boolean subscribe(final Subscription subscription) {
-        for (SubscriptionItem listItem : subscriptionListPanel.getSubscriptions()) {
-            if (listItem.hasTopic(subscription.getTopic())) {
-                Utils.Toast.info(LangUtil.getString("TopicSubscribed"));
-                return false;
+        for (SubscriptionItem existItem : subscriptionListPanel.getSubscriptions()) {
+            if (existItem.hasTopic(subscription.getTopic())) {
+                if (existItem.isSubscribed()) {
+                    Utils.Toast.info(LangUtil.getString("TopicSubscribed"));
+                    return false;
+                } else {
+                    return this.doSubscribe(existItem.getSubscription());
+                }
             }
         }
         return this.doSubscribe(subscription);
@@ -393,7 +400,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                     .addActionListener(e -> {
                         favoriteSubscriptions.forEach(favorite -> {
                             Subscription subscription = new Subscription(this, favorite.getTopic(), favorite.getQos(), favorite.getPayloadFormat(), Utils.generateRandomColor());
-                            this.doSubscribe(subscription);
+                            this.subscribe(subscription);
                         });
                     });
                 favoriteMenu.addSeparator();
@@ -403,7 +410,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                 favoriteMenu.add(favorite.getTopic())
                     .addActionListener(e -> {
                         Subscription subscription = new Subscription(this, favorite.getTopic(), favorite.getQos(), favorite.getPayloadFormat(), Utils.generateRandomColor());
-                        this.doSubscribe(subscription);
+                        this.subscribe(subscription);
                     });
             });
         } else {

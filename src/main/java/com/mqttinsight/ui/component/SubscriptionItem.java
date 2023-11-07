@@ -5,11 +5,12 @@ import com.mqttinsight.codec.CodecSupports;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.Subscription;
 import com.mqttinsight.ui.event.InstanceEventListener;
-import com.mqttinsight.ui.form.panel.SubscriptionListPanel;
+import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.Setter;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.swingx.JXLabel;
@@ -30,9 +31,9 @@ public class SubscriptionItem extends JPanel implements MouseListener {
 
     private final Color borderColor = UIManager.getColor("Component.borderColor");
 
+    private final MqttInstance mqttInstance;
+    @Getter
     private final Subscription subscription;
-    private final UnsubscribeListener unsubscribeListener;
-    private final SubscriptionListPanel parent;
     private boolean subscribed = true;
 
     @Setter
@@ -49,11 +50,10 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     private JMenuItem resubscribeMenu;
     private JMenu formatMenu;
 
-    public SubscriptionItem(SubscriptionListPanel parent, Subscription subscription, UnsubscribeListener unsubscribeListener) {
+    public SubscriptionItem(MqttInstance mqttInstance, Subscription subscription) {
         super();
-        this.parent = parent;
+        this.mqttInstance = mqttInstance;
         this.subscription = subscription;
-        this.unsubscribeListener = unsubscribeListener;
         initComponents();
         initActionsAndStyles();
         updateComponents();
@@ -99,7 +99,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
 
         unsubscribeMenu = new JMenuItem();
         LangUtil.buttonText(unsubscribeMenu, "Unsubscribe");
-        unsubscribeMenu.addActionListener(e -> unsubscribeListener.unsubscribe(false));
+        unsubscribeMenu.addActionListener(e -> this.unsubscribe(false));
         moreButton.addMunuItem(unsubscribeMenu);
 
         resubscribeMenu = new JMenuItem();
@@ -151,13 +151,13 @@ public class SubscriptionItem extends JPanel implements MouseListener {
 
         favoriteButton.addActionListener(e -> {
             if (isFavorite()) {
-                parent.getProperties().removeFavorite(subscription.getTopic());
+                mqttInstance.getProperties().removeFavorite(subscription.getTopic());
                 favoriteButton.setIcon(Icons.FAVORITE);
             } else {
-                parent.getProperties().addFavorite(subscription.getTopic(), subscription.getQos(), subscription.getSelfPayloadFormat());
+                mqttInstance.getProperties().addFavorite(subscription.getTopic(), subscription.getQos(), subscription.getSelfPayloadFormat());
                 favoriteButton.setIcon(Icons.FAVORITE_FILL);
             }
-            parent.getMqttInstance().applyEvent(InstanceEventListener::favoriteChanged);
+            mqttInstance.applyEvent(InstanceEventListener::favoriteChanged);
             Configuration.instance().changed();
         });
 
@@ -233,20 +233,20 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     }
 
     private boolean isFavorite() {
-        return parent.getProperties().isFavorite(subscription.getTopic());
+        return mqttInstance.getProperties().isFavorite(subscription.getTopic());
+    }
+
+    private void unsubscribe(boolean closable) {
+        mqttInstance.applyEvent(l -> l.onUnsubscribe(subscription, closable));
     }
 
     private void close(ActionEvent e) {
-        if (subscribed) {
-            unsubscribeListener.unsubscribe(true);
-        } else {
-            parent.remove(subscription);
-        }
+        this.unsubscribe(true);
     }
 
     public void resubscribe() {
         SwingUtilities.invokeLater(() -> {
-            if (parent.getMqttInstance().subscribe(subscription)) {
+            if (mqttInstance.subscribe(subscription)) {
                 setSubscribed(true);
             }
         });
@@ -278,13 +278,17 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     }
 
     private void clearMessages(ActionEvent e) {
-        parent.clearMessages(subscription);
+        mqttInstance.applyEvent(eventListener -> {
+            eventListener.clearMessages(subscription);
+        });
         subscription.resetMessageCount();
         updateMessageCounter();
     }
 
     private void exportMessages(ActionEvent e) {
-        parent.exportMessages(subscription);
+        mqttInstance.applyEvent(eventListener -> {
+            eventListener.exportMessages(subscription);
+        });
     }
 
     public void updateComponents() {
@@ -340,7 +344,6 @@ public class SubscriptionItem extends JPanel implements MouseListener {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        parent.select(this);
     }
 
     @Override
@@ -356,9 +359,5 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     @Override
     public void mouseExited(MouseEvent e) {
 
-    }
-
-    public interface UnsubscribeListener {
-        void unsubscribe(boolean closable);
     }
 }

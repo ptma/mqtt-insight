@@ -24,6 +24,10 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
     }
 
     @Override
+    public void onUnsubscribe(Subscription subscription, boolean closable) {
+    }
+
+    @Override
     public void onMessage(MqttMessage message) {
     }
 

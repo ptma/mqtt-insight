@@ -14,6 +14,8 @@ public interface InstanceEventListener {
 
     void onSubscribe(Subscription subscription);
 
+    void onUnsubscribe(Subscription subscription, boolean closable);
+
     void onMessage(MqttMessage message);
 
     void onMessage(MqttMessage message, MqttMessage parent);
