@@ -4,7 +4,6 @@ import cn.hutool.core.io.FileUtil;
 import com.caoccao.javet.exceptions.JavetException;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.ReceivedMqttMessage;
-import com.mqttinsight.scripting.modules.CodecWrapper;
 import com.mqttinsight.scripting.modules.MqttClientWrapper;
 import com.mqttinsight.scripting.modules.ToastWrapper;
 import com.mqttinsight.ui.form.panel.MqttInstance;
@@ -22,13 +21,13 @@ public class ScriptLoader {
 
     private static final ToastWrapper TOAST_WRAPPER = new ToastWrapper();
 
-    private final MqttClientWrapper mqttClient;
-    private final ScriptCodec scriptDecoder;
+    private final MqttInstance mqttInstance;
+    private final ScriptCodec scriptCodec;
     private final Map<String, ScriptEngine> engines = new ConcurrentHashMap<>();
 
     public ScriptLoader(MqttInstance mqttInstance) {
-        this.mqttClient = new MqttClientWrapper(mqttInstance);
-        this.scriptDecoder = new ScriptCodec();
+        this.mqttInstance = mqttInstance;
+        this.scriptCodec = new ScriptCodec();
     }
 
     public void loadScript(File scriptFile, Consumer<ScriptResult> resultConsumer) {
@@ -42,8 +41,7 @@ public class ScriptLoader {
             engines.put(scriptPath, scriptEngine);
 
             Map<String, Object> modules = new HashMap<>();
-            modules.put("mqtt", mqttClient);
-            modules.put("codec", new CodecWrapper(scriptPath, scriptDecoder));
+            modules.put("mqtt", new MqttClientWrapper(mqttInstance, scriptCodec, scriptPath));
             modules.put("toast", TOAST_WRAPPER);
             modules.put("logger", ScriptEnginePool.instance().getLogger());
 
@@ -57,11 +55,11 @@ public class ScriptLoader {
     }
 
     public void decode(ReceivedMqttMessage receivedMessage, Consumer<MqttMessage> decodedConsumer) {
-        scriptDecoder.decode(receivedMessage, decodedConsumer);
+        scriptCodec.decode(receivedMessage, decodedConsumer);
     }
 
     public void removeScript(String scriptPath) {
-        scriptDecoder.removeScript(scriptPath);
+        scriptCodec.removeScript(scriptPath);
         if (engines.containsKey(scriptPath)) {
             ScriptEngine scriptEngine = engines.get(scriptPath);
             scriptEngine.close();
@@ -70,7 +68,7 @@ public class ScriptLoader {
     }
 
     public void closeAll() {
-        scriptDecoder.removeAllScripts();
+        scriptCodec.removeAllScripts();
         engines.values().forEach(ScriptEngine::close);
         engines.clear();
     }

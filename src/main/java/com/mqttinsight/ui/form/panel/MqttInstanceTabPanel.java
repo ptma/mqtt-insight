@@ -204,6 +204,9 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     @Override
     public void close() {
+        if (scriptLoader != null) {
+            scriptLoader.closeAll();
+        }
         if (isConnected()) {
             onConnectionChanged(ConnectionStatus.DISCONNECTING);
             disconnect(false);

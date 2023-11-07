@@ -62,40 +62,10 @@ public class ScriptCodec {
         }
     }
 
-    /**
-     * Script API
-     * <pre>
-     * <code>
-     * // Javascript
-     * codec.decode(function (message) {
-     *   // do something
-     *   return {
-     *     payload: "...",
-     *     format: "json"
-     *   };
-     * });
-     * </code>
-     * </pre>
-     */
     public void decode(String scriptPath, Function<SimpleMqttMessage, Object> scriptingDecoder) {
         decode(scriptPath, "*", scriptingDecoder);
     }
 
-    /**
-     * Script API
-     * <pre>
-     * <code>
-     * // Javascript
-     * codec.decode("/test/#", function (message) {
-     *   // do something
-     *   return {
-     *     payload: "...",
-     *     format: "json"
-     *   };
-     * });
-     * </code>
-     * </pre>
-     */
     public void decode(String scriptPath, String topic, Function<SimpleMqttMessage, Object> scriptingDecoder) {
         if (decodersGroupMap.containsKey(scriptPath)) {
             decodersGroupMap.get(scriptPath).put(topic, scriptingDecoder);

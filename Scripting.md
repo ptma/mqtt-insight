@@ -27,7 +27,7 @@ const mqttClient = mqttJS.connect("mqtt://127.0.0.1:1883");
 mqttClient.on("connect", () => {
     logger.debug("已连接: mqtt://127.0.0.1:1883");
 });
-codec.decode("testtopic/#", (message) => {
+mqtt.decode("testtopic/#", (message) => {
     // 将 testtopic/# 主题下的消息转发到 mqtt://127.0.0.1:1883
     mqttClient.publish(message.getTopic(), Buffer.from(message.getPayload()));
 });
@@ -45,7 +45,7 @@ const fs = require("fs");
 const protobuf = require('protocol-buffers');
 
 var messages = protobuf(fs.readFileSync('SampleMessages.proto'))
-codec.decode("test/sample", (message) => {
+mqtt.decode("test/sample", (message) => {
     let buffer = Buffer.from(message.getPayload());
     var obj = messages.SampleMessage.decode(buffer)
     return {
@@ -60,8 +60,7 @@ mqtt.subscribe("test/sample", 1);
 
 ## 内置对象
 
-* mqtt - MqttInsight 中当前标签的实例，用于操作MQTT(订阅、发布)
-* codec - 脚本解码器
+* mqtt - MqttInsight 中当前标签的实例，用于操作MQTT(订阅、发布、解码)
 * toast - 提示框工具
 * logger - 日志工具
 
@@ -69,19 +68,17 @@ mqtt.subscribe("test/sample", 1);
 
 #### mqtt.subscribe(String topic, [int qos])
 
-添加 MQTT 订阅
+添加订阅
 
 #### mqtt.publish(String topic, String payload, [int qos], [boolean retained])
 
-发布 MQTT 消息
+发布消息
 
 #### mqtt.publish(String topic, byte[] payload, [int qos], [boolean retained])
 
-发布 MQTT 消息
+发布消息
 
-### 2. codec
-
-#### codec.decode([String topic], callback)
+#### mqtt.decode([String topic], callback)
 
 * `topic` - string, 匹配的主题，可选
 * `callback` - function (message), 消息处理回调方法，返回结果可选。
@@ -98,7 +95,7 @@ mqtt.subscribe("test/sample", 1);
             * `format` - string, 值可以是 `plain`|`json`|`hex`|`xml`
             * `color` - string, Hex 颜色代码, 例如```#FF0000```
 
-### 3. toast
+### 2. toast
 
 toast 工具可以在 UI 上弹出各种提示消息, 格式化文本 `format` 中使用 `{}` 表示占位符
 
@@ -110,7 +107,7 @@ toast 工具可以在 UI 上弹出各种提示消息, 格式化文本 `format` �
 
 #### toast.error(String format, [Object... arguments])
 
-### 4. logger
+### 3. logger
 
 日志工具, 格式化文本 `format` 中使用 `{}` 表示占位符
 

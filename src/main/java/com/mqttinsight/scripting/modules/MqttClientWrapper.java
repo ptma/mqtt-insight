@@ -2,9 +2,13 @@ package com.mqttinsight.scripting.modules;
 
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.mqtt.Subscription;
+import com.mqttinsight.scripting.ScriptCodec;
 import com.mqttinsight.scripting.ScriptPubMqttMessage;
+import com.mqttinsight.scripting.SimpleMqttMessage;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Utils;
+
+import java.util.function.Function;
 
 /**
  * @author ptma
@@ -12,9 +16,13 @@ import com.mqttinsight.util.Utils;
 public class MqttClientWrapper {
 
     private final MqttInstance mqttInstance;
+    private final ScriptCodec scriptCodec;
+    private final String scriptPath;
 
-    public MqttClientWrapper(MqttInstance mqttInstance) {
+    public MqttClientWrapper(MqttInstance mqttInstance, ScriptCodec scriptCodec, String scriptPath) {
         this.mqttInstance = mqttInstance;
+        this.scriptCodec = scriptCodec;
+        this.scriptPath = scriptPath;
     }
 
     public void subscribe(String topic) {
@@ -56,4 +64,41 @@ public class MqttClientWrapper {
         ));
     }
 
+    /**
+     * Script API
+     * <pre>
+     * <code>
+     * // Javascript
+     * mqtt.decode(function (message) {
+     *   // do something
+     *   return {
+     *     payload: "...",
+     *     format: "json"
+     *   };
+     * });
+     * </code>
+     * </pre>
+     */
+    public void decode(Function<SimpleMqttMessage, Object> function) {
+        scriptCodec.decode(scriptPath, function);
+    }
+
+    /**
+     * Script API
+     * <pre>
+     * <code>
+     * // Javascript
+     * mqtt.decode("/test/#", function (message) {
+     *   // do something
+     *   return {
+     *     payload: "...",
+     *     format: "json"
+     *   };
+     * });
+     * </code>
+     * </pre>
+     */
+    public void decode(String topic, Function<SimpleMqttMessage, Object> function) {
+        scriptCodec.decode(scriptPath, topic, function);
+    }
 }
