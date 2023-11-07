@@ -44,6 +44,17 @@ public class SubscriptionListPanel {
 
     private void initEventListeners() {
         mqttInstance.addEventListeners(new InstanceEventAdapter() {
+
+            @Override
+            public void onSubscribe(Subscription subscription) {
+                SubscriptionItem itemPanel = new SubscriptionItem(SubscriptionListPanel.this, subscription, (closable) -> {
+                    unsubscribe(subscription, closable);
+                });
+                containerPanel.add(itemPanel);
+                containerPanel.revalidate();
+                subscriptionList.add(itemPanel);
+            }
+
             @Override
             public void onMessage(MqttMessage message) {
                 onMessageReceived(message);
@@ -110,14 +121,7 @@ public class SubscriptionListPanel {
                     return;
                 }
             }
-            if (mqttInstance.subscribe(subscription)) {
-                SubscriptionItem itemPanel = new SubscriptionItem(this, subscription, (closable) -> {
-                    unsubscribe(subscription, closable);
-                });
-                containerPanel.add(itemPanel);
-                containerPanel.revalidate();
-                subscriptionList.add(itemPanel);
-            }
+            mqttInstance.subscribe(subscription);
         });
     }
 

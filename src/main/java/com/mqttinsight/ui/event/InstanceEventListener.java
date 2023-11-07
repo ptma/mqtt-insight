@@ -12,6 +12,8 @@ public interface InstanceEventListener {
 
     void viewInitializeCompleted();
 
+    void onSubscribe(Subscription subscription);
+
     void onMessage(MqttMessage message);
 
     void onMessage(MqttMessage message, MqttMessage parent);

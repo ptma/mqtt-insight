@@ -118,6 +118,7 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
             });
             boolean success = token.getException() == null;
             if (success) {
+                applyEvent(l -> l.onSubscribe(subscription));
                 log.info("Successfully subscribed topic. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
             } else {
                 log.warn("Subscribe topic failed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
