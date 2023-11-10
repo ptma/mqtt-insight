@@ -1,7 +1,10 @@
 package com.mqttinsight.ui.form.panel;
 
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.mqttinsight.mqtt.*;
+import com.mqttinsight.mqtt.ConnectionStatus;
+import com.mqttinsight.mqtt.MqttMessage;
+import com.mqttinsight.mqtt.ReceivedMqttMessage;
+import com.mqttinsight.mqtt.Subscription;
 import com.mqttinsight.ui.component.SubscriptionItem;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import lombok.Getter;
@@ -108,18 +111,20 @@ public class SubscriptionListPanel {
     }
 
     private void updateOnSubscribe(Subscription subscription) {
-        // 订阅条目是否已存在
-        for (SubscriptionItem item : subscriptions) {
-            if (item.hasTopic(subscription.getTopic())) {
-                item.setSubscribed(true);
-                containerPanel.revalidate();
-                return;
+        SwingUtilities.invokeLater(() -> {
+            // 订阅条目是否已存在
+            for (SubscriptionItem item : subscriptions) {
+                if (item.hasTopic(subscription.getTopic())) {
+                    item.setSubscribed(true);
+                    containerPanel.revalidate();
+                    return;
+                }
             }
-        }
-        SubscriptionItem newItem = new SubscriptionItem(mqttInstance, subscription);
-        containerPanel.add(newItem);
-        subscriptions.add(newItem);
-        containerPanel.revalidate();
+            SubscriptionItem newItem = new SubscriptionItem(mqttInstance, subscription);
+            containerPanel.add(newItem);
+            subscriptions.add(newItem);
+            containerPanel.revalidate();
+        });
     }
 
     private void updateOnUnsubscribe(Subscription subscription, boolean closable) {
