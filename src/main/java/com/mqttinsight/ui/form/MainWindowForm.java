@@ -52,9 +52,7 @@ public class MainWindowForm {
         initComponents();
         contentPanel.setDoubleBuffered(true);
         ShortcutManager.instance().registerShortcut(KeyStroke.getKeyStroke("ctrl O"), ConnectionManagerForm::open);
-        ShortcutManager.instance().registerShortcut(KeyStroke.getKeyStroke("ctrl shift S"), () -> {
-            newSubscription();
-        });
+        ShortcutManager.instance().registerShortcut(KeyStroke.getKeyStroke("ctrl shift S"), this::newSubscription);
     }
 
     public void openLogTab() {
@@ -185,11 +183,6 @@ public class MainWindowForm {
         tabPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK, (BiConsumer<JTabbedPane, Integer>) (tabbedPane, tabIndex) -> {
             if (isMqttInstanceAtTab(tabIndex)) {
                 getMqttInstanceAtTab(tabIndex).close();
-            }
-            // Close Log
-            Component component = tabPanel.getComponentAt(tabIndex);
-            if (component instanceof LogTab) {
-                StdHook.reset();
             }
             tabPanel.removeTabAt(tabIndex);
             System.gc();
