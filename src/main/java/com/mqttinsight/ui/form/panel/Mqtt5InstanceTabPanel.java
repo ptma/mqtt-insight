@@ -201,7 +201,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
                     }
                 }
             );
-            token.waitForCompletion();
+            token.waitForCompletion(5000);
             boolean success = token.getException() == null;
             if (success) {
                 log.info("Successfully published message. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained());
