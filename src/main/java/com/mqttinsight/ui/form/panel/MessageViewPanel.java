@@ -162,7 +162,7 @@ public class MessageViewPanel {
     }
 
     private String toCsvLineText(MqttMessage message) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(message.timeWithFormat("yyyy/MM/dd HH:mm:ss")).append(",");
         sb.append(message.getMessageType().name()).append(",");
         sb.append(message.getTopic()).append(",");

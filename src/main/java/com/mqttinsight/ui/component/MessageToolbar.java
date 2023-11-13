@@ -279,23 +279,23 @@ public class MessageToolbar extends JToolBar {
             loadScriptMenu.addActionListener(this::loadScript);
             scriptMenu.add(loadScriptMenu);
             scriptMenu.addSeparator();
-            moreMenuButton.addMunuItem(scriptMenu);
+            moreMenuButton.addMenuItem(scriptMenu);
         }
 
         {
             formatMenu = new JMenu();
             LangUtil.buttonText(formatMenu, "PayloadFormat");
-            moreMenuButton.addMunuItem(formatMenu);
+            moreMenuButton.addMenuItem(formatMenu);
             loadFormatMenus();
         }
 
         moreMenuButton.addSeparator();
         JMenuItem clearMessageMenu = new JMenuItem(Icons.CLEAR);
         LangUtil.buttonText(clearMessageMenu, "ClearAllMessages");
-        moreMenuButton.addMunuItem(clearMessageMenu).addActionListener(this::clearAllMessages);
+        moreMenuButton.addMenuItem(clearMessageMenu).addActionListener(this::clearAllMessages);
         JMenuItem exportMenu = new JMenuItem(Icons.EXPORT);
         LangUtil.buttonText(exportMenu, "ExportAllMessages");
-        moreMenuButton.addMunuItem(exportMenu).addActionListener(this::exportAllMessages);
+        moreMenuButton.addMenuItem(exportMenu).addActionListener(this::exportAllMessages);
         add(moreMenuButton);
     }
 
@@ -343,7 +343,7 @@ public class MessageToolbar extends JToolBar {
         ButtonGroup formatGroup = new ButtonGroup();
         for (CodecSupport codecSupport : CodecSupports.instance().getCodes()) {
             JCheckBoxMenuItem formatMenuItem = new JCheckBoxMenuItem(codecSupport.getName());
-            formatMenuItem.addActionListener(this::payloadFormatChanged);
+            formatMenuItem.addActionListener(this::payloadFormatChangeAction);
             if (codecSupport.getName().equals(mqttInstance.getPayloadFormat())) {
                 formatMenuItem.setSelected(true);
             }
@@ -568,9 +568,10 @@ public class MessageToolbar extends JToolBar {
         mqttInstance.applyEvent(l -> l.toggleAutoScroll(autoScrollButton.isSelected()));
     }
 
-    private void payloadFormatChanged(ActionEvent e) {
+    private void payloadFormatChangeAction(ActionEvent e) {
         String format = e.getActionCommand();
         mqttInstance.setPayloadFormat(format);
+        mqttInstance.applyEvent(InstanceEventListener::payloadFormatChanged);
     }
 
     private void clearAllMessages(ActionEvent e) {

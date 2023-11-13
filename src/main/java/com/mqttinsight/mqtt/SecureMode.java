@@ -21,10 +21,9 @@ public enum SecureMode implements Textable {
 
     PROPERTIES("SecureMode.properties", "SslModeProperties");
 
-    @Setter
-    private String key;
+    private final String key;
 
-    private String lngKey;
+    private final String lngKey;
 
     SecureMode(String key, String lngKey) {
         this.key = key;

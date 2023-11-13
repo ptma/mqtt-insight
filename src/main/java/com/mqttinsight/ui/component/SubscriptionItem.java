@@ -100,36 +100,36 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         unsubscribeMenu = new JMenuItem();
         LangUtil.buttonText(unsubscribeMenu, "Unsubscribe");
         unsubscribeMenu.addActionListener(e -> this.unsubscribe(false));
-        moreButton.addMunuItem(unsubscribeMenu);
+        moreButton.addMenuItem(unsubscribeMenu);
 
         resubscribeMenu = new JMenuItem();
         LangUtil.buttonText(resubscribeMenu, "Resubscribe");
         resubscribeMenu.setEnabled(false);
         resubscribeMenu.addActionListener(e -> resubscribe());
-        moreButton.addMunuItem(resubscribeMenu);
+        moreButton.addMenuItem(resubscribeMenu);
 
         moreButton.addSeparator();
 
         formatMenu = new JMenu();
         LangUtil.buttonText(formatMenu, "PayloadFormat");
-        moreButton.addMunuItem(formatMenu);
+        moreButton.addMenuItem(formatMenu);
         loadFormatMenus();
 
         moreButton.addSeparator();
 
         JMenuItem clearMessageMenu = new JMenuItem(Icons.CLEAR);
         LangUtil.buttonText(clearMessageMenu, "ClearMessages");
-        moreButton.addMunuItem(clearMessageMenu).addActionListener(this::clearMessages);
+        moreButton.addMenuItem(clearMessageMenu).addActionListener(this::clearMessages);
 
         JMenuItem exportMessageMenu = new JMenuItem(Icons.EXPORT);
         LangUtil.buttonText(exportMessageMenu, "ExportMessages");
-        moreButton.addMunuItem(exportMessageMenu).addActionListener(this::exportMessages);
+        moreButton.addMenuItem(exportMessageMenu).addActionListener(this::exportMessages);
 
         moreButton.addSeparator();
 
         JMenuItem closeMenu = new JMenuItem(Icons.CANCEL);
         LangUtil.buttonText(closeMenu, "Close");
-        moreButton.addMunuItem(closeMenu).addActionListener(this::close);
+        moreButton.addMenuItem(closeMenu).addActionListener(this::close);
 
         toolBar.add(moreButton);
         add(toolBar, "cell 0 1,growx");
@@ -198,7 +198,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         ButtonGroup formatGroup = new ButtonGroup();
 
         JCheckBoxMenuItem formatMenuItem = new JCheckBoxMenuItem(CodecSupport.DEFAULT);
-        formatMenuItem.addActionListener(this::payloadFormatChanged);
+        formatMenuItem.addActionListener(this::payloadFormatChangeAction);
         if (CodecSupport.DEFAULT.equals(subscription.getSelfPayloadFormat())) {
             formatMenuItem.setSelected(true);
         }
@@ -207,7 +207,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
 
         for (CodecSupport codecSupport : CodecSupports.instance().getCodes()) {
             formatMenuItem = new JCheckBoxMenuItem(codecSupport.getName());
-            formatMenuItem.addActionListener(this::payloadFormatChanged);
+            formatMenuItem.addActionListener(this::payloadFormatChangeAction);
             if (codecSupport.getName().equals(subscription.getSelfPayloadFormat())) {
                 formatMenuItem.setSelected(true);
             }
@@ -216,9 +216,10 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         }
     }
 
-    private void payloadFormatChanged(ActionEvent e) {
+    private void payloadFormatChangeAction(ActionEvent e) {
         String format = e.getActionCommand();
         subscription.setPayloadFormat(format);
+        mqttInstance.applyEvent(InstanceEventListener::payloadFormatChanged);
     }
 
     public void setSubscribed(boolean subscribed) {

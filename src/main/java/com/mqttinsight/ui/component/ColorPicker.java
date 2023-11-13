@@ -19,7 +19,7 @@ import java.awt.event.ItemEvent;
 public class ColorPicker extends JComboBox<ColorPicker.ColorValue> {
 
     private final ColorValue value;
-    private ColorGridPanel colorPanel;
+    private final ColorGridPanel colorPanel;
 
     public ColorPicker(Color color) {
         super();

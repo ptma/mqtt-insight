@@ -122,7 +122,11 @@ public class MessagePreviewPanel extends JPanel {
 
         prettyCheckbox = new JCheckBox(LangUtil.getString("Pretty"));
         prettyCheckbox.setSelected(mqttInstance.getProperties().isPrettyDuringPreview());
-        prettyCheckbox.addActionListener(e -> this.updatePreviewMessage());
+        prettyCheckbox.addActionListener(e -> {
+            mqttInstance.getProperties().setPrettyDuringPreview(prettyCheckbox.isSelected());
+            Configuration.instance().changed();
+            this.updatePreviewMessage();
+        });
         topPanel.add(prettyCheckbox, "");
 
         payloadEditor = new SyntaxTextEditor();
@@ -147,6 +151,11 @@ public class MessagePreviewPanel extends JPanel {
 
     private void initEventListeners() {
         mqttInstance.addEventListeners(new InstanceEventAdapter() {
+            @Override
+            public void payloadFormatChanged() {
+                updatePreviewMessage();
+            }
+
             @Override
             public void clearAllMessages() {
                 previewMessage(null);
@@ -187,8 +196,6 @@ public class MessagePreviewPanel extends JPanel {
                 payloadEditor.setSyntax(codec.getSyntax());
             }
         }
-        mqttInstance.getProperties().setPrettyDuringPreview(pretty);
-        Configuration.instance().changed();
     }
 
     private void previewMessage(final MqttMessage message) {

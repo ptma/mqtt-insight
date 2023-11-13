@@ -20,6 +20,8 @@ public interface InstanceEventListener {
 
     void onMessage(MqttMessage message, MqttMessage parent);
 
+    void payloadFormatChanged();
+
     void clearAllMessages();
 
     void clearMessages(Subscription subscription);

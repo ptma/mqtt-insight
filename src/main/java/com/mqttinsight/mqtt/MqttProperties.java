@@ -103,20 +103,10 @@ public class MqttProperties implements Serializable, Cloneable {
     }
 
     public String completeServerURI() {
-        String serverURI = StrUtil.format("{}:{}", host, port);
-        boolean sslEnabled = secure != null && secure.isEnable();
+        boolean ssl = secure != null && secure.isEnable();
         boolean websocket = Transport.WEB_SOCKET.equals(transport);
-        if (sslEnabled && websocket) {
-            serverURI = "wss://" + serverURI;
-        } else if (sslEnabled && !websocket) {
-            serverURI = "ssl://" + serverURI;
-        } else if (!sslEnabled && websocket) {
-            serverURI = "ws://" + serverURI;
-        } else {
-            serverURI = "tcp://" + serverURI;
-        }
-
-        return serverURI;
+        String protocol = websocket ? (ssl ? "wss" : "ws") : (ssl ? "ssl" : "tcp");
+        return StrUtil.format("{}://{}:{}", protocol, host, port);
     }
 
     public List<FavoriteSubscription> getFavoriteSubscriptions() {
@@ -127,39 +117,25 @@ public class MqttProperties implements Serializable, Cloneable {
     }
 
     public boolean isFavorite(String topic) {
-        if (favoriteSubscriptions != null) {
-            for (FavoriteSubscription favoriteSubscription : favoriteSubscriptions) {
-                if (favoriteSubscription.getTopic().equals(topic)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return getFavoriteSubscriptions().stream()
+            .anyMatch(favorite -> favorite.getTopic().equals(topic));
     }
 
     public void addFavorite(String topic, int qos, String format) {
-        if (favoriteSubscriptions == null) {
-            favoriteSubscriptions = new ArrayList<>();
-        }
-        favoriteSubscriptions.add(new FavoriteSubscription(topic, qos, format));
+        getFavoriteSubscriptions().add(new FavoriteSubscription(topic, qos, format));
     }
 
     public void removeFavorite(String topic) {
-        if (favoriteSubscriptions != null) {
-            for (int i = 0; i < favoriteSubscriptions.size(); i++) {
-                if (favoriteSubscriptions.get(i).getTopic().equals(topic)) {
-                    favoriteSubscriptions.remove(i);
-                    return;
-                }
-            }
-        }
+        getFavoriteSubscriptions().removeIf(favorite -> favorite.getTopic().equals(topic));
     }
 
 
     @Override
     public MqttProperties clone() throws CloneNotSupportedException {
         MqttProperties clone = (MqttProperties) super.clone();
+        // reset id
         clone.id = IdUtil.fastUUID();
+        // clear lists
         clone.setSearchHistory(null);
         clone.setPublishedHistory(null);
         clone.setFavoriteSubscriptions(null);

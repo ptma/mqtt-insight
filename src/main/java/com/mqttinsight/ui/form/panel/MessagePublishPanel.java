@@ -124,7 +124,7 @@ public class MessagePublishPanel extends JPanel {
         InputMap inputMap = payloadEditor.textArea().getInputMap();
         while (inputMap != null) {
             inputMap = inputMap.getParent();
-            if (inputMap != null && inputMap instanceof RSyntaxTextAreaDefaultInputMap) {
+            if (inputMap instanceof RSyntaxTextAreaDefaultInputMap) {
                 // remove key binding
                 inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK));
                 break;

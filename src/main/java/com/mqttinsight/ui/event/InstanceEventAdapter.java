@@ -36,6 +36,10 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
     }
 
     @Override
+    public void payloadFormatChanged() {
+    }
+
+    @Override
     public void clearAllMessages() {
     }
 

@@ -16,7 +16,7 @@ public class ServerKeystorePanel extends SecurePanel {
     private JPanel rootPanel;
     private JTextField fileField;
     private JPasswordField passwordField;
-    private JLabel caTrusrFileLabel;
+    private JLabel caTrustFileLabel;
     private JLabel caTrustPwdLabel;
 
     public ServerKeystorePanel() {
@@ -28,13 +28,13 @@ public class ServerKeystorePanel extends SecurePanel {
 
     @Override
     public void applyLanguage() {
-        caTrusrFileLabel.setText(LangUtil.getString("CaKeystoreFile"));
+        caTrustFileLabel.setText(LangUtil.getString("CaKeystoreFile"));
         caTrustPwdLabel.setText(LangUtil.getString("CaKeystorePassword"));
     }
 
     @Override
     public void verifyFields() throws VerificationException {
-        Validator.notEmpty(fileField, () -> LangUtil.format("FieldRequiredValidation", caTrusrFileLabel.getText()));
+        Validator.notEmpty(fileField, () -> LangUtil.format("FieldRequiredValidation", caTrustFileLabel.getText()));
         Validator.notEmpty(passwordField, () -> LangUtil.format("FieldRequiredValidation", caTrustPwdLabel.getText()));
     }
 
@@ -81,10 +81,10 @@ public class ServerKeystorePanel extends SecurePanel {
     private void $$$setupUI$$$() {
         rootPanel = new JPanel();
         rootPanel.setLayout(new FormLayout("fill:170px:noGrow,left:4dlu:noGrow,fill:d:grow", "center:d:noGrow,top:4dlu:noGrow,center:max(d;4px):noGrow"));
-        caTrusrFileLabel = new JLabel();
-        caTrusrFileLabel.setText("CA keystore file");
+        caTrustFileLabel = new JLabel();
+        caTrustFileLabel.setText("CA keystore file");
         CellConstraints cc = new CellConstraints();
-        rootPanel.add(caTrusrFileLabel, cc.xy(1, 1));
+        rootPanel.add(caTrustFileLabel, cc.xy(1, 1));
         fileField = new JTextField();
         rootPanel.add(fileField, cc.xy(3, 1, CellConstraints.FILL, CellConstraints.DEFAULT));
         caTrustPwdLabel = new JLabel();

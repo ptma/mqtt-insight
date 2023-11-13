@@ -32,7 +32,7 @@ public abstract class AbstractPopupButton extends JButton implements ActionListe
 
     private JPopupMenu popupMenu;
 
-    private boolean showArrow;
+    private final boolean showArrow;
 
     public AbstractPopupButton(String text) {
         this(text, null, true);

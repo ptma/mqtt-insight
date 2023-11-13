@@ -348,18 +348,19 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         }
     }
 
-    public abstract boolean doPublishMessage(PublishedMqttMessage message);
+    public abstract boolean doPublishMessage(final PublishedMqttMessage message);
 
     public abstract boolean doSubscribe(final Subscription subscription);
 
     @Override
-    public boolean subscribe(final Subscription subscription) {
+    public boolean subscribe(Subscription subscription) {
         for (SubscriptionItem existItem : subscriptionListPanel.getSubscriptions()) {
             if (existItem.hasTopic(subscription.getTopic())) {
                 if (existItem.isSubscribed()) {
                     Utils.Toast.info(LangUtil.getString("TopicSubscribed"));
                     return false;
                 } else {
+                    // resubscribe
                     return this.doSubscribe(existItem.getSubscription());
                 }
             }

@@ -21,13 +21,9 @@ public class SizeLimitSynchronizedList<E> implements List<E> {
 
     private int maximum;
 
-    public SizeLimitSynchronizedList() {
-        this(Const.MESSAGES_STORED_MAX_SIZE);
-    }
-
     public SizeLimitSynchronizedList(final int maximum) {
         this.maximum = maximum;
-        this.delegate = Collections.synchronizedList(new ArrayList<E>());
+        this.delegate = Collections.synchronizedList(new ArrayList<>());
     }
 
     public int getMaximum() {

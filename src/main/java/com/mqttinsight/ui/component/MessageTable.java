@@ -258,7 +258,6 @@ public class MessageTable extends JXTable {
     }
 
     public void copyTopic() {
-        int selectedRow = getSelectedRow();
         int modelIndex = convertRowIndexToModel(getSelectedRow());
         MqttMessage message = tableModel.get(modelIndex);
         StringSelection selec = new StringSelection(message.getTopic());
@@ -267,7 +266,6 @@ public class MessageTable extends JXTable {
     }
 
     public void copyPayload() {
-        int selectedRow = getSelectedRow();
         int modelIndex = convertRowIndexToModel(getSelectedRow());
         MqttMessage message = tableModel.get(modelIndex);
         StringSelection selec = new StringSelection(message.getPayload());
