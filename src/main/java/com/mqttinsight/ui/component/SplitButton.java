@@ -78,7 +78,6 @@ public class SplitButton extends JButton {
 
     public void setPopupMenu(JPopupMenu popup) {
         popupMenu = popup;
-        this.setComponentPopupMenu(popup);
     }
 
     public JPopupMenu getPopupMenu() {
