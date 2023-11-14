@@ -140,6 +140,10 @@ public class Utils {
             return menu;
         }
 
+        public static JMenuItem createMenuItem(String menuText) {
+            return createMenuItem(menuText, null);
+        }
+
         public static JMenuItem createMenuItem(String menuText, ActionListener action) {
             JMenuItem menuItem = new NormalMenuItem();
             Utils.UI.buttonText(menuItem, menuText);

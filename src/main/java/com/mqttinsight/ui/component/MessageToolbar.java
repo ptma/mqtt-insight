@@ -132,10 +132,10 @@ public class MessageToolbar extends JToolBar {
         historyButton.addActionListener(e -> {
             JPopupMenu popupMenu = new JPopupMenu();
             if (searchHistory.isEmpty()) {
-                popupMenu.add(Utils.UI.createMenu(LangUtil.getString("Empty")));
+                popupMenu.add(Utils.UI.createMenuItem(LangUtil.getString("Empty")));
             } else {
                 for (String searchText : searchHistory) {
-                    popupMenu.add(Utils.UI.createMenu(searchText)).addActionListener(searchHistoryMenuAction);
+                    popupMenu.add(Utils.UI.createMenuItem(searchText, searchHistoryMenuAction));
                 }
             }
             popupMenu.show(historyButton, 0, historyButton.getHeight());
