@@ -1,6 +1,7 @@
 package com.mqttinsight.util;
 
 import com.mqttinsight.MqttInsightApplication;
+import com.mqttinsight.ui.component.NormalMenuItem;
 import org.jdesktop.swingx.graphics.ColorUtilities;
 import raven.toast.Notifications;
 
@@ -140,7 +141,7 @@ public class Utils {
         }
 
         public static JMenuItem createMenuItem(String menuText, ActionListener action) {
-            JMenuItem menuItem = new JMenuItem();
+            JMenuItem menuItem = new NormalMenuItem();
             Utils.UI.buttonText(menuItem, menuText);
 
             if (action != null) {

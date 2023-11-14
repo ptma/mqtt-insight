@@ -1,7 +1,6 @@
 package com.mqttinsight.ui.form.panel;
 
 import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.ArrayUtil;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.*;
 import com.mqttinsight.mqtt.options.Mqtt3Options;
@@ -119,9 +118,9 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
             boolean success = token.getException() == null;
             if (success) {
                 applyEvent(l -> l.onSubscribe(subscription));
-                log.info("Successfully subscribed topic. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
+                log.info("Successfully subscribed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
             } else {
-                log.warn("Subscribe topic failed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
+                log.warn("Failed to subscribe. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
             }
             return success;
         } catch (MqttException e) {
@@ -141,13 +140,13 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
                     @Override
                     public void onSuccess(IMqttToken token) {
                         unsubscribed.accept(Boolean.TRUE);
-                        log.info("Successfully unsubscribed topic. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
+                        log.info("Successfully unsubscribed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
                     }
 
                     @Override
                     public void onFailure(IMqttToken token, Throwable exception) {
                         unsubscribed.accept(Boolean.FALSE);
-                        log.warn("Unsubscribe topic failed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
+                        log.warn("Failed to unsubscribe. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
                     }
                 }
             );
@@ -173,14 +172,14 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
                 null,
                 new IMqttActionListener() {
                     @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
+                    public void onSuccess(IMqttToken token) {
 
                     }
 
                     @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    public void onFailure(IMqttToken token, Throwable exception) {
                         Utils.Toast.error(exception.getMessage());
-                        log.error(exception.getMessage(), exception);
+                        log.warn("Failed to publish message. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained(), exception);
                     }
                 }
             );
@@ -208,11 +207,11 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
         }
 
         @Override
-        public void onFailure(IMqttToken asyncActionToken, Throwable cause) {
+        public void onFailure(IMqttToken token, Throwable cause) {
             MqttException ex = (MqttException) cause;
             String causeMessage = getCauseMessage(ex);
             Mqtt3InstanceTabPanel.this.onConnectionFailed(ex.getReasonCode(), causeMessage);
-            log.warn("Connect to {} failed: {}, errorCode: {}. {}", properties.completeServerURI(), causeMessage, ex.getReasonCode(), causeMessage);
+            log.warn("Failed to connect to {}. errorCode: {}, {}", properties.completeServerURI(), ex.getReasonCode(), causeMessage);
         }
     }
 
@@ -223,17 +222,17 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
             MqttException ex = (MqttException) cause;
             String causeMessage = getCauseMessage(ex);
             Mqtt3InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.FAILED, ex.getReasonCode(), causeMessage);
-            log.warn("Disconnected from {} with an error, errorCode: {}. {}", properties.completeServerURI(), ex.getReasonCode(), causeMessage);
+            log.warn("Disconnected from {} with an error. errorCode: {}, {}", properties.completeServerURI(), ex.getReasonCode(), causeMessage);
         }
 
         @Override
         public void messageArrived(String topic, MqttMessage message) {
-            log.debug("messageArrived: topic: {}.", topic);
+            //log.debug("messageArrived: topic: {}.", topic);
         }
 
         @Override
         public void deliveryComplete(IMqttDeliveryToken token) {
-            log.debug("deliveryComplete: topics: {}.", ArrayUtil.join(token.getTopics(), ","));
+            //log.debug("deliveryComplete: topics: {}.", ArrayUtil.join(token.getTopics(), ","));
         }
     }
 

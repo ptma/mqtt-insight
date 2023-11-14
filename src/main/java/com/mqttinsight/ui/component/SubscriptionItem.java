@@ -97,12 +97,12 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         // More Menu
         moreButton = new PopupMenuButton(Icons.MORE);
 
-        unsubscribeMenu = new JMenuItem();
+        unsubscribeMenu = new NormalMenuItem();
         LangUtil.buttonText(unsubscribeMenu, "Unsubscribe");
         unsubscribeMenu.addActionListener(e -> this.unsubscribe(false));
         moreButton.addMenuItem(unsubscribeMenu);
 
-        resubscribeMenu = new JMenuItem();
+        resubscribeMenu = new NormalMenuItem();
         LangUtil.buttonText(resubscribeMenu, "Resubscribe");
         resubscribeMenu.setEnabled(false);
         resubscribeMenu.addActionListener(e -> resubscribe());
@@ -117,17 +117,17 @@ public class SubscriptionItem extends JPanel implements MouseListener {
 
         moreButton.addSeparator();
 
-        JMenuItem clearMessageMenu = new JMenuItem(Icons.CLEAR);
+        JMenuItem clearMessageMenu = new NormalMenuItem(Icons.CLEAR);
         LangUtil.buttonText(clearMessageMenu, "ClearMessages");
         moreButton.addMenuItem(clearMessageMenu).addActionListener(this::clearMessages);
 
-        JMenuItem exportMessageMenu = new JMenuItem(Icons.EXPORT);
+        JMenuItem exportMessageMenu = new NormalMenuItem(Icons.EXPORT);
         LangUtil.buttonText(exportMessageMenu, "ExportMessages");
         moreButton.addMenuItem(exportMessageMenu).addActionListener(this::exportMessages);
 
         moreButton.addSeparator();
 
-        JMenuItem closeMenu = new JMenuItem(Icons.CANCEL);
+        JMenuItem closeMenu = new NormalMenuItem(Icons.CANCEL);
         LangUtil.buttonText(closeMenu, "Close");
         moreButton.addMenuItem(closeMenu).addActionListener(this::close);
 
@@ -197,7 +197,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     private void loadFormatMenus() {
         ButtonGroup formatGroup = new ButtonGroup();
 
-        JCheckBoxMenuItem formatMenuItem = new JCheckBoxMenuItem(CodecSupport.DEFAULT);
+        JCheckBoxMenuItem formatMenuItem = new NormalCheckBoxMenuItem(CodecSupport.DEFAULT);
         formatMenuItem.addActionListener(this::payloadFormatChangeAction);
         if (CodecSupport.DEFAULT.equals(subscription.getSelfPayloadFormat())) {
             formatMenuItem.setSelected(true);
@@ -206,7 +206,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         formatGroup.add(formatMenuItem);
 
         for (CodecSupport codecSupport : CodecSupports.instance().getCodes()) {
-            formatMenuItem = new JCheckBoxMenuItem(codecSupport.getName());
+            formatMenuItem = new NormalCheckBoxMenuItem(codecSupport.getName());
             formatMenuItem.addActionListener(this::payloadFormatChangeAction);
             if (codecSupport.getName().equals(subscription.getSelfPayloadFormat())) {
                 formatMenuItem.setSelected(true);

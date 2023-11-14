@@ -32,7 +32,7 @@ public class PopupMenuButton extends AbstractPopupButton {
     }
 
     public JMenuItem addMenuItem(String menuText) {
-        return addMenuItem(new JMenuItem(menuText));
+        return addMenuItem(new NormalMenuItem(menuText));
     }
 
     public JMenuItem addMenuItem(JMenuItem menuItem) {
