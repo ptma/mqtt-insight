@@ -9,6 +9,7 @@ import com.mqttinsight.ui.frame.MainFrame;
 import com.mqttinsight.util.Const;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.ThemeUtil;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.swing.*;
 import java.util.Locale;
@@ -21,7 +22,9 @@ public class MqttInsightApplication {
     public static MainFrame frame;
 
     public static void main(String[] args) {
-
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
+ 
         if (SystemInfo.isMacOS) {
             System.setProperty("apple.laf.useScreenMenuBar", "true");
             System.setProperty("apple.awt.application.name", Const.APP_NAME);
