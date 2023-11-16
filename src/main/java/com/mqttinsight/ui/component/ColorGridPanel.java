@@ -31,6 +31,7 @@ public class ColorGridPanel extends JPanel {
             String.format("[]%d[]", CELL_SPACE),
             String.format("[]%d[]", CELL_SPACE)
         ));
+        this.setBackground(UIManager.getColor("MenuItem.background"));
         selectionListeners = new ArrayList<>();
         init();
     }
