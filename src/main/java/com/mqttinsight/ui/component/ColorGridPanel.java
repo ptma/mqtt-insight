@@ -19,11 +19,6 @@ public class ColorGridPanel extends JPanel {
     private static final int BORDER_INSET = 10;
     private static final int GRID_ROWS = 11;
     private static final int GRID_COLS = 11;
-    private static final MigLayout LAYOUT = new MigLayout(
-        String.format("insets %d", BORDER_INSET),
-        String.format("[]%d[]", CELL_SPACE),
-        String.format("[]%d[]", CELL_SPACE)
-    );
     private final List<ColorSelectionListener> selectionListeners;
 
     private String dialogTitle = "Choose Color";
@@ -31,7 +26,11 @@ public class ColorGridPanel extends JPanel {
     private Color colorValue;
 
     public ColorGridPanel() {
-        super(LAYOUT);
+        super(new MigLayout(
+            String.format("insets %d", BORDER_INSET),
+            String.format("[]%d[]", CELL_SPACE),
+            String.format("[]%d[]", CELL_SPACE)
+        ));
         selectionListeners = new ArrayList<>();
         init();
     }
@@ -55,7 +54,7 @@ public class ColorGridPanel extends JPanel {
             cellButton.setToolTipText(ColorUtil.toHex(grayColor));
             cellButton.setBackground(grayColor);
             cellButton.addActionListener(colorCellActionListener);
-            this.add(cellButton, String.format("w %d!,h %d!", CELL_SIZE, CELL_SIZE));
+            this.add(cellButton, String.format("w %d!,h %d!,newline", CELL_SIZE, CELL_SIZE));
 
             float rowLightness = lightness + row * (1 - lightness) / GRID_ROWS;
             for (int col = 0; col < colorCols; col++) {
@@ -65,11 +64,7 @@ public class ColorGridPanel extends JPanel {
                 cellButton.setToolTipText(ColorUtil.toHex(color));
                 cellButton.setBackground(color);
                 cellButton.addActionListener(colorCellActionListener);
-                if (col == colorCols - 1) {
-                    this.add(cellButton, String.format("w %d!,h %d!,wrap", CELL_SIZE, CELL_SIZE));
-                } else {
-                    this.add(cellButton, String.format("w %d!,h %d!", CELL_SIZE, CELL_SIZE));
-                }
+                this.add(cellButton, String.format("w %d!,h %d!", CELL_SIZE, CELL_SIZE));
             }
         }
         moreButton = new JButton("More ...");
@@ -89,7 +84,7 @@ public class ColorGridPanel extends JPanel {
             );
             dialog.setVisible(true);
         });
-        this.add(moreButton, "h 25!,gaptop 5,spanx,growx");
+        this.add(moreButton, "h 25!,gaptop 5,spanx,growx,newline");
 
         int width = CELL_SPACE * (GRID_COLS - 1) + CELL_SIZE * GRID_COLS + BORDER_INSET * 2;
         int height = CELL_SPACE * (GRID_ROWS - 1) + CELL_SIZE * GRID_ROWS + BORDER_INSET * 2 + 5 + 25;
