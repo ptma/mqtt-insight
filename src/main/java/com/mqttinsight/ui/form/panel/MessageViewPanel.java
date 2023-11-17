@@ -104,6 +104,8 @@ public class MessageViewPanel {
             @Override
             public void clearAllMessages() {
                 messageTableModel.clear();
+                lastSelectedRow = -1;
+                messageTable.goAndSelectRow(-1);
             }
 
             @Override
@@ -234,7 +236,7 @@ public class MessageViewPanel {
                     .stream()
                     .filter(m -> m instanceof ReceivedMqttMessage)
                     .map(m -> (ReceivedMqttMessage) m)
-                    .filter(m -> m.getSubscription().equals(subscription))
+                    .filter(m -> m.getSubscription() != null && m.getSubscription().equals(subscription))
                     .collect(Collectors.toList());
             }
             StringBuffer lines = new StringBuffer();
@@ -277,7 +279,7 @@ public class MessageViewPanel {
         SwingUtilities.invokeLater(() -> {
             if (message instanceof ReceivedMqttMessage) {
                 ReceivedMqttMessage receivedMessage = (ReceivedMqttMessage) message;
-                if (receivedMessage.getSubscription().isMuted()) {
+                if (receivedMessage.getSubscription() != null && receivedMessage.getSubscription().isMuted()) {
                     return;
                 }
             }

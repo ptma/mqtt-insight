@@ -275,16 +275,18 @@ public class MessageTable extends JXTable {
 
     public void goAndSelectRow(int row) {
         if (this.getRowCount() == 0) {
+            this.clearSelection();
             return;
         }
         if (row < 0) {
-            row = 0;
+            this.clearSelection();
+        } else {
+            if (row >= this.getRowCount()) {
+                row = this.getRowCount() - 1;
+            }
+            this.scrollRowToVisible(row);
+            this.setRowSelectionInterval(row, row);
         }
-        if (row >= this.getRowCount()) {
-            row = this.getRowCount() - 1;
-        }
-        this.scrollRowToVisible(row);
-        this.setRowSelectionInterval(row, row);
     }
 
     public boolean isAutoScroll() {

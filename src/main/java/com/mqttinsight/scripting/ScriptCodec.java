@@ -92,7 +92,6 @@ public class ScriptCodec {
         if (data instanceof String) {
             msg.setSubscription(context.getSubscription());
             msg.setPayload(((String) data).getBytes());
-
         } else if (data instanceof Map) {
             Map<String, Object> map = (Map<String, Object>) data;
             msg.setSubscription(context.getSubscription());

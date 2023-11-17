@@ -1,5 +1,7 @@
 package com.mqttinsight.mqtt;
 
+import com.mqttinsight.codec.CodecSupport;
+
 import java.awt.*;
 
 /**
@@ -10,6 +12,8 @@ public class ReceivedMqttMessage extends AbstractMqttMessage implements MqttMess
     private final transient Subscription subscription;
 
     private final MessageType messageType = MessageType.RECEIVED;
+
+    private String format;
 
     public static ReceivedMqttMessage of(Subscription subscription, String topic, byte[] payload, int qos, boolean retained, boolean duplicate) {
         return new ReceivedMqttMessage(subscription, topic, payload, qos, retained, duplicate);
@@ -26,7 +30,7 @@ public class ReceivedMqttMessage extends AbstractMqttMessage implements MqttMess
 
     @Override
     public Color getColor() {
-        return subscription.getColor();
+        return subscription == null ? null : subscription.getColor();
     }
 
     @Override
@@ -36,7 +40,14 @@ public class ReceivedMqttMessage extends AbstractMqttMessage implements MqttMess
 
     @Override
     public String getPayloadFormat() {
-        return subscription.getPayloadFormat();
+        if (format == null || format.equals(CodecSupport.DEFAULT)) {
+            return subscription == null ? CodecSupport.DEFAULT : subscription.getPayloadFormat();
+        } else {
+            return format;
+        }
     }
 
+    public void setFormat(String format) {
+        this.format = format;
+    }
 }

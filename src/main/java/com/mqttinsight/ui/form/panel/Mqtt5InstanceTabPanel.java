@@ -255,7 +255,15 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
 
         @Override
         public void messageArrived(String topic, MqttMessage message) {
-
+            ReceivedMqttMessage mqttMessage = ReceivedMqttMessage.of(null,
+                topic,
+                message.getPayload(),
+                message.getQos(),
+                message.isRetained(),
+                message.isDuplicate()
+            );
+            mqttMessage.setFormat(properties.getPayloadFormat());
+            messageReceived(mqttMessage);
         }
 
         @Override
