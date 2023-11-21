@@ -220,6 +220,10 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         String format = e.getActionCommand();
         subscription.setPayloadFormat(format);
         mqttInstance.applyEvent(InstanceEventListener::payloadFormatChanged);
+        if (isFavorite()) {
+            mqttInstance.getProperties().updateFavorite(subscription.getTopic(), subscription.getQos(), subscription.getSelfPayloadFormat());
+            mqttInstance.applyEvent(InstanceEventListener::favoriteChanged);
+        }
     }
 
     public void setSubscribed(boolean subscribed) {

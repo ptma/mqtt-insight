@@ -125,6 +125,16 @@ public class MqttProperties implements Serializable, Cloneable {
         getFavoriteSubscriptions().add(new FavoriteSubscription(topic, qos, format));
     }
 
+    public void updateFavorite(String topic, int qos, String format) {
+        for (FavoriteSubscription favorite : getFavoriteSubscriptions()) {
+            if (favorite.getTopic().equals(topic)) {
+                favorite.setQos(qos);
+                favorite.setPayloadFormat(format);
+                break;
+            }
+        }
+    }
+
     public void removeFavorite(String topic) {
         getFavoriteSubscriptions().removeIf(favorite -> favorite.getTopic().equals(topic));
     }
