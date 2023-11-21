@@ -1,7 +1,5 @@
 package com.mqttinsight.mqtt;
 
-import com.mqttinsight.util.Const;
-
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
@@ -31,7 +29,11 @@ public class SizeLimitSynchronizedList<E> implements List<E> {
     }
 
     public boolean isMaximum() {
-        return delegate.size() > maximum;
+        return delegate.size() >= maximum;
+    }
+
+    public boolean isMaximum(int tobeAdded) {
+        return delegate.size() >= maximum + tobeAdded;
     }
 
     public void setMaximum(int maximum) {
@@ -80,11 +82,10 @@ public class SizeLimitSynchronizedList<E> implements List<E> {
 
     @Override
     public boolean add(E e) {
-        boolean added = delegate.add(e);
         while (isMaximum()) {
             remove(0);
         }
-        return added;
+        return delegate.add(e);
     }
 
     @Override
@@ -99,20 +100,18 @@ public class SizeLimitSynchronizedList<E> implements List<E> {
 
     @Override
     public boolean addAll(Collection<? extends E> c) {
-        boolean added = delegate.addAll(c);
-        while (isMaximum()) {
+        while (isMaximum(c.size())) {
             remove(0);
         }
-        return added;
+        return delegate.addAll(c);
     }
 
     @Override
     public boolean addAll(int index, Collection<? extends E> c) {
-        boolean added = delegate.addAll(index, c);
-        while (isMaximum()) {
+        while (isMaximum(c.size())) {
             remove(0);
         }
-        return added;
+        return delegate.addAll(index, c);
     }
 
     @Override
