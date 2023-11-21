@@ -116,6 +116,7 @@ public class SubscriptionListPanel {
             for (SubscriptionItem item : subscriptions) {
                 if (item.hasTopic(subscription.getTopic())) {
                     item.setSubscribed(true);
+                    containerPanel.revalidate();
                     containerPanel.repaint();
                     return;
                 }
@@ -123,6 +124,7 @@ public class SubscriptionListPanel {
             SubscriptionItem newItem = new SubscriptionItem(mqttInstance, subscription);
             containerPanel.add(newItem);
             subscriptions.add(newItem);
+            containerPanel.revalidate();
             containerPanel.repaint();
         });
     }
@@ -140,6 +142,7 @@ public class SubscriptionListPanel {
                                     removeItem(item);
                                 } else {
                                     item.setSubscribed(false);
+                                    containerPanel.revalidate();
                                     containerPanel.repaint();
                                 }
                             }
@@ -159,6 +162,7 @@ public class SubscriptionListPanel {
                 eventListener.clearMessages(item.getSubscription());
             });
         }
+        containerPanel.revalidate();
         containerPanel.repaint();
     }
 
