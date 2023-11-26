@@ -115,8 +115,7 @@ public class MessagePublishPanel extends JPanel {
         payloadEditor = new SyntaxTextEditor();
         payloadPanel.add(payloadEditor, BorderLayout.CENTER);
 
-        publishButton = new JButton(Icons.SEND_GREEN);
-        LangUtil.buttonText(publishButton, "PublishMessage");
+        publishButton = new JButton(LangUtil.getString("PublishMessage") + " (Ctrl + Enter)", Icons.SEND_GREEN);
         publishButton.addActionListener(e -> publishMessage());
         buttonPanel.add(publishButton, BorderLayout.WEST);
 

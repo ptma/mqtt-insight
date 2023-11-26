@@ -150,7 +150,7 @@ public class MessagePreviewPanel extends JPanel {
     }
 
     private void initEventListeners() {
-        mqttInstance.addEventListeners(new InstanceEventAdapter() {
+        mqttInstance.addEventListener(new InstanceEventAdapter() {
             @Override
             public void payloadFormatChanged() {
                 updatePreviewMessage();

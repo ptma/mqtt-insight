@@ -91,4 +91,8 @@ public final class Icons {
     public static final Icon CLEAR = new FlatSVGIcon("svg/icons/clear.svg");
     public static final Icon EXPORT = new FlatSVGIcon("svg/icons/export.svg");
 
+    public static final Icon RESET = new FlatSVGIcon("svg/icons/reset.svg");
+    public static final Icon CHART_PIE = new FlatSVGIcon("svg/icons/chartPie.svg");
+    public static final Icon CHART_BAR = new FlatSVGIcon("svg/icons/chartBar.svg");
+
 }

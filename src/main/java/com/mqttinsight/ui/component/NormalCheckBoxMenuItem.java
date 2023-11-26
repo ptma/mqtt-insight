@@ -4,11 +4,11 @@ import javax.swing.*;
 import java.awt.event.MouseEvent;
 
 /**
- * @author jinjq
+ * @author ptma
  */
 public class NormalCheckBoxMenuItem extends JCheckBoxMenuItem {
 
-    public NormalCheckBoxMenuItem(){
+    public NormalCheckBoxMenuItem() {
         this(null, null, false);
     }
 
@@ -27,7 +27,7 @@ public class NormalCheckBoxMenuItem extends JCheckBoxMenuItem {
     @Override
     protected void processMouseEvent(MouseEvent e) {
         // left mouse button only
-        if ( !SwingUtilities.isRightMouseButton(e) && !SwingUtilities.isMiddleMouseButton(e)) {
+        if (!SwingUtilities.isRightMouseButton(e) && !SwingUtilities.isMiddleMouseButton(e)) {
             super.processMouseEvent(e);
         }
     }

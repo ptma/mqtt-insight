@@ -4,6 +4,7 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mqttinsight.codec.CodecSupport;
+import com.mqttinsight.ui.chart.series.FavoriteSeries;
 import com.mqttinsight.util.Const;
 import lombok.Getter;
 import lombok.Setter;
@@ -66,6 +67,9 @@ public class MqttProperties implements Serializable, Cloneable {
     protected List<String> searchHistory;
     protected List<FavoriteSubscription> favoriteSubscriptions;
     protected List<PublishedItem> publishedHistory;
+    protected List<FavoriteSeries> favoriteSeries;
+
+
     protected Integer maxMessageStored = Const.MESSAGES_STORED_MAX_SIZE;
     protected String payloadFormat;
     protected boolean clearUnsubMessage = true;

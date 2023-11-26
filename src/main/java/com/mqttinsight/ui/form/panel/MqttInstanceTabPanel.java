@@ -196,7 +196,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     private void initEventListeners() {
-        addEventListeners(new InstanceEventAdapter() {
+        addEventListener(new InstanceEventAdapter() {
             @Override
             public void onViewModeChanged(MessageViewMode viewMode) {
                 applyLayout(viewMode);
@@ -246,8 +246,13 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     @Override
-    public void addEventListeners(InstanceEventListener eventListener) {
+    public void addEventListener(InstanceEventListener eventListener) {
         eventListeners.add(eventListener);
+    }
+
+    @Override
+    public void removeEventListener(InstanceEventListener eventListener) {
+        eventListeners.remove(eventListener);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.mqttinsight.util;
 
+import cn.hutool.core.lang.PatternPool;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.ui.component.NormalMenuItem;
 import org.jdesktop.swingx.graphics.ColorUtilities;
@@ -11,6 +12,8 @@ import java.awt.event.ActionListener;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author ptma
@@ -57,43 +60,79 @@ public class Utils {
     public static class Message {
 
         public static void info(String message) {
+            info(MqttInsightApplication.frame, message);
+        }
+
+        public static void info(Component parent, String message) {
             JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(MqttInsightApplication.frame),
                 message,
                 LangUtil.getString("Information"), JOptionPane.INFORMATION_MESSAGE);
         }
 
         public static void info(String message, Throwable ex) {
-            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(MqttInsightApplication.frame),
+            info(MqttInsightApplication.frame, message, ex);
+        }
+
+        public static void info(Component parent, String message, Throwable ex) {
+            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(parent),
                 message + "\n\n" + ex.getMessage(),
                 LangUtil.getString("Information"), JOptionPane.INFORMATION_MESSAGE);
         }
 
         public static void warning(String message, Throwable ex) {
-            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(MqttInsightApplication.frame),
+            warning(MqttInsightApplication.frame, message, ex);
+        }
+
+        public static void warning(Component parent, String message, Throwable ex) {
+            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(parent),
                 message + "\n\n" + ex.getMessage(),
                 LangUtil.getString("Warning"), JOptionPane.WARNING_MESSAGE);
         }
 
         public static void warning(String message) {
-            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(MqttInsightApplication.frame),
+            warning(MqttInsightApplication.frame, message);
+        }
+
+        public static void warning(Component parent, String message) {
+            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(parent),
                 message,
                 LangUtil.getString("Warning"), JOptionPane.WARNING_MESSAGE);
         }
 
         public static void error(String message, Throwable ex) {
-            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(MqttInsightApplication.frame),
+            error(MqttInsightApplication.frame, message, ex);
+        }
+
+        public static void error(Component parent, String message, Throwable ex) {
+            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(parent),
                 message + "\n\n" + ex.getMessage(),
                 LangUtil.getString("Error"), JOptionPane.ERROR_MESSAGE);
         }
 
         public static void error(String message) {
-            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(MqttInsightApplication.frame),
+            error(MqttInsightApplication.frame, message);
+        }
+
+        public static void error(Component parent, String message) {
+            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(parent),
                 message,
                 LangUtil.getString("Error"), JOptionPane.ERROR_MESSAGE);
         }
 
+        /**
+         * @param message
+         * @return JOptionPane.YES_OPTION, JOptionPane.NO_OPTION
+         */
         public static int confirm(String message) {
-            return JOptionPane.showConfirmDialog(MqttInsightApplication.frame, message,
+            return confirm(MqttInsightApplication.frame, message);
+        }
+
+        /**
+         * @param message
+         * @return JOptionPane.YES_OPTION, JOptionPane.NO_OPTION
+         */
+        public static int confirm(Component parent, String message) {
+            return JOptionPane.showConfirmDialog(parent, message,
                 LangUtil.getString("Confirm"), JOptionPane.YES_NO_OPTION);
         }
     }
@@ -212,6 +251,16 @@ public class Utils {
             builder.append(String.format("%02X", b));
         }
         return builder.toString();
+    }
+
+    public static String findRegexMatchGroup(String regex, String content) {
+        Pattern pattern = PatternPool.get(regex, Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(content);
+        if (matcher.matches()) {
+            return matcher.group(matcher.groupCount() >= 1 ? 1 : 0);
+        } else {
+            return null;
+        }
     }
 
 }

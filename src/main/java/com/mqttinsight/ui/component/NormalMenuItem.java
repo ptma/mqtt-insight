@@ -4,11 +4,11 @@ import javax.swing.*;
 import java.awt.event.MouseEvent;
 
 /**
- * @author jinjq
+ * @author ptma
  */
 public class NormalMenuItem extends JMenuItem {
 
-    public NormalMenuItem(){
+    public NormalMenuItem() {
         this(null, null);
     }
 
@@ -27,7 +27,7 @@ public class NormalMenuItem extends JMenuItem {
     @Override
     protected void processMouseEvent(MouseEvent e) {
         // left mouse button only
-        if ( !SwingUtilities.isRightMouseButton(e) && !SwingUtilities.isMiddleMouseButton(e)) {
+        if (!SwingUtilities.isRightMouseButton(e) && !SwingUtilities.isMiddleMouseButton(e)) {
             super.processMouseEvent(e);
         }
     }

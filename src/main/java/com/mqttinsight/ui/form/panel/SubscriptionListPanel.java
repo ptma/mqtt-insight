@@ -44,7 +44,7 @@ public class SubscriptionListPanel {
     }
 
     private void initEventListeners() {
-        mqttInstance.addEventListeners(new InstanceEventAdapter() {
+        mqttInstance.addEventListener(new InstanceEventAdapter() {
 
             @Override
             public void onSubscribe(Subscription subscription) {

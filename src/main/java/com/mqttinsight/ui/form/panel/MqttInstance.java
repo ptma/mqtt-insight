@@ -34,7 +34,13 @@ public interface MqttInstance {
 
     MessageTable getMessageTable();
 
-    void addEventListeners(InstanceEventListener eventListener);
+    default List<MqttMessage> getMessage() {
+        return getMessageTable().getMessage();
+    }
+
+    void addEventListener(InstanceEventListener eventListener);
+
+    void removeEventListener(InstanceEventListener eventListener);
 
     void applyEvent(Consumer<InstanceEventListener> action);
 

@@ -146,21 +146,21 @@ public class MessageToolbar extends JToolBar {
         matchCaseButton = new JToggleButton(Icons.SEARCH_MATCHCASE);
         matchCaseButton.setRolloverIcon(Icons.SEARCH_MATCHCASE_HOVER);
         matchCaseButton.setSelectedIcon(Icons.SEARCH_MATCHCASE_SELECTED);
-        matchCaseButton.setToolTipText(LangUtil.getString("MatchCase"));
+        matchCaseButton.setToolTipText(LangUtil.getString("MatchCase") + " (Alt + C)");
         matchCaseButton.addActionListener(e -> find(true));
 
         // whole words button
         wordsButton = new JToggleButton(Icons.SEARCH_WORDS);
         wordsButton.setRolloverIcon(Icons.SEARCH_WORDS_HOVER);
         wordsButton.setSelectedIcon(Icons.SEARCH_WORDS_SELECTED);
-        wordsButton.setToolTipText(LangUtil.getString("WholeWords"));
+        wordsButton.setToolTipText(LangUtil.getString("WholeWords") + " (Alt + W)");
         wordsButton.addActionListener(e -> find(true));
 
         // regex button
         regexButton = new JToggleButton(Icons.SEARCH_REGEX);
         regexButton.setRolloverIcon(Icons.SEARCH_REGEX_HOVER);
         regexButton.setSelectedIcon(Icons.SEARCH_REGEX_SELECTED);
-        regexButton.setToolTipText(LangUtil.getString("RegularExpression"));
+        regexButton.setToolTipText(LangUtil.getString("RegularExpression") + " (Alt + X)");
         regexButton.addActionListener(e -> find(true));
 
         // search inpput trailing buttons
@@ -174,21 +174,21 @@ public class MessageToolbar extends JToolBar {
         searchPrevButton = new JButton(Icons.PREVIOUS_OCCURENCE);
         searchPrevButton.setEnabled(false);
         searchPrevButton.addActionListener(e -> find(false));
-        searchPrevButton.setToolTipText(LangUtil.getString("PreviousOccurrence"));
+        searchPrevButton.setToolTipText(LangUtil.getString("PreviousOccurrence") + " (Shift + F3)");
         this.add(searchPrevButton);
 
         // next button
         searchNextButton = new JButton(Icons.NEXT_OCCURENCE);
         searchNextButton.setEnabled(false);
         searchNextButton.addActionListener(e -> find(true));
-        searchNextButton.setToolTipText(LangUtil.getString("NextOccurrence"));
+        searchNextButton.setToolTipText(LangUtil.getString("NextOccurrence") + " (F3)");
         this.add(searchNextButton);
 
         this.addSeparator();
 
         // filter button
         filterButton = new JToggleButton(Icons.FILTER);
-        filterButton.setToolTipText(LangUtil.getString("FilterSearchResults"));
+        filterButton.setToolTipText(LangUtil.getString("FilterSearchResults") + " (Ctrl + Alt + F)");
         filterButton.addActionListener(e -> filter());
         this.add(filterButton);
 
@@ -300,7 +300,7 @@ public class MessageToolbar extends JToolBar {
     }
 
     private void initEventListeners() {
-        mqttInstance.addEventListeners(new InstanceEventAdapter() {
+        mqttInstance.addEventListener(new InstanceEventAdapter() {
             @Override
             public void viewInitializeCompleted() {
                 resetMessageTableActions();

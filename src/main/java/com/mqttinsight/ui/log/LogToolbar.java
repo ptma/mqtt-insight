@@ -70,7 +70,7 @@ public class LogToolbar extends JPanel {
         matchCaseButton = new JToggleButton(Icons.SEARCH_MATCHCASE);
         matchCaseButton.setRolloverIcon(Icons.SEARCH_MATCHCASE_HOVER);
         matchCaseButton.setSelectedIcon(Icons.SEARCH_MATCHCASE_SELECTED);
-        matchCaseButton.setToolTipText(LangUtil.getString("MatchCase"));
+        matchCaseButton.setToolTipText(LangUtil.getString("MatchCase") + " (Alt + C)");
         matchCaseButton.addActionListener(e -> {
             find(true);
         });
@@ -79,7 +79,7 @@ public class LogToolbar extends JPanel {
         wholeWordsButton = new JToggleButton(Icons.SEARCH_WORDS);
         wholeWordsButton.setRolloverIcon(Icons.SEARCH_WORDS_HOVER);
         wholeWordsButton.setSelectedIcon(Icons.SEARCH_WORDS_SELECTED);
-        wholeWordsButton.setToolTipText(LangUtil.getString("WholeWords"));
+        wholeWordsButton.setToolTipText(LangUtil.getString("WholeWords") + " (Alt + W)");
         wholeWordsButton.addActionListener(e -> {
             find(true);
         });
@@ -88,7 +88,7 @@ public class LogToolbar extends JPanel {
         regexButton = new JToggleButton(Icons.SEARCH_REGEX);
         regexButton.setRolloverIcon(Icons.SEARCH_REGEX_HOVER);
         regexButton.setSelectedIcon(Icons.SEARCH_REGEX_SELECTED);
-        regexButton.setToolTipText(LangUtil.getString("RegularExpression"));
+        regexButton.setToolTipText(LangUtil.getString("RegularExpression") + " (Alt + X)");
         regexButton.addActionListener(e -> {
             find(true);
         });
@@ -106,7 +106,7 @@ public class LogToolbar extends JPanel {
         previousButton.addActionListener(e -> {
             find(false);
         });
-        previousButton.setToolTipText(LangUtil.getString("PreviousOccurrence"));
+        previousButton.setToolTipText(LangUtil.getString("PreviousOccurrence") + " (Shift + F3)");
         previousButton.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
         this.add(previousButton, "");
 
@@ -116,7 +116,7 @@ public class LogToolbar extends JPanel {
         nextButton.addActionListener(e -> {
             find(true);
         });
-        nextButton.setToolTipText(LangUtil.getString("NextOccurrence"));
+        nextButton.setToolTipText(LangUtil.getString("NextOccurrence") + " (F3)");
         nextButton.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
         this.add(nextButton, "");
 

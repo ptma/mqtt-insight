@@ -165,7 +165,7 @@ public class MainWindowForm {
         trailing.setFloatable(false);
         trailing.setBorder(null);
         JButton connManagerButton = new JButton(Icons.ADD);
-        connManagerButton.setToolTipText(LangUtil.getString("OpenConnection"));
+        connManagerButton.setToolTipText(LangUtil.getString("OpenConnection") + " (Ctrl + O)");
         trailing.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         connManagerButton.addActionListener(e -> ConnectionManagerForm.open());
         trailing.add(connManagerButton);

@@ -95,7 +95,7 @@ public class MessageViewPanel {
     }
 
     private void initEventListeners() {
-        mqttInstance.addEventListeners(new InstanceEventAdapter() {
+        mqttInstance.addEventListener(new InstanceEventAdapter() {
             @Override
             public void onViewModeChanged(MessageViewMode viewMode) {
                 MessageViewPanel.this.toggleViewMode(viewMode);

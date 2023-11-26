@@ -8,6 +8,7 @@ import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.component.renderer.DialogueViewRendererProvider;
 import com.mqttinsight.ui.component.renderer.TableViewRendererProvider;
 import com.mqttinsight.ui.event.InstanceEventListener;
+import com.mqttinsight.ui.chart.MessageCountChartFrame;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
@@ -29,6 +30,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 
 /**
  * @author ptma
@@ -102,12 +104,23 @@ public class MessageTable extends JXTable {
         popupMenu = new FlatPopupMenu();
         menuCopyTopic = Utils.UI.createMenuItem(LangUtil.getString("Copy&Topic"), (e) -> copyTopic());
         popupMenu.add(menuCopyTopic);
-        menuCopy = Utils.UI.createMenuItem(LangUtil.getString("Copy&Payload"), (e) -> copyPayload());
+        menuCopy = Utils.UI.createMenuItem(LangUtil.getString("Copy&Payload") + " (Ctrl + C)", (e) -> copyPayload());
         popupMenu.add(menuCopy);
         menuDelete = Utils.UI.createMenuItem(LangUtil.getString("&Delete"), (e) -> deleteSelectedRow());
         menuDelete.setIcon(Icons.REMOVE);
         popupMenu.add(menuDelete);
-        popupMenu.add(new JSeparator());
+
+        popupMenu.addSeparator();
+
+        JMenu chartMenu = new JMenu(LangUtil.getString("Chart"));
+        JMenuItem countChartMenu = new JMenuItem(LangUtil.getString("MessagesCountStatisticsChart"));
+        countChartMenu.addActionListener(e -> {
+            MessageCountChartFrame.open(mqttInstance);
+        });
+        chartMenu.add(countChartMenu);
+        popupMenu.add(chartMenu);
+
+        popupMenu.addSeparator();
 
         JMenuItem menuClear = Utils.UI.createMenuItem(LangUtil.getString("ClearAllMessages"), (e) -> mqttInstance.applyEvent(InstanceEventListener::clearAllMessages));
         menuClear.setIcon(Icons.CLEAR);
@@ -287,6 +300,10 @@ public class MessageTable extends JXTable {
             this.scrollRowToVisible(row);
             this.setRowSelectionInterval(row, row);
         }
+    }
+
+    public List<MqttMessage> getMessage() {
+        return tableModel.getMessages();
     }
 
     public boolean isAutoScroll() {
