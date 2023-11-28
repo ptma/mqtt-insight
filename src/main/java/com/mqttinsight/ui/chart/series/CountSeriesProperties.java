@@ -8,10 +8,10 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class MessageSeriesDefinition {
+public class CountSeriesProperties implements SeriesProperties {
     private boolean dynamic;
     private String seriesName;
     private Match match;
-    private MatchType matchType;
+    private MatchMode matchMode;
     private MatchExpression matchExpression;
 }

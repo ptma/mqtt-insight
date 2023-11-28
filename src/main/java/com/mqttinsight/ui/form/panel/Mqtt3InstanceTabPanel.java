@@ -60,7 +60,9 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
                         new Mqtt3ActionHandler()
                     );
                 }
-            } catch (Exception e) {
+            } catch (MqttException e) {
+                String causeMessage = getCauseMessage(e);
+                onConnectionFailed(e.getReasonCode(), causeMessage);
                 log.error(e.getMessage(), e);
             }
         });

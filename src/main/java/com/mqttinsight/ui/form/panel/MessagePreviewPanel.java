@@ -218,15 +218,17 @@ public class MessagePreviewPanel extends JPanel {
                 String previewText = previewedMessage.decodePayload(codec, prettyCheckbox.isSelected());
 
                 SwingUtilities.invokeLater(() -> {
-                    topicField.setText(previewedMessage.getTopic());
-                    retainedLabel.setVisible(previewedMessage.isRetained());
-                    qosLabel.setText(String.format("QoS %d", previewedMessage.getQos()));
-                    timeLabel.setText(previewedMessage.getTime());
-                    payloadEditor.setText(previewText);
-                    payloadEditor.setSyntax(codec.getSyntax());
+                    if (previewedMessage != null) {
+                        topicField.setText(previewedMessage.getTopic());
+                        retainedLabel.setVisible(previewedMessage.isRetained());
+                        qosLabel.setText(String.format("QoS %d", previewedMessage.getQos()));
+                        timeLabel.setText(previewedMessage.getTime());
+                        payloadEditor.setText(previewText);
+                        payloadEditor.setSyntax(codec.getSyntax());
 
-                    if (toolbarPanel.isVisible()) {
-                        textSearchToolbar.find(true);
+                        if (toolbarPanel.isVisible()) {
+                            textSearchToolbar.find(true);
+                        }
                     }
                 });
             }

@@ -11,15 +11,15 @@ import lombok.Getter;
 @Getter
 public enum Match implements Textable {
 
-    TOPIC(LangUtil.getString("Topic"), new MatchType[]{MatchType.WILDCARD, MatchType.REGEXP}),
-    PAYLOAD(LangUtil.getString("Payload"), new MatchType[]{MatchType.REGEXP, MatchType.JSON_PATH});
+    TOPIC(LangUtil.getString("Topic"), new MatchMode[]{MatchMode.WILDCARD, MatchMode.REGEXP}),
+    PAYLOAD(LangUtil.getString("Payload"), new MatchMode[]{MatchMode.REGEXP, MatchMode.JSON_PATH, MatchMode.XPATH});
 
     private final String text;
-    private final MatchType[] matchTypes;
+    private final MatchMode[] matchModes;
 
-    Match(String text, MatchType[] matchTypes) {
+    Match(String text, MatchMode[] matchModes) {
         this.text = text;
-        this.matchTypes = matchTypes;
+        this.matchModes = matchModes;
     }
 
     @Override

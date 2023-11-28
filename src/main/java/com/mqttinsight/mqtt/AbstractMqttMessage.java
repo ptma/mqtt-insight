@@ -61,6 +61,11 @@ public abstract class AbstractMqttMessage implements MqttMessage {
     }
 
     @Override
+    public long getTimestamp() {
+        return time.getTime();
+    }
+
+    @Override
     public String timeWithFormat(String dateTimeFormat) {
         return DateUtil.format(time, dateTimeFormat);
     }

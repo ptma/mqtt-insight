@@ -37,10 +37,17 @@ public interface MqttMessage {
 
     String getTime();
 
+    long getTimestamp();
+
     String timeWithFormat(String dateTimeFormat);
 
     default Color getColor() {
         return null;
+    }
+
+    default int payloadSize() {
+        byte[] payload = payloadAsBytes();
+        return payload == null ? 0 : payload.length;
     }
 
 }

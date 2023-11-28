@@ -14,10 +14,10 @@ import java.util.List;
 @Setter
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
-public class FavoriteSeries {
+public class FavoriteSeries<T extends SeriesProperties> {
 
     private String name;
 
-    private List<MessageSeriesDefinition> series;
+    private List<T> series;
 
 }

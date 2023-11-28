@@ -9,16 +9,17 @@ import lombok.Getter;
  */
 
 @Getter
-public enum MatchType implements Textable {
+public enum MatchMode implements Textable {
 
     WILDCARD(LangUtil.getString("Wildcards"), false),
     REGEXP(LangUtil.getString("RegularExpression"), true),
-    JSON_PATH(LangUtil.getString("JsonPath"), true);
+    JSON_PATH(LangUtil.getString("JsonPath"), true),
+    XPATH("XPath", true);
 
     private final String text;
     private final boolean supportsDynamic;
 
-    MatchType(String text, boolean supportsDynamic) {
+    MatchMode(String text, boolean supportsDynamic) {
         this.text = text;
         this.supportsDynamic = supportsDynamic;
     }
@@ -28,13 +29,13 @@ public enum MatchType implements Textable {
         return name();
     }
 
-    public static MatchType of(String name) {
-        for (MatchType c : MatchType.values()) {
+    public static MatchMode of(String name) {
+        for (MatchMode c : MatchMode.values()) {
             if (c.name().equalsIgnoreCase(name)) {
                 return c;
             }
         }
-        return MatchType.WILDCARD;
+        return MatchMode.WILDCARD;
     }
 
 }

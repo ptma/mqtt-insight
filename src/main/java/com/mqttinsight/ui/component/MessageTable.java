@@ -3,12 +3,13 @@ package com.mqttinsight.ui.component;
 import com.formdev.flatlaf.extras.components.FlatPopupMenu;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
+import com.mqttinsight.ui.chart.MessageCountChartFrame;
+import com.mqttinsight.ui.chart.MessageLoadChartFrame;
 import com.mqttinsight.ui.component.model.MessageTableModel;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.component.renderer.DialogueViewRendererProvider;
 import com.mqttinsight.ui.component.renderer.TableViewRendererProvider;
 import com.mqttinsight.ui.event.InstanceEventListener;
-import com.mqttinsight.ui.chart.MessageCountChartFrame;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
@@ -118,6 +119,11 @@ public class MessageTable extends JXTable {
             MessageCountChartFrame.open(mqttInstance);
         });
         chartMenu.add(countChartMenu);
+        JMenuItem loadChartMenu = new JMenuItem(LangUtil.getString("MessagesLoadStatisticsChart"));
+        loadChartMenu.addActionListener(e -> {
+            MessageLoadChartFrame.open(mqttInstance);
+        });
+        chartMenu.add(loadChartMenu);
         popupMenu.add(chartMenu);
 
         popupMenu.addSeparator();

@@ -2,40 +2,30 @@ package com.mqttinsight.ui.chart;
 
 import cn.hutool.core.img.ColorUtil;
 import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.NumberUtil;
-import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import com.jayway.jsonpath.JsonPath;
 import com.mqttinsight.MqttInsightApplication;
-import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
-import com.mqttinsight.ui.chart.series.ChartMode;
-import com.mqttinsight.ui.chart.series.FavoriteSeries;
-import com.mqttinsight.ui.chart.series.MatchExpression;
-import com.mqttinsight.ui.chart.series.MessageSeriesDefinition;
-import com.mqttinsight.ui.component.SplitButton;
-import com.mqttinsight.ui.component.SplitIconMenuItem;
-import com.mqttinsight.ui.component.model.CountSeriesTableModel;
-import com.mqttinsight.ui.event.InstanceEventAdapter;
+import com.mqttinsight.ui.chart.series.*;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
-import com.mqttinsight.util.TopicUtil;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
-import org.jdesktop.swingx.JXTable;
 import org.jdesktop.swingx.table.TableColumnExt;
 import org.knowm.xchart.*;
 import org.knowm.xchart.internal.chartpart.Chart;
 import org.knowm.xchart.style.PieStyler;
 import org.knowm.xchart.style.Styler;
+import org.xml.sax.InputSource;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import javax.swing.event.ListSelectionEvent;
+import javax.xml.xpath.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
+import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,20 +36,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author ptma
  */
 @Slf4j
-public class MessageCountChartFrame extends JFrame {
-    private MqttInstance mqttInstance;
-    private JPanel contentPanel;
-    private JButton addSeriesButton;
-    private JSplitPane splitPanel;
-    private JPanel topPanel;
-    private JScrollPane tableScrollPanel;
-    private JToolBar toolbar;
-    private JButton removeSeriesButton;
-    private JButton resetChartButton;
-    private JXTable seriesTable;
+public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties> {
     private JToggleButton pieChartButton;
     private JToggleButton barChartButton;
-    private SplitButton favoriteSplitButton;
+
     private CountSeriesTableModel seriesTableModel;
 
     private ExecutorService executorService;
@@ -68,7 +48,8 @@ public class MessageCountChartFrame extends JFrame {
     private Chart chart;
     private ChartMode chartMode;
     private XChartPanel chartPanel;
-    private InstanceEventAdapter eventAdapter;
+
+    private static final XPathFactory xpathFactory = XPathFactory.newInstance();
 
     public static void open(MqttInstance mqttInstance) {
         JFrame dialog = new MessageCountChartFrame(mqttInstance);
@@ -80,102 +61,87 @@ public class MessageCountChartFrame extends JFrame {
     }
 
     private MessageCountChartFrame(MqttInstance mqttInstance) {
-        super();
-        this.mqttInstance = mqttInstance;
-        $$$setupUI$$$();
-        setIconImages(Icons.WINDOW_ICON);
-        setContentPane(contentPanel);
-
+        super(mqttInstance);
+        createUIComponents();
         initComponents();
         initChart(ChartMode.PIE);
         initMessageEvent();
-        loadFavoriteSeries();
-        applyLanguage();
-    }
-
-    private void applyLanguage() {
         setTitle(String.format(LangUtil.getString("MessagesCountStatisticsChartTitle"), mqttInstance.getProperties().getName()));
-        LangUtil.buttonText(addSeriesButton, "AddSeries");
-        LangUtil.buttonText(removeSeriesButton, "RemoveSeries");
-        LangUtil.buttonText(resetChartButton, "ResetChart");
-        LangUtil.buttonText(favoriteSplitButton, "Favorite");
-        favoriteSplitButton.setToolTipText(LangUtil.getString("SaveCollectionToFavorites"));
-        pieChartButton.setToolTipText(ChartMode.PIE.getText());
-        barChartButton.setToolTipText(ChartMode.BAR.getText());
-        chartPanel.setSaveAsString(LangUtil.getString("SaveAs"));
-        chartPanel.setPrintString(LangUtil.getString("Print"));
     }
 
-    private void initComponents() {
-        splitPanel.setDividerLocation(200);
+    @Override
+    protected void addSeriesAction(ActionEvent e) {
+        CountSeriesEditor.open(MessageCountChartFrame.this, null, newSeries -> {
+            seriesTableModel.addRow(newSeries);
+        });
+    }
 
-        seriesTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
-        seriesTable.setEditable(false);
-        seriesTable.setSortable(false);
-        seriesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        seriesTable.setColumnSelectionAllowed(false);
-        seriesTable.setCellSelectionEnabled(false);
-        seriesTable.setRowSelectionAllowed(true);
-        initTableColumns();
-        if (UIManager.getBoolean("laf.dark")) {
-            seriesTable.setShowHorizontalLines(true);
+    @Override
+    protected void doubleClickOnTableRow(int rowIndex) {
+        CountSeriesProperties oldSeries = seriesTableModel.getRow(seriesTable.convertRowIndexToModel(rowIndex));
+        String oldSeriesName = oldSeries.getSeriesName();
+        CountSeriesEditor.open(MessageCountChartFrame.this, oldSeries, newSeries -> {
+            // Series Name changed
+            if (!oldSeriesName.equals(newSeries.getSeriesName())) {
+                seriesNameChanged(oldSeriesName, newSeries.getSeriesName());
+            }
+            seriesTableModel.fireTableDataChanged();
+        });
+    }
+
+    @Override
+    protected void removeSeriesAction(ActionEvent e) {
+        int selectedRow = seriesTable.getSelectedRow();
+        if (selectedRow >= 0) {
+            seriesTableModel.removeRow(seriesTable.convertRowIndexToModel(selectedRow));
         }
-        seriesTable.getSelectionModel().addListSelectionListener(this::tableSelectionChanged);
-        seriesTable.revalidate();
-        seriesTable.repaint();
+    }
 
-        ListSelectionModel cellSelectionModel = seriesTable.getSelectionModel();
-        cellSelectionModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        cellSelectionModel.addListSelectionListener(e -> {
-            int selectedRow = seriesTable.getSelectedRow();
-            removeSeriesButton.setEnabled(selectedRow >= 0);
-        });
+    @Override
+    protected void resetChartAction(ActionEvent e) {
+        seriesCache.clear();
+        chart.getSeriesMap().clear();
+        chartPanel.revalidate();
+        chartPanel.repaint();
+    }
 
-        // Add series
-        addSeriesButton.setIcon(Icons.ADD);
-        addSeriesButton.addActionListener(e -> {
-            CountSeriesEditor.open(MessageCountChartFrame.this, null, newSeries -> {
-                seriesTableModel.addRow(newSeries);
-            });
-        });
-        // Double click to editing selected series
-        seriesTable.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
-                    final int rowIndex = seriesTable.rowAtPoint(e.getPoint());
-                    if (rowIndex >= 0) {
-                        MessageSeriesDefinition selected = seriesTableModel.getRow(seriesTable.convertRowIndexToModel(rowIndex));
-                        CountSeriesEditor.open(MessageCountChartFrame.this, selected, series -> {
-                            seriesTableModel.fireTableDataChanged();
-                        });
+    @Override
+    protected AbstractSeriesTableModel<CountSeriesProperties> getSeriesTableModel() {
+        return seriesTableModel;
+    }
+
+    @Override
+    protected void onMessage(MqttMessage message) {
+        executorService.execute(() -> {
+            for (CountSeriesProperties series : seriesTableModel.getSeries()) {
+                if (series.isDynamic()) {
+                    dynamicSeries(series, message);
+                } else {
+                    if (messageMatchesSeries(series, message)) {
+                        saveOrUpdateSeriesData(series.getSeriesName());
                     }
                 }
             }
         });
-        // Remove selected series
-        removeSeriesButton.setIcon(Icons.REMOVE);
-        removeSeriesButton.setEnabled(false);
-        removeSeriesButton.addActionListener(e -> {
-            int selectedRow = seriesTable.getSelectedRow();
-            if (selectedRow >= 0) {
-                seriesTableModel.removeRow(seriesTable.convertRowIndexToModel(selectedRow));
-            }
-        });
+    }
 
-        // Reset chart
-        resetChartButton.setIcon(Icons.RESET);
-        resetChartButton.addActionListener(e -> {
-            seriesCache.clear();
-            chart.getSeriesMap().clear();
-            chartPanel.revalidate();
-            chartPanel.repaint();
-        });
+    @Override
+    protected List<FavoriteSeries<CountSeriesProperties>> getFavoriteSeries() {
+        return mqttInstance.getProperties().getFavoriteCountSeries();
+    }
+
+    @Override
+    protected void saveSeriesToFavorite(List<FavoriteSeries<CountSeriesProperties>> favoriteSeries) {
+        mqttInstance.getProperties().setFavoriteCountSeries(favoriteSeries);
+    }
+
+    private void initComponents() {
+        seriesTableModel = new CountSeriesTableModel();
+        seriesTable.setModel(seriesTableModel);
+        initTableColumns();
 
         pieChartButton.addActionListener(this::chartChanged);
         barChartButton.addActionListener(this::chartChanged);
-
-        favoriteSplitButton.addActionListener(this::saveSeries);
     }
 
     private void initTableColumns() {
@@ -207,20 +173,12 @@ public class MessageCountChartFrame extends JFrame {
         column.setWidth(300);
     }
 
-    private void tableSelectionChanged(ListSelectionEvent e) {
-        ListSelectionModel lsm = (ListSelectionModel) e.getSource();
-        if (!e.getValueIsAdjusting()) {
-            int selectedRow = lsm.getMaxSelectionIndex();
-            removeSeriesButton.setEnabled(selectedRow >= 0);
-        }
-    }
-
     private void initChart(ChartMode chartMode) {
         this.chartMode = chartMode;
         if (ChartMode.PIE.equals(chartMode)) {
             PieChart pieChart = new PieChartBuilder()
-                .width(this.getWidth() - 10)
-                .height(this.getHeight() - 215)
+                .width(bottomPanel.getPreferredSize().width)
+                .height(bottomPanel.getPreferredSize().height)
                 .build();
             pieChart.getStyler().setLabelType(PieStyler.LabelType.NameAndPercentage);
             pieChart.getStyler().setLabelsDistance(1.1);
@@ -232,8 +190,8 @@ public class MessageCountChartFrame extends JFrame {
             chart = pieChart;
         } else {
             CategoryChart barChart = new CategoryChartBuilder()
-                .width(this.getWidth() - 10)
-                .height(this.getHeight() - 215)
+                .width(bottomPanel.getPreferredSize().width)
+                .height(bottomPanel.getPreferredSize().height)
                 .build();
             barChart.getStyler().setShowWithinAreaPoint(true);
             barChart.getStyler().setLabelsVisible(true);
@@ -253,6 +211,7 @@ public class MessageCountChartFrame extends JFrame {
         chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNE);
         chart.getStyler().setToolTipsEnabled(true);
         chart.getStyler().setToolTipType(Styler.ToolTipType.xAndYLabels);
+        chart.getStyler().setBaseFont(UIManager.getFont("Label.font"));
         if (UIManager.getBoolean("laf.dark")) {
             chart.getStyler().setChartFontColor(UIManager.getColor("Label.foreground"));
             chart.getStyler().setChartBackgroundColor(UIManager.getColor("Panel.background"));
@@ -273,7 +232,11 @@ public class MessageCountChartFrame extends JFrame {
             chart.getStyler().setToolTipBorderColor(UIManager.getColor("Component.borderColor"));
         }
         chartPanel = new XChartPanel(chart);
-        splitPanel.setBottomComponent(chartPanel);
+        chartPanel.setSaveAsString(LangUtil.getString("SaveAs"));
+        chartPanel.setPrintString(LangUtil.getString("Print"));
+        chartPanel.setResetString(LangUtil.getString("ResetZoom"));
+        chartPanel.setExportAsString(LangUtil.getString("ExportAs"));
+
 
         if (!seriesCache.isEmpty()) {
             seriesCache.forEach((seriesName, seriesValue) -> {
@@ -284,23 +247,17 @@ public class MessageCountChartFrame extends JFrame {
                 }
             });
         }
+        bottomPanel.removeAll();
+        bottomPanel.add(chartPanel, BorderLayout.CENTER);
         chartPanel.revalidate();
         chartPanel.repaint();
     }
 
     private void initMessageEvent() {
-        executorService = ThreadUtil.newFixedExecutor(1, "Chart", false);
-        eventAdapter = new InstanceEventAdapter() {
-            @Override
-            public void onMessage(MqttMessage message) {
-                MessageCountChartFrame.this.onMessage(message);
-            }
-        };
-        mqttInstance.addEventListener(eventAdapter);
+        executorService = ThreadUtil.newFixedExecutor(1, "Count Chart ", false);
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                mqttInstance.removeEventListener(eventAdapter);
                 executorService.shutdown();
                 super.windowClosing(e);
             }
@@ -312,127 +269,38 @@ public class MessageCountChartFrame extends JFrame {
         initChart(chartMode);
     }
 
-    private void onMessage(MqttMessage message) {
-        executorService.execute(() -> {
-            for (MessageSeriesDefinition series : seriesTableModel.getSeries()) {
-                if (series.isDynamic()) {
-                    dynamicSeries(series, message);
-                } else {
-                    staticSeries(series, message);
-                }
-            }
-        });
-    }
-
-    private void saveSeries(ActionEvent e) {
-        if (seriesTableModel.getSeries().isEmpty()) {
+    private void dynamicSeries(CountSeriesProperties series, MqttMessage message) {
+        if (!series.isDynamic()) {
             return;
         }
-        String name = JOptionPane.showInputDialog(this, LangUtil.getString("EnterCollectionName"));
-        if (StrUtil.isEmpty(name)) {
-            Utils.Message.info(LangUtil.getString("EnterCollectionNameHint"));
-        } else {
-            List<FavoriteSeries> favoriteSeries = mqttInstance.getProperties().getFavoriteSeries();
-            if (favoriteSeries == null) {
-                favoriteSeries = new ArrayList<>();
-                mqttInstance.getProperties().setFavoriteSeries(favoriteSeries);
-            }
-            favoriteSeries.removeIf(t -> t.getName().equals(name));
-            favoriteSeries.add(FavoriteSeries.of(name, seriesTableModel.getSeries()));
-            Configuration.instance().changed();
-            loadFavoriteSeries();
-        }
-    }
-
-    private void loadFavoriteSeries() {
-        JPopupMenu menu = favoriteSplitButton.getPopupMenu();
-        menu.removeAll();
-        List<FavoriteSeries> favoriteSeries = mqttInstance.getProperties().getFavoriteSeries();
-        if (favoriteSeries != null && !favoriteSeries.isEmpty()) {
-            favoriteSeries.forEach(item -> {
-                SplitIconMenuItem menuItem = new SplitIconMenuItem(item.getName(), null, Icons.REMOVE);
-                menu.add(menuItem);
-                menuItem.addActionListener(e -> {
-                    seriesTableModel.removeAll();
-                    for (MessageSeriesDefinition definition : item.getSeries()) {
-                        seriesTableModel.addRow(definition);
-                    }
-                    resetChartButton.doClick();
-                });
-                menuItem.addSplitActionListener(e -> {
-                    int opt = Utils.Message.confirm(this, String.format(LangUtil.getString("RemoveFavoriteCollection"), item.getName()));
-                    if (JOptionPane.YES_OPTION == opt) {
-                        favoriteSeries.remove(item);
-                        Configuration.instance().changed();
-                    }
-                });
-            });
-        }
-    }
-
-    private void dynamicSeries(MessageSeriesDefinition definition, MqttMessage message) {
-        if (!definition.isDynamic()) {
-            return;
-        }
-        switch (definition.getMatch()) {
+        switch (series.getMatch()) {
             case TOPIC -> {
                 // only Regular expression
-                String seriesName = Utils.findRegexMatchGroup(definition.getMatchExpression().getExpression(), message.getTopic());
+                String seriesName = Utils.findRegexMatchGroup(series.getMatchExpression().getExpression(), message.getTopic());
                 saveOrUpdateSeriesData(seriesName);
             }
             case PAYLOAD -> {
-                switch (definition.getMatchType()) {
+                switch (series.getMatchMode()) {
                     case REGEXP -> {
-                        String seriesName = Utils.findRegexMatchGroup(definition.getMatchExpression().getExpression(), message.getTopic());
+                        String seriesName = Utils.findRegexMatchGroup(series.getMatchExpression().getExpression(), message.getTopic());
                         saveOrUpdateSeriesData(seriesName);
                     }
                     case JSON_PATH -> {
                         String payloadStr = message.payloadAsString(false);
-                        MatchExpression expression = definition.getMatchExpression();
+                        MatchExpression expression = series.getMatchExpression();
                         String seriesName = JsonPath.read(payloadStr, expression.getExpression()).toString();
                         saveOrUpdateSeriesData(seriesName);
                     }
-                }
-            }
-        }
-    }
+                    case XPATH -> {
+                        try {
+                            String payloadStr = message.payloadAsString(false);
+                            MatchExpression expression = series.getMatchExpression();
+                            XPath xpath = xpathFactory.newXPath();
+                            XPathExpression exp = xpath.compile(expression.getExpression());
+                            String seriesName = (String) exp.evaluate(new InputSource(new StringReader(payloadStr)), XPathConstants.STRING);
+                            saveOrUpdateSeriesData(seriesName);
+                        } catch (XPathExpressionException ignore) {
 
-    private void staticSeries(MessageSeriesDefinition definition, MqttMessage message) {
-        if (definition.isDynamic()) {
-            return;
-        }
-        switch (definition.getMatch()) {
-            case TOPIC -> {
-                switch (definition.getMatchType()) {
-                    case WILDCARD -> {
-                        if (TopicUtil.match(definition.getMatchExpression().getExpression(), message.getTopic())) {
-                            saveOrUpdateSeriesData(definition.getSeriesName());
-                        }
-                    }
-                    case REGEXP -> {
-                        if (ReUtil.isMatch(definition.getMatchExpression().getExpression(), message.getTopic())) {
-                            saveOrUpdateSeriesData(definition.getSeriesName());
-                        }
-                    }
-                }
-
-            }
-            case PAYLOAD -> {
-                String payloadStr = message.payloadAsString(false);
-                switch (definition.getMatchType()) {
-                    case REGEXP -> {
-                        if (ReUtil.isMatch(definition.getMatchExpression().getExpression(), payloadStr)) {
-                            saveOrUpdateSeriesData(definition.getSeriesName());
-                        }
-                    }
-                    case JSON_PATH -> {
-                        MatchExpression expression = definition.getMatchExpression();
-                        String jsonpath = expression.getExpression();
-                        String comparator = expression.getComparator();
-                        String expectedValue = expression.getValue();
-                        String readValue = JsonPath.read(payloadStr, jsonpath).toString();
-                        if (isMatchComparator(comparator, expectedValue, readValue)) {
-                            saveOrUpdateSeriesData(definition.getSeriesName());
                         }
                     }
                 }
@@ -472,118 +340,45 @@ public class MessageCountChartFrame extends JFrame {
         }
     }
 
-    private boolean isMatchComparator(String comparator, String expected, String readValue) {
-        if (expected == null) {
-            expected = "";
-        }
-        switch (comparator) {
-            case "=" -> {
-                return expected.equals(readValue);
-            }
-            case "!=" -> {
-                return !expected.equals(readValue);
-            }
-            case "contains" -> {
-                return StrUtil.contains(readValue, expected);
-            }
-            case "not contains" -> {
-                return !StrUtil.contains(readValue, expected);
-            }
-            case ">" -> {
-                if (!NumberUtil.isNumber(expected) || !NumberUtil.isNumber(readValue)) {
-                    return false;
+    private void seriesNameChanged(String oldSeriesName, String newSeriesName) {
+        SwingUtilities.invokeLater(() -> {
+            if (chart.getSeriesMap().containsKey(oldSeriesName)) {
+                if (ChartMode.PIE.equals(chartMode)) {
+                    Map<String, PieSeries> seriesMap = ((PieChart) chart).getSeriesMap();
+                    PieSeries chartSeries = seriesMap.get(oldSeriesName);
+                    chartSeries.setLabel(newSeriesName);
+                    seriesMap.remove(oldSeriesName);
+                    seriesMap.put(newSeriesName, chartSeries);
+                } else {
+                    Map<String, CategorySeries> seriesMap = ((CategoryChart) chart).getSeriesMap();
+                    CategorySeries chartSeries = seriesMap.get(oldSeriesName);
+                    chartSeries.setLabel(newSeriesName);
+                    seriesMap.remove(oldSeriesName);
+                    seriesMap.put(newSeriesName, chartSeries);
                 }
-                return NumberUtil.parseNumber(readValue).doubleValue() > NumberUtil.parseNumber(expected).doubleValue();
             }
-            case ">=" -> {
-                if (!NumberUtil.isNumber(expected) || !NumberUtil.isNumber(readValue)) {
-                    return false;
-                }
-                return NumberUtil.parseNumber(readValue).doubleValue() >= NumberUtil.parseNumber(expected).doubleValue();
+            if (seriesCache.containsKey(oldSeriesName)) {
+                AtomicInteger data = seriesCache.get(oldSeriesName);
+                seriesCache.remove(oldSeriesName);
+                seriesCache.put(newSeriesName, data);
             }
-            case "<" -> {
-                if (!NumberUtil.isNumber(expected) || !NumberUtil.isNumber(readValue)) {
-                    return false;
-                }
-                return NumberUtil.parseNumber(readValue).doubleValue() < NumberUtil.parseNumber(expected).doubleValue();
-            }
-            case "<=" -> {
-                if (!NumberUtil.isNumber(expected) || !NumberUtil.isNumber(readValue)) {
-                    return false;
-                }
-                return NumberUtil.parseNumber(readValue).doubleValue() <= NumberUtil.parseNumber(expected).doubleValue();
-            }
-            default -> {
-                return false;
-            }
-        }
-    }
-
-    /**
-     * Method generated by IntelliJ IDEA GUI Designer
-     * >>> IMPORTANT!! <<<
-     * DO NOT edit this method OR call it in your code!
-     *
-     * @noinspection ALL
-     */
-    private void $$$setupUI$$$() {
-        createUIComponents();
-        contentPanel = new JPanel();
-        contentPanel.setLayout(new BorderLayout(0, 0));
-        contentPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
-        splitPanel = new JSplitPane();
-        splitPanel.setDividerLocation(150);
-        splitPanel.setOrientation(0);
-        splitPanel.setResizeWeight(0.1);
-        contentPanel.add(splitPanel, BorderLayout.CENTER);
-        topPanel = new JPanel();
-        topPanel.setLayout(new BorderLayout(0, 0));
-        splitPanel.setLeftComponent(topPanel);
-        toolbar = new JToolBar();
-        topPanel.add(toolbar, BorderLayout.NORTH);
-        addSeriesButton = new JButton();
-        addSeriesButton.setText("Add Series");
-        toolbar.add(addSeriesButton);
-        removeSeriesButton = new JButton();
-        removeSeriesButton.setText("Remove Series");
-        toolbar.add(removeSeriesButton);
-        final JToolBar.Separator toolBar$Separator1 = new JToolBar.Separator();
-        toolbar.add(toolBar$Separator1);
-        resetChartButton = new JButton();
-        resetChartButton.setText("Reset Chart");
-        toolbar.add(resetChartButton);
-        final JToolBar.Separator toolBar$Separator2 = new JToolBar.Separator();
-        toolbar.add(toolBar$Separator2);
-        toolbar.add(pieChartButton);
-        toolbar.add(barChartButton);
-        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
-        toolbar.add(toolBar$Separator3);
-        toolbar.add(favoriteSplitButton);
-        tableScrollPanel = new JScrollPane();
-        topPanel.add(tableScrollPanel, BorderLayout.CENTER);
-        seriesTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
-        tableScrollPanel.setViewportView(seriesTable);
-    }
-
-    /**
-     * @noinspection ALL
-     */
-    public JComponent $$$getRootComponent$$$() {
-        return contentPanel;
+            chartPanel.revalidate();
+            chartPanel.repaint();
+        });
     }
 
     private void createUIComponents() {
-        seriesTableModel = new CountSeriesTableModel();
-        seriesTable = new JXTable(seriesTableModel);
-
+        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
+        toolbar.add(toolBar$Separator3);
         pieChartButton = new JToggleButton(Icons.CHART_PIE);
+        pieChartButton.setToolTipText(ChartMode.PIE.getText());
         barChartButton = new JToggleButton(Icons.CHART_BAR);
+        barChartButton.setToolTipText(ChartMode.BAR.getText());
         ButtonGroup viewButtonGroup = new ButtonGroup();
         viewButtonGroup.add(pieChartButton);
         viewButtonGroup.add(barChartButton);
         pieChartButton.setSelected(true);
-
-        favoriteSplitButton = new SplitButton("Favorite");
-        favoriteSplitButton.setIcon(Icons.FAVORITE);
+        toolbar.add(pieChartButton);
+        toolbar.add(barChartButton);
     }
 }

@@ -66,6 +66,8 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
                     );
                 }
             } catch (MqttException e) {
+                String causeMessage = getCauseMessage(e);
+                onConnectionFailed(e.getReasonCode(), causeMessage);
                 log.error(e.getMessage(), e);
             }
         });

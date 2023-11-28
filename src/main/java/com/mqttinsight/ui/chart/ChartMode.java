@@ -1,4 +1,4 @@
-package com.mqttinsight.ui.chart.series;
+package com.mqttinsight.ui.chart;
 
 import com.mqttinsight.ui.component.Textable;
 import com.mqttinsight.util.LangUtil;
