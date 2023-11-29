@@ -2,6 +2,9 @@ package com.mqttinsight.ui.chart;
 
 import cn.hutool.core.img.ColorUtil;
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.StrUtil;
+import com.jayway.jsonpath.JsonPath;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.ui.chart.series.*;
@@ -9,6 +12,7 @@ import com.mqttinsight.ui.component.PopupMenuButton;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
+import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.jdesktop.swingx.table.TableColumnExt;
 import org.knowm.xchart.XChartPanel;
@@ -16,45 +20,35 @@ import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.Styler;
+import org.xml.sax.InputSource;
 
 import javax.swing.*;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * @author ptma
  */
 @Slf4j
-public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> {
+public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperties> {
 
-    private PopupMenuButton seriesIntervalButton;
     private PopupMenuButton seriesLimitButton;
-    private LoadSeriesTableModel seriesTableModel;
+    private ValueSeriesTableModel seriesTableModel;
 
     private ExecutorService executorService;
-    private ScheduledThreadPoolExecutor scheduledExecutor;
     private XYChart chart;
     private XChartPanel chartPanel;
-
-    private int sizeYAxisGroup = -1;
-    private int countYAxisGroup = -1;
-
-    private final static List<Duration> seriesIntervalList = Arrays.asList(
-        Duration.of(1, TimeUnit.SECONDS),
-        Duration.of(5, TimeUnit.SECONDS),
-        Duration.of(10, TimeUnit.SECONDS),
-        Duration.of(30, TimeUnit.SECONDS),
-        Duration.of(1, TimeUnit.MINUTES)
-    );
-    private Duration defaultSeriesInterval = seriesIntervalList.get(0);
 
     private final static List<Limit> seriesLimitList = Arrays.asList(
         Limit.of(100, 0, "100 " + LangUtil.getString("DataPoints")),
@@ -71,7 +65,7 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
 
 
     public static void open(MqttInstance mqttInstance) {
-        JFrame dialog = new MessageLoadChartFrame(mqttInstance);
+        JFrame dialog = new MessageContentChartFrame(mqttInstance);
         dialog.setMinimumSize(new Dimension(800, 600));
         dialog.setResizable(true);
         dialog.pack();
@@ -79,18 +73,18 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         dialog.setVisible(true);
     }
 
-    private MessageLoadChartFrame(MqttInstance mqttInstance) {
+    private MessageContentChartFrame(MqttInstance mqttInstance) {
         super(mqttInstance);
         createUIComponents();
         initComponents();
         initChart();
         initMessageEvent();
-        setTitle(String.format(LangUtil.getString("MessageLoadStatisticsChartTitle"), mqttInstance.getProperties().getName()));
+        setTitle(String.format(LangUtil.getString("MessageContentStatisticsChartTitle"), mqttInstance.getProperties().getName()));
     }
 
     @Override
     protected void addSeriesAction(ActionEvent e) {
-        LoadSeriesEditor.open(MessageLoadChartFrame.this, null, newSeries -> {
+        ValueSeriesEditor.open(MessageContentChartFrame.this, null, newSeries -> {
             newSeries.setXYDataLimit(defaultSeriesLimit);
             seriesTableModel.addRow(newSeries);
         });
@@ -98,9 +92,9 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
 
     @Override
     protected void doubleClickOnTableRow(int rowIndex) {
-        LoadSeriesProperties oldSeries = seriesTableModel.getRow(seriesTable.convertRowIndexToModel(rowIndex));
+        ValueSeriesProperties oldSeries = seriesTableModel.getRow(seriesTable.convertRowIndexToModel(rowIndex));
         String oldSeriesName = oldSeries.getSeriesName();
-        LoadSeriesEditor.open(MessageLoadChartFrame.this, oldSeries, newSeries -> {
+        ValueSeriesEditor.open(MessageContentChartFrame.this, oldSeries, newSeries -> {
             // Series Name changed
             if (!oldSeriesName.equals(newSeries.getSeriesName())) {
                 seriesNameChanged(oldSeriesName, newSeries.getSeriesName());
@@ -115,7 +109,7 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         int selectedRow = seriesTable.getSelectedRow();
         if (selectedRow >= 0) {
             int modelRowIndex = seriesTable.convertRowIndexToModel(selectedRow);
-            LoadSeriesProperties series = seriesTableModel.getRow(modelRowIndex);
+            ValueSeriesProperties series = seriesTableModel.getRow(modelRowIndex);
             seriesTableModel.removeRow(modelRowIndex);
             chart.removeSeries(series.getSeriesName());
         }
@@ -123,7 +117,7 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
 
     @Override
     protected void resetChartAction(ActionEvent e) {
-        seriesTableModel.getSeries().forEach(LoadSeriesProperties::resetDatas);
+        seriesTableModel.getSeries().forEach(ValueSeriesProperties::resetDatas);
         chart.getSeriesMap().clear();
         chartPanel.revalidate();
         chartPanel.repaint();
@@ -132,58 +126,45 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
     @Override
     protected void onMessage(MqttMessage message) {
         executorService.execute(() -> {
-            for (LoadSeriesProperties series : seriesTableModel.getSeries()) {
+            for (ValueSeriesProperties series : seriesTableModel.getSeries()) {
                 if (messageMatchesSeries(series, message)) {
-                    series.addMessageData(message.getTimestamp(), message.payloadSize());
+                    Number value = extractValue(series, message);
+                    if (value != null) {
+                        series.addXyData(new Date(message.getTimestamp()), value);
+                        if (chart.getSeriesMap().containsKey(series.getSeriesName())) {
+                            chart.updateXYSeries(series.getSeriesName(), series.xDataList(), series.yDataList(), null);
+                        } else {
+                            chart.addSeries(series.getSeriesName(), series.xDataList(), series.yDataList());
+                            XYSeries xySeries = chart.getSeriesMap().get(series.getSeriesName());
+                            xySeries.setSmooth(true);
+                        }
+                        chartPanel.revalidate();
+                        chartPanel.repaint();
+                    }
                 }
             }
         });
     }
 
     @Override
-    protected List<FavoriteSeries<LoadSeriesProperties>> getFavoriteSeries() {
-        return mqttInstance.getProperties().getFavoriteLoadSeries();
+    protected List<FavoriteSeries<ValueSeriesProperties>> getFavoriteSeries() {
+        return mqttInstance.getProperties().getFavoriteValueSeries();
     }
 
     @Override
-    protected void saveSeriesToFavorite(List<FavoriteSeries<LoadSeriesProperties>> favoriteSeries) {
-        mqttInstance.getProperties().setFavoriteLoadSeries(favoriteSeries);
+    protected void saveSeriesToFavorite(List<FavoriteSeries<ValueSeriesProperties>> favoriteSeries) {
+        mqttInstance.getProperties().setFavoriteValueSeries(favoriteSeries);
     }
 
     @Override
-    protected AbstractSeriesTableModel<LoadSeriesProperties> getSeriesTableModel() {
+    protected AbstractSeriesTableModel<ValueSeriesProperties> getSeriesTableModel() {
         return seriesTableModel;
     }
 
     private void initComponents() {
-        seriesTableModel = new LoadSeriesTableModel();
+        seriesTableModel = new ValueSeriesTableModel();
         seriesTable.setModel(seriesTableModel);
         initTableColumns();
-        // Series table rows changed
-        seriesTableModel.addTableModelListener(l -> {
-            resetYAxisGroup();
-            initScheduledSeriesDataTasks(false);
-        });
-
-        // Chart series data refresh interval
-        ButtonGroup intervalGroup = new ButtonGroup();
-        seriesIntervalList.forEach(duration -> {
-            JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem(duration.toString());
-            seriesIntervalButton.addMenuItem(menuItem);
-            intervalGroup.add(menuItem);
-            menuItem.addActionListener(e -> {
-                seriesIntervalButton.setText(duration.toString());
-                menuItem.setSelected(true);
-                if (!defaultSeriesInterval.equals(duration)) {
-                    defaultSeriesInterval = duration;
-                    initScheduledSeriesDataTasks(true);
-                }
-            });
-            if (defaultSeriesInterval.equals(duration)) {
-                menuItem.setSelected(true);
-            }
-        });
-        seriesIntervalButton.setText(defaultSeriesInterval.toString());
 
         //Chart series data length or time limit
         ButtonGroup limitGroup = new ButtonGroup();
@@ -207,40 +188,14 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
     }
 
     private void initMessageEvent() {
-        executorService = ThreadUtil.newFixedExecutor(1, "Load Chart ", false);
+        executorService = ThreadUtil.newFixedExecutor(1, "Value Chart ", false);
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 executorService.shutdown();
-                if (scheduledExecutor != null) {
-                    scheduledExecutor.shutdownNow();
-                }
                 super.windowClosing(e);
             }
         });
-    }
-
-    private void initScheduledSeriesDataTasks(boolean reSchedule) {
-        if (seriesTableModel.getSeries().isEmpty()) {
-            return;
-        }
-        if (!reSchedule && scheduledExecutor != null) {
-            return;
-        }
-        if (scheduledExecutor != null) {
-            scheduledExecutor.shutdownNow();
-        }
-        scheduledExecutor = ThreadUtil.createScheduledExecutor(1);
-        scheduledExecutor.scheduleAtFixedRate(() -> {
-                Date now = new Date();
-                seriesTableModel.getSeries().forEach(series -> {
-                    addOrUpdateChartSeries(series, now);
-                });
-            },
-            defaultSeriesInterval.toMillis(),
-            defaultSeriesInterval.toMillis(),
-            java.util.concurrent.TimeUnit.MILLISECONDS
-        );
     }
 
     private void initTableColumns() {
@@ -323,55 +278,38 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         chartPanel.repaint();
     }
 
-    private void resetYAxisGroup() {
-        countYAxisGroup = -1;
-        sizeYAxisGroup = -1;
-        for (LoadSeriesProperties series : seriesTableModel.getSeries()) {
-            if (StatisticalMethod.COUNT.equals(series.getStatisticalMethod())) {
-                // If the count index is not allocated
-                if (countYAxisGroup == -1) {
-                    countYAxisGroup = sizeYAxisGroup == -1 ? 0 : 1;
-                }
-                Optional.ofNullable(chart.getSeriesMap().get(series.getSeriesName()))
-                    .ifPresent(xySeries -> {
-                        xySeries.setYAxisGroup(countYAxisGroup);
-                        chart.setYAxisGroupTitle(countYAxisGroup, LangUtil.getString("MessageCount"));
-                    });
-            } else {
-                // If the size index is not allocated
-                if (sizeYAxisGroup == -1) {
-                    sizeYAxisGroup = countYAxisGroup == -1 ? 0 : 1;
-                }
-                Optional.ofNullable(chart.getSeriesMap().get(series.getSeriesName()))
-                    .ifPresent(xySeries -> {
-                        xySeries.setYAxisGroup(sizeYAxisGroup);
-                        chart.setYAxisGroupTitle(sizeYAxisGroup, LangUtil.getString("MessageSizeAxis"));
-                    });
-            }
+    private Number extractValue(ValueSeriesProperties series, MqttMessage message) {
+        String payload = message.payloadAsString(false);
+        if (StrUtil.isBlank(payload)) {
+            return null;
+        }
+        String value = switch (series.getExtractingMode()) {
+            case PAYLOAD -> payload;
+            case REGEXP -> Utils.findRegexMatchGroup(series.getExtractingExpression(), payload);
+            case JSON_PATH -> JsonPath.read(payload, series.getExtractingExpression()).toString();
+            case XPATH -> extractWithXPath(series.getExtractingExpression(), payload);
+        };
+        return NumberUtil.isNumber(value) ? NumberUtil.parseNumber(value).doubleValue() : null;
+    }
+
+    private String extractWithXPath(String expression, String payload) {
+        try {
+            XPath xpath = xpathFactory.newXPath();
+            XPathExpression exp = xpath.compile(expression);
+            return (String) exp.evaluate(new InputSource(new StringReader(payload)), XPathConstants.STRING);
+        } catch (XPathExpressionException ignore) {
+            return null;
         }
     }
 
-    private void addOrUpdateChartSeries(LoadSeriesProperties series, Date date) {
+    private void addOrUpdateChartSeries(ValueSeriesProperties series, Date date) {
         SwingUtilities.invokeLater(() -> {
-            series.calculateStatisticalValue(date);
-
             if (chart.getSeriesMap().containsKey(series.getSeriesName())) {
                 chart.updateXYSeries(series.getSeriesName(), series.xDataList(), series.yDataList(), null);
             } else {
                 chart.addSeries(series.getSeriesName(), series.xDataList(), series.yDataList());
                 XYSeries xySeries = chart.getSeriesMap().get(series.getSeriesName());
                 xySeries.setSmooth(true);
-                if (StatisticalMethod.COUNT.equals(series.getStatisticalMethod())) {
-                    if (countYAxisGroup != -1) {
-                        xySeries.setYAxisGroup(countYAxisGroup);
-                        chart.setYAxisGroupTitle(countYAxisGroup, LangUtil.getString("MessageCount"));
-                    }
-                } else {
-                    if (sizeYAxisGroup != -1) {
-                        xySeries.setYAxisGroup(sizeYAxisGroup);
-                        chart.setYAxisGroupTitle(sizeYAxisGroup, LangUtil.getString("MessageSizeAxis"));
-                    }
-                }
             }
             chartPanel.revalidate();
             chartPanel.repaint();
@@ -387,12 +325,8 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
     }
 
     private void createUIComponents() {
-        seriesIntervalButton = new PopupMenuButton("", Icons.CLOCK, true);
+        toolbar.add(new JToolBar.Separator());
         seriesLimitButton = new PopupMenuButton("", Icons.CHART_LINE, true);
-
-        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
-        toolbar.add(toolBar$Separator3);
-        toolbar.add(seriesIntervalButton);
         toolbar.add(seriesLimitButton);
     }
 

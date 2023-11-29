@@ -30,8 +30,8 @@ public class CountSeriesTableModel extends AbstractSeriesTableModel<CountSeriesP
             case 0 -> LangUtil.getString("SeriesName");
             case 1 -> LangUtil.getString("Dynamic");
             case 2 -> LangUtil.getString("Match");
-            case 3 -> LangUtil.getString("Mode");
-            case 4 -> LangUtil.getString("Expression");
+            case 3 -> LangUtil.getString("MatchMode");
+            case 4 -> LangUtil.getString("MatchExpression");
             default -> "-";
         };
     }

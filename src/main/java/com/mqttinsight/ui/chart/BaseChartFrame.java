@@ -1,7 +1,6 @@
 package com.mqttinsight.ui.chart;
 
 import cn.hutool.core.util.ReUtil;
-import cn.hutool.core.util.StrUtil;
 import com.jayway.jsonpath.JsonPath;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
@@ -108,7 +107,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     protected abstract void saveSeriesToFavorite(List<FavoriteSeries<T>> favoriteSeries);
 
     private void applyLanguage() {
-        setTitle(String.format(LangUtil.getString("MessagesCountStatisticsChartTitle"), mqttInstance.getProperties().getName()));
+        setTitle(String.format(LangUtil.getString("MessageCountStatisticsChartTitle"), mqttInstance.getProperties().getName()));
         LangUtil.buttonText(addSeriesButton, "AddSeries");
         LangUtil.buttonText(removeSeriesButton, "RemoveSeries");
         LangUtil.buttonText(resetChartButton, "ResetChart");
@@ -170,20 +169,23 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
         if (getSeriesTableModel().getSeries().isEmpty()) {
             return;
         }
-        String name = JOptionPane.showInputDialog(this, LangUtil.getString("EnterCollectionName"));
-        if (StrUtil.isEmpty(name)) {
-            Utils.Message.info(LangUtil.getString("EnterCollectionNameHint"));
-        } else {
+        Utils.Message.input(this, LangUtil.getString("EnterCollectionName"), (name) -> {
             List<FavoriteSeries<T>> favoriteSeries = getFavoriteSeries();
             if (favoriteSeries == null) {
                 favoriteSeries = new ArrayList<>();
                 saveSeriesToFavorite(favoriteSeries);
             }
+            if (favoriteSeries.stream().anyMatch(t -> t.getName().equals(name))) {
+                int opt = Utils.Message.confirm(this, LangUtil.format("OverwriteCollection", name));
+                if (JOptionPane.YES_OPTION != opt) {
+                    return;
+                }
+            }
             favoriteSeries.removeIf(t -> t.getName().equals(name));
             favoriteSeries.add(FavoriteSeries.of(name, getSeriesTableModel().getSeries()));
             Configuration.instance().changed();
             loadFavoriteSeries();
-        }
+        });
     }
 
     private void tableSelectionChanged(ListSelectionEvent e) {

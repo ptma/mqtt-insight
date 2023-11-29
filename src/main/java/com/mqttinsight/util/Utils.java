@@ -3,6 +3,7 @@ package com.mqttinsight.util;
 import cn.hutool.core.lang.PatternPool;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.ui.component.NormalMenuItem;
+import com.mqttinsight.ui.form.InputDialog;
 import org.jdesktop.swingx.graphics.ColorUtilities;
 import raven.toast.Notifications;
 
@@ -12,6 +13,7 @@ import java.awt.event.ActionListener;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -134,6 +136,22 @@ public class Utils {
         public static int confirm(Component parent, String message) {
             return JOptionPane.showConfirmDialog(parent, message,
                 LangUtil.getString("Confirm"), JOptionPane.YES_NO_OPTION);
+        }
+
+        public static void input(String message, Consumer<String> inputConsumer) {
+            input(MqttInsightApplication.frame, message, null, inputConsumer);
+        }
+
+        public static void input(String message, String defaultValue, Consumer<String> inputConsumer) {
+            input(MqttInsightApplication.frame, message, defaultValue, inputConsumer);
+        }
+
+        public static void input(Frame parent, String message, Consumer<String> inputConsumer) {
+            input(parent, message, null, inputConsumer);
+        }
+
+        public static void input(Frame parent, String message, String defaultValue, Consumer<String> inputConsumer) {
+            InputDialog.open(parent, message, defaultValue, inputConsumer);
         }
     }
 

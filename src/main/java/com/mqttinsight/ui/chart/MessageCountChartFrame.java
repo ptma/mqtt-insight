@@ -66,7 +66,7 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
         initComponents();
         initChart(ChartMode.PIE);
         initMessageEvent();
-        setTitle(String.format(LangUtil.getString("MessagesCountStatisticsChartTitle"), mqttInstance.getProperties().getName()));
+        setTitle(String.format(LangUtil.getString("MessageCountStatisticsChartTitle"), mqttInstance.getProperties().getName()));
     }
 
     @Override

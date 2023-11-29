@@ -36,9 +36,9 @@ public class LoadSeriesEditor extends JDialog {
     private JPanel buttonPanel;
     private JComboBox<ValueComparator> comparatorComboBox;
     private JTextField valueField;
-    private JComboBox<TimeUnit> slidingWindowCombo;
-    private JSpinner slidingWindowField;
-    private JLabel slidingWindowLabel;
+    private JComboBox<TimeUnit> statisticalWindowCombo;
+    private JSpinner statisticalWindowField;
+    private JLabel statisticalWindowLabel;
     private JLabel statisticalMethodLabel;
     private JComboBox<StatisticalMethod> statisticalMethodCombo;
 
@@ -102,12 +102,12 @@ public class LoadSeriesEditor extends JDialog {
         statisticalMethodCombo.setSelectedItem(StatisticalMethod.AVG);
         statisticalMethodCombo.setRenderer(new TextableListRenderer());
 
-        slidingWindowField.setModel(new SpinnerNumberModel(1, 1, 65535, 1));
-        slidingWindowField.setEditor(new JSpinner.NumberEditor(slidingWindowField, "####"));
+        statisticalWindowField.setModel(new SpinnerNumberModel(1, 1, 65535, 1));
+        statisticalWindowField.setEditor(new JSpinner.NumberEditor(statisticalWindowField, "####"));
 
-        slidingWindowCombo.setModel(new EnumComboBoxModel(TimeUnit.class));
-        slidingWindowCombo.setSelectedItem(TimeUnit.MINUTES);
-        slidingWindowCombo.setRenderer(new TextableListRenderer());
+        statisticalWindowCombo.setModel(new EnumComboBoxModel(TimeUnit.class));
+        statisticalWindowCombo.setSelectedItem(TimeUnit.MINUTES);
+        statisticalWindowCombo.setRenderer(new TextableListRenderer());
 
         matchModeCombo.addActionListener(e -> {
             if ("comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
@@ -129,8 +129,8 @@ public class LoadSeriesEditor extends JDialog {
                 matchExpressionField.setText(currentProperties.getMatchExpression().getExpression());
             }
             statisticalMethodCombo.setSelectedItem(currentProperties.getStatisticalMethod());
-            slidingWindowField.setValue(currentProperties.getWindow().getDuration());
-            slidingWindowCombo.setSelectedItem(currentProperties.getWindow().getUnit());
+            statisticalWindowField.setValue(currentProperties.getWindow().getDuration());
+            statisticalWindowCombo.setSelectedItem(currentProperties.getWindow().getUnit());
         }
         expressionFieldsVisible();
         resetMatchModeCombo();
@@ -140,10 +140,10 @@ public class LoadSeriesEditor extends JDialog {
         setTitle(LangUtil.getString("SeriesEditor"));
         seriesNameLabel.setText(LangUtil.getString("SeriesName"));
         matchLabel.setText(LangUtil.getString("Match"));
-        matchModeLabel.setText(LangUtil.getString("Mode"));
-        matchExpressionLabel.setText(LangUtil.getString("Expression"));
-        statisticalMethodLabel.setText(LangUtil.getString("Method"));
-        slidingWindowLabel.setText(LangUtil.getString("SlidingWindow"));
+        matchModeLabel.setText(LangUtil.getString("MatchMode"));
+        matchExpressionLabel.setText(LangUtil.getString("MatchExpression"));
+        statisticalMethodLabel.setText(LangUtil.getString("StatisticalMethod"));
+        statisticalWindowLabel.setText(LangUtil.getString("StatisticalWindow"));
         LangUtil.buttonText(buttonOK, "&Ok");
         LangUtil.buttonText(buttonCancel, "&Cancel");
     }
@@ -209,7 +209,7 @@ public class LoadSeriesEditor extends JDialog {
             currentProperties.setMatchExpression(MatchExpression.normal(matchExpressionField.getText()));
         }
         currentProperties.setStatisticalMethod((StatisticalMethod) statisticalMethodCombo.getSelectedItem());
-        currentProperties.setWindow(Duration.of((int) slidingWindowField.getValue(), (TimeUnit) slidingWindowCombo.getSelectedItem()));
+        currentProperties.setWindow(Duration.of((int) statisticalWindowField.getValue(), (TimeUnit) statisticalWindowCombo.getSelectedItem()));
 
         if (consumer != null) {
             consumer.accept(currentProperties);
@@ -287,15 +287,15 @@ public class LoadSeriesEditor extends JDialog {
         centerPanel.add(comparatorComboBox, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         valueField = new JTextField();
         centerPanel.add(valueField, new GridConstraints(3, 2, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        slidingWindowLabel = new JLabel();
-        slidingWindowLabel.setText("Sliding Window");
-        centerPanel.add(slidingWindowLabel, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        slidingWindowCombo = new JComboBox();
-        centerPanel.add(slidingWindowCombo, new GridConstraints(5, 2, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        slidingWindowField = new JSpinner();
-        centerPanel.add(slidingWindowField, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        statisticalWindowLabel = new JLabel();
+        statisticalWindowLabel.setText("Sliding Window");
+        centerPanel.add(statisticalWindowLabel, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        statisticalWindowCombo = new JComboBox();
+        centerPanel.add(statisticalWindowCombo, new GridConstraints(5, 2, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        statisticalWindowField = new JSpinner();
+        centerPanel.add(statisticalWindowField, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         matchModeLabel = new JLabel();
-        matchModeLabel.setText("Mode");
+        matchModeLabel.setText("Match Mode");
         centerPanel.add(matchModeLabel, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         matchModeCombo = new JComboBox();
         final DefaultComboBoxModel defaultComboBoxModel3 = new DefaultComboBoxModel();
@@ -304,7 +304,7 @@ public class LoadSeriesEditor extends JDialog {
         statisticalMethodCombo = new JComboBox();
         centerPanel.add(statisticalMethodCombo, new GridConstraints(4, 1, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         statisticalMethodLabel = new JLabel();
-        statisticalMethodLabel.setText("Method");
+        statisticalMethodLabel.setText("StatisticalMethod");
         centerPanel.add(statisticalMethodLabel, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 

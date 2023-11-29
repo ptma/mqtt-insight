@@ -7,6 +7,7 @@ import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.ui.chart.series.CountSeriesProperties;
 import com.mqttinsight.ui.chart.series.FavoriteSeries;
 import com.mqttinsight.ui.chart.series.LoadSeriesProperties;
+import com.mqttinsight.ui.chart.series.ValueSeriesProperties;
 import com.mqttinsight.util.Const;
 import lombok.Getter;
 import lombok.Setter;
@@ -71,6 +72,7 @@ public class MqttProperties implements Serializable, Cloneable {
     protected List<PublishedItem> publishedHistory;
     protected List<FavoriteSeries<CountSeriesProperties>> favoriteCountSeries;
     protected List<FavoriteSeries<LoadSeriesProperties>> favoriteLoadSeries;
+    protected List<FavoriteSeries<ValueSeriesProperties>> favoriteValueSeries;
 
 
     protected Integer maxMessageStored = Const.MESSAGES_STORED_MAX_SIZE;
