@@ -2,11 +2,8 @@ package com.mqttinsight.mqtt;
 
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.ui.component.Textable;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Objects;
 
 /**
  * @author ptma

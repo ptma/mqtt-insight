@@ -3,7 +3,6 @@ package com.mqttinsight.mqtt;
 import com.mqttinsight.ui.component.Textable;
 import com.mqttinsight.util.LangUtil;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * @author ptma

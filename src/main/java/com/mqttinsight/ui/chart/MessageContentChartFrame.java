@@ -4,7 +4,6 @@ import cn.hutool.core.img.ColorUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
-import com.jayway.jsonpath.JsonPath;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.ui.chart.series.*;
@@ -20,18 +19,12 @@ import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 import org.knowm.xchart.XYSeries;
 import org.knowm.xchart.style.Styler;
-import org.xml.sax.InputSource;
 
 import javax.swing.*;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -283,37 +276,14 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         if (StrUtil.isBlank(payload)) {
             return null;
         }
+        payload = payload.trim();
         String value = switch (series.getExtractingMode()) {
             case PAYLOAD -> payload;
             case REGEXP -> Utils.findRegexMatchGroup(series.getExtractingExpression(), payload);
-            case JSON_PATH -> JsonPath.read(payload, series.getExtractingExpression()).toString();
-            case XPATH -> extractWithXPath(series.getExtractingExpression(), payload);
+            case JSON_PATH -> Utils.getByJsonPath(series.getExtractingExpression(), payload);
+            case XPATH -> Utils.getByXPath(series.getExtractingExpression(), payload);
         };
         return NumberUtil.isNumber(value) ? NumberUtil.parseNumber(value).doubleValue() : null;
-    }
-
-    private String extractWithXPath(String expression, String payload) {
-        try {
-            XPath xpath = xpathFactory.newXPath();
-            XPathExpression exp = xpath.compile(expression);
-            return (String) exp.evaluate(new InputSource(new StringReader(payload)), XPathConstants.STRING);
-        } catch (XPathExpressionException ignore) {
-            return null;
-        }
-    }
-
-    private void addOrUpdateChartSeries(ValueSeriesProperties series, Date date) {
-        SwingUtilities.invokeLater(() -> {
-            if (chart.getSeriesMap().containsKey(series.getSeriesName())) {
-                chart.updateXYSeries(series.getSeriesName(), series.xDataList(), series.yDataList(), null);
-            } else {
-                chart.addSeries(series.getSeriesName(), series.xDataList(), series.yDataList());
-                XYSeries xySeries = chart.getSeriesMap().get(series.getSeriesName());
-                xySeries.setSmooth(true);
-            }
-            chartPanel.revalidate();
-            chartPanel.repaint();
-        });
     }
 
     private void seriesNameChanged(String oldSeriesName, String newSeriesName) {

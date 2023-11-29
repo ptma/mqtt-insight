@@ -20,8 +20,7 @@ public enum ValueComparator implements Textable {
     GT(">"),
     GTE(">="),
     LT("<"),
-    LTE("<=")
-    ;
+    LTE("<=");
 
     private final String text;
 
@@ -35,6 +34,9 @@ public enum ValueComparator implements Textable {
     }
 
     public static boolean match(ValueComparator comparator, String expected, String readValue) {
+        if (readValue == null) {
+            return false;
+        }
         if (expected == null) {
             expected = "";
         }

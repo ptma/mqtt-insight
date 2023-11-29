@@ -5,8 +5,6 @@ import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.exception.VerificationException;
-import com.mqttinsight.mqtt.FavoriteSubscription;
-import com.mqttinsight.mqtt.MqttQos;
 import com.mqttinsight.mqtt.PublishedItem;
 import com.mqttinsight.mqtt.PublishedMqttMessage;
 import com.mqttinsight.ui.component.SyntaxTextEditor;

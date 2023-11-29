@@ -1,7 +1,7 @@
 package com.mqttinsight.ui.chart;
 
 import cn.hutool.core.util.ReUtil;
-import com.jayway.jsonpath.JsonPath;
+import cn.hutool.core.util.StrUtil;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.ui.chart.series.*;
@@ -15,15 +15,12 @@ import com.mqttinsight.util.TopicUtil;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.jdesktop.swingx.JXTable;
-import org.xml.sax.InputSource;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
-import javax.xml.xpath.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,8 +43,6 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     protected JPanel bottomPanel;
 
     protected InstanceEventAdapter eventAdapter;
-
-    protected static final XPathFactory xpathFactory = XPathFactory.newInstance();
 
     protected BaseChartFrame(MqttInstance mqttInstance) {
         super();
@@ -257,6 +252,9 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
             }
             case PAYLOAD -> {
                 String payloadStr = message.payloadAsString(false);
+                if (StrUtil.isEmpty(payloadStr)) {
+                    return false;
+                }
                 switch (series.getMatchMode()) {
                     case REGEXP -> {
                         return ReUtil.isMatch(series.getMatchExpression().getExpression(), payloadStr);
@@ -265,21 +263,15 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
                         MatchExpression expression = series.getMatchExpression();
                         ValueComparator comparator = expression.getComparator();
                         String expectedValue = expression.getValue();
-                        String readValue = JsonPath.read(payloadStr, expression.getExpression()).toString();
+                        String readValue = Utils.getByJsonPath(expression.getExpression(), payloadStr);
                         return ValueComparator.match(comparator, expectedValue, readValue);
                     }
                     case XPATH -> {
-                        try {
-                            MatchExpression expression = series.getMatchExpression();
-                            ValueComparator comparator = expression.getComparator();
-                            String expectedValue = expression.getValue();
-                            XPath xpath = xpathFactory.newXPath();
-                            XPathExpression exp = xpath.compile(expression.getExpression());
-                            String readValue = (String) exp.evaluate(new InputSource(new StringReader(payloadStr)), XPathConstants.STRING);
-                            return ValueComparator.match(comparator, expectedValue, readValue);
-                        } catch (XPathExpressionException ignore) {
-                            return false;
-                        }
+                        MatchExpression expression = series.getMatchExpression();
+                        ValueComparator comparator = expression.getComparator();
+                        String expectedValue = expression.getValue();
+                        String readValue = Utils.getByXPath(expression.getExpression(), payloadStr);
+                        return ValueComparator.match(comparator, expectedValue, readValue);
                     }
                     default -> {
                         return false;

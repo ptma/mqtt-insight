@@ -174,15 +174,30 @@ public class ValueSeriesEditor extends JDialog {
     private void verifyFields() throws VerificationException {
         Validator.notEmpty(seriesNameField, () -> LangUtil.format("FieldRequiredValidation", seriesNameLabel.getText()));
         Validator.notEmpty(matchExpressionField, () -> LangUtil.format("FieldRequiredValidation", matchExpressionLabel.getText()));
-        boolean isJsonOrXPath = MatchMode.JSON_PATH.equals(matchModeCombo.getSelectedItem())
-            || MatchMode.XPATH.equals(matchModeCombo.getSelectedItem());
-        if (isJsonOrXPath) {
+        boolean isJsonPath = MatchMode.JSON_PATH.equals(matchModeCombo.getSelectedItem());
+        if (isJsonPath && !Utils.verifyJsonPath(matchExpressionField.getText())) {
+            throw new VerificationException(LangUtil.format("InputNotValid", matchExpressionField.getText(), "JsonPath"));
+        }
+        boolean isXPath = MatchMode.XPATH.equals(matchModeCombo.getSelectedItem());
+        if (isXPath && !Utils.verifyXPath(matchExpressionField.getText())) {
+            throw new VerificationException(LangUtil.format("InputNotValid", matchExpressionField.getText(), "XPath"));
+        }
+        if (isJsonPath || isXPath) {
             Validator.notEmpty(comparatorComboBox, () -> LangUtil.format("FieldRequiredValidation", "Comparator"));
         }
 
         boolean extractingExpressionVisible = ((ExtractingMode) extractingModeCombo.getSelectedItem()).isSupportsExpression();
         if (extractingExpressionVisible) {
             Validator.notEmpty(extractingExpressionField, () -> LangUtil.format("FieldRequiredValidation", extractingExpressionLabel.getText()));
+        }
+        if (ExtractingMode.JSON_PATH.equals(extractingModeCombo.getSelectedItem())) {
+            if (!!Utils.verifyJsonPath(extractingExpressionField.getText())) {
+                throw new VerificationException(LangUtil.format("InputNotValid", extractingExpressionField.getText(), "JsonPath"));
+            }
+        } else if (ExtractingMode.XPATH.equals(extractingModeCombo.getSelectedItem())) {
+            if (!!Utils.verifyXPath(extractingExpressionField.getText())) {
+                throw new VerificationException(LangUtil.format("InputNotValid", extractingExpressionField.getText(), "XPath"));
+            }
         }
     }
 

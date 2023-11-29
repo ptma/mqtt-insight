@@ -1,18 +1,27 @@
 package com.mqttinsight.util;
 
 import cn.hutool.core.lang.PatternPool;
+import com.jayway.jsonpath.JsonPath;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.ui.component.NormalMenuItem;
 import com.mqttinsight.ui.form.InputDialog;
 import org.jdesktop.swingx.graphics.ColorUtilities;
+import org.xml.sax.InputSource;
 import raven.toast.Notifications;
 
 import javax.swing.*;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.StringReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,6 +32,8 @@ import java.util.regex.Pattern;
 public class Utils {
 
     private static final Random RANDOM = new Random(System.currentTimeMillis());
+
+    private static final Map<String, XPathExpression> XPATH_CACHE = new ConcurrentHashMap<>();
 
     public static class Toast {
 
@@ -281,4 +292,50 @@ public class Utils {
         }
     }
 
+    public static boolean verifyJsonPath(String jsonPath) {
+        try {
+            JsonPath.compile(jsonPath);
+            return true;
+        } catch (Exception ignore) {
+            return false;
+        }
+    }
+
+    public static String getByJsonPath(String jsonPath, String source) {
+        try {
+            return JsonPath.read(source, jsonPath).toString();
+        } catch (Exception ignore) {
+            return null;
+        }
+    }
+
+    public static boolean verifyXPath(String xpath) {
+        try {
+            XPATH_CACHE.computeIfAbsent(xpath, (key) -> {
+                try {
+                    return XPathFactory.newInstance().newXPath().compile(key);
+                } catch (XPathExpressionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            return true;
+        } catch (Exception ignore) {
+            return false;
+        }
+    }
+
+    public static String getByXPath(String xpath, String source) {
+        try (StringReader reader = new StringReader(source)) {
+            XPathExpression exp = XPATH_CACHE.computeIfAbsent(xpath, (key) -> {
+                try {
+                    return XPathFactory.newInstance().newXPath().compile(key);
+                } catch (XPathExpressionException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            return (String) exp.evaluate(new InputSource(reader), XPathConstants.STRING);
+        } catch (Exception ignore) {
+            return null;
+        }
+    }
 }

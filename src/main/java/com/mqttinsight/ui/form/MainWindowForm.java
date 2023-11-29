@@ -11,7 +11,6 @@ import com.mqttinsight.ui.form.panel.Mqtt5InstanceTabPanel;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.ui.form.panel.MqttInstanceTabPanel;
 import com.mqttinsight.ui.log.LogTab;
-import com.mqttinsight.ui.log.StdHook;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;

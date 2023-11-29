@@ -3,7 +3,6 @@ package com.mqttinsight.ui.chart;
 import cn.hutool.core.img.ColorUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
-import com.jayway.jsonpath.JsonPath;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.ui.chart.series.*;
@@ -17,15 +16,12 @@ import org.knowm.xchart.*;
 import org.knowm.xchart.internal.chartpart.Chart;
 import org.knowm.xchart.style.PieStyler;
 import org.knowm.xchart.style.Styler;
-import org.xml.sax.InputSource;
 
 import javax.swing.*;
-import javax.xml.xpath.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,8 +44,6 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     private Chart chart;
     private ChartMode chartMode;
     private XChartPanel chartPanel;
-
-    private static final XPathFactory xpathFactory = XPathFactory.newInstance();
 
     public static void open(MqttInstance mqttInstance) {
         JFrame dialog = new MessageCountChartFrame(mqttInstance);
@@ -288,20 +282,14 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
                     case JSON_PATH -> {
                         String payloadStr = message.payloadAsString(false);
                         MatchExpression expression = series.getMatchExpression();
-                        String seriesName = JsonPath.read(payloadStr, expression.getExpression()).toString();
+                        String seriesName = Utils.getByJsonPath(expression.getExpression(), payloadStr);
                         saveOrUpdateSeriesData(seriesName);
                     }
                     case XPATH -> {
-                        try {
-                            String payloadStr = message.payloadAsString(false);
-                            MatchExpression expression = series.getMatchExpression();
-                            XPath xpath = xpathFactory.newXPath();
-                            XPathExpression exp = xpath.compile(expression.getExpression());
-                            String seriesName = (String) exp.evaluate(new InputSource(new StringReader(payloadStr)), XPathConstants.STRING);
-                            saveOrUpdateSeriesData(seriesName);
-                        } catch (XPathExpressionException ignore) {
-
-                        }
+                        String payloadStr = message.payloadAsString(false);
+                        MatchExpression expression = series.getMatchExpression();
+                        String seriesName = Utils.getByXPath(expression.getExpression(), payloadStr);
+                        saveOrUpdateSeriesData(seriesName);
                     }
                 }
             }

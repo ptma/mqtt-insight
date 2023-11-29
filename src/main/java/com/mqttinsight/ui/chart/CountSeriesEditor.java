@@ -169,9 +169,15 @@ public class CountSeriesEditor extends JDialog {
         Validator.notEmpty(seriesNameField, () -> LangUtil.format("FieldRequiredValidation", seriesNameLabel.getText()));
         Validator.notEmpty(matchExpressionField, () -> LangUtil.format("FieldRequiredValidation", matchExpressionLabel.getText()));
         boolean isDynamic = dynamicCheckBox.isSelected();
-        boolean isJsonOrXPath = MatchMode.JSON_PATH.equals(matchModeCombo.getSelectedItem())
-            || MatchMode.XPATH.equals(matchModeCombo.getSelectedItem());
-        if (!isDynamic && isJsonOrXPath) {
+        boolean isJsonPath = MatchMode.JSON_PATH.equals(matchModeCombo.getSelectedItem());
+        if (isJsonPath && !Utils.verifyJsonPath(matchExpressionField.getText())) {
+            throw new VerificationException(LangUtil.format("InputNotValid", matchExpressionField.getText(), "JsonPath"));
+        }
+        boolean isXPath = MatchMode.XPATH.equals(matchModeCombo.getSelectedItem());
+        if (isXPath && !Utils.verifyXPath(matchExpressionField.getText())) {
+            throw new VerificationException(LangUtil.format("InputNotValid", matchExpressionField.getText(), "XPath"));
+        }
+        if (!isDynamic && (isJsonPath || isXPath)) {
             Validator.notEmpty(comparatorComboBox, () -> LangUtil.format("FieldRequiredValidation", "Comparer"));
         }
     }
