@@ -1,19 +1,17 @@
 @file:Suppress("UNCHECKED_CAST")
 
-import groovy.lang.Closure
 import groovy.json.JsonSlurper
+import groovy.lang.Closure
 import io.github.fvarrui.javapackager.gradle.PackagePluginExtension
 import io.github.fvarrui.javapackager.gradle.PackageTask
+import io.github.fvarrui.javapackager.model.HeaderType
 import io.github.fvarrui.javapackager.model.LinuxConfig
 import io.github.fvarrui.javapackager.model.MacConfig
+import io.github.fvarrui.javapackager.model.MacStartup
 import io.github.fvarrui.javapackager.model.Platform
 import io.github.fvarrui.javapackager.model.WindowsConfig
-import io.github.fvarrui.javapackager.model.HeaderType
-import io.github.fvarrui.javapackager.model.MacStartup
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.internal.os.OperatingSystem
-import java.nio.charset.Charset
-import java.io.File
 
 plugins {
     `java-library`
@@ -26,7 +24,9 @@ buildscript {
         mavenCentral()
         dependencies {
             // ********* package with gradle 7.6.2 *********
-            classpath("io.github.fvarrui:javapackager:1.6.7")
+            // @see https://githubfast.com/fvarrui/JavaPackager/issues/315
+            // classpath("io.github.fvarrui:javapackager:1.6.7")
+            classpath("io.github.fvarrui:javapackager:1.7.3")
         }
     }
 }
