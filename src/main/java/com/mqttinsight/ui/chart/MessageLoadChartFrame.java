@@ -37,7 +37,6 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
 
     private PopupMenuButton seriesIntervalButton;
     private PopupMenuButton seriesLimitButton;
-    private LoadSeriesTableModel seriesTableModel;
 
     private ExecutorService executorService;
     private ScheduledThreadPoolExecutor scheduledExecutor;
@@ -151,13 +150,11 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
     }
 
     @Override
-    protected AbstractSeriesTableModel<LoadSeriesProperties> getSeriesTableModel() {
-        return seriesTableModel;
+    protected AbstractSeriesTableModel<LoadSeriesProperties> createSeriesTableModel() {
+        return new LoadSeriesTableModel();
     }
 
     private void initComponents() {
-        seriesTableModel = new LoadSeriesTableModel();
-        seriesTable.setModel(seriesTableModel);
         initTableColumns();
         // Series table rows changed
         seriesTableModel.addTableModelListener(l -> {
@@ -254,12 +251,14 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         column.setWidth(80);
         column.setMinWidth(80);
         column.setMaxWidth(80);
+        column.putClientProperty("Alignment", JLabel.CENTER);
         // Type column
         column = seriesTable.getColumnExt(2);
         column.setPreferredWidth(130);
         column.setWidth(130);
         column.setMinWidth(100);
         column.setMaxWidth(150);
+        column.putClientProperty("Alignment", JLabel.CENTER);
         // Expression column
         column = seriesTable.getColumnExt(3);
         column.setPreferredWidth(300);
@@ -268,6 +267,7 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         column = seriesTable.getColumnExt(4);
         column.setPreferredWidth(100);
         column.setWidth(100);
+        column.putClientProperty("Alignment", JLabel.CENTER);
         // Window column
         column = seriesTable.getColumnExt(5);
         column.setPreferredWidth(100);
@@ -354,27 +354,28 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
     private void addOrUpdateChartSeries(LoadSeriesProperties series, Date date) {
         SwingUtilities.invokeLater(() -> {
             series.calculateStatisticalValue(date);
-
-            if (chart.getSeriesMap().containsKey(series.getSeriesName())) {
-                chart.updateXYSeries(series.getSeriesName(), series.xDataList(), series.yDataList(), null);
-            } else {
-                chart.addSeries(series.getSeriesName(), series.xDataList(), series.yDataList());
-                XYSeries xySeries = chart.getSeriesMap().get(series.getSeriesName());
-                xySeries.setSmooth(true);
-                if (StatisticalMethod.COUNT.equals(series.getStatisticalMethod())) {
-                    if (countYAxisGroup != -1) {
-                        xySeries.setYAxisGroup(countYAxisGroup);
-                        chart.setYAxisGroupTitle(countYAxisGroup, LangUtil.getString("MessageCount"));
-                    }
+            if (!isPaused()) {
+                if (chart.getSeriesMap().containsKey(series.getSeriesName())) {
+                    chart.updateXYSeries(series.getSeriesName(), series.xDataList(), series.yDataList(), null);
                 } else {
-                    if (sizeYAxisGroup != -1) {
-                        xySeries.setYAxisGroup(sizeYAxisGroup);
-                        chart.setYAxisGroupTitle(sizeYAxisGroup, LangUtil.getString("MessageSizeAxis"));
+                    chart.addSeries(series.getSeriesName(), series.xDataList(), series.yDataList());
+                    XYSeries xySeries = chart.getSeriesMap().get(series.getSeriesName());
+                    xySeries.setSmooth(true);
+                    if (StatisticalMethod.COUNT.equals(series.getStatisticalMethod())) {
+                        if (countYAxisGroup != -1) {
+                            xySeries.setYAxisGroup(countYAxisGroup);
+                            chart.setYAxisGroupTitle(countYAxisGroup, LangUtil.getString("MessageCount"));
+                        }
+                    } else {
+                        if (sizeYAxisGroup != -1) {
+                            xySeries.setYAxisGroup(sizeYAxisGroup);
+                            chart.setYAxisGroupTitle(sizeYAxisGroup, LangUtil.getString("MessageSizeAxis"));
+                        }
                     }
                 }
+                chartPanel.revalidate();
+                chartPanel.repaint();
             }
-            chartPanel.revalidate();
-            chartPanel.repaint();
         });
     }
 

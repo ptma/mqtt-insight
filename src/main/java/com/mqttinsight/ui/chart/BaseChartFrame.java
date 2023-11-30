@@ -13,10 +13,13 @@ import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.TopicUtil;
 import com.mqttinsight.util.Utils;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jdesktop.swingx.JXTable;
+import org.jdesktop.swingx.renderer.DefaultTableRenderer;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import java.awt.*;
@@ -41,8 +44,11 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     protected JXTable seriesTable;
     protected SplitButton favoriteSplitButton;
     protected JPanel bottomPanel;
-
+    private JButton pauseButton;
+    protected AbstractSeriesTableModel<T> seriesTableModel;
     protected InstanceEventAdapter eventAdapter;
+    @Getter
+    private boolean paused = false;
 
     protected BaseChartFrame(MqttInstance mqttInstance) {
         super();
@@ -78,14 +84,9 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     protected abstract void resetChartAction(ActionEvent e);
 
     /**
-     * 收藏按钮点击时调用，子类实现具体的业务逻辑。
-     */
-//    protected abstract void saveSeriesToFavorite(ActionEvent e);
-
-    /**
      * 获取子类实际使用的表格模型
      */
-    protected abstract AbstractSeriesTableModel<T> getSeriesTableModel();
+    protected abstract AbstractSeriesTableModel<T> createSeriesTableModel();
 
     /**
      * 接收到 MQTT 消息时调用，子类实现具体的业务逻辑。
@@ -111,6 +112,10 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     }
 
     private void initComponents() {
+        bottomPanel.setBorder(new LineBorder(UIManager.getColor("Component.borderColor")));
+
+        seriesTableModel = createSeriesTableModel();
+        seriesTable.setModel(seriesTableModel);
         seriesTable.setRowHeight(25);
         seriesTable.setEditable(false);
         seriesTable.setSortable(false);
@@ -119,12 +124,15 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
         seriesTable.setCellSelectionEnabled(false);
         seriesTable.setRowSelectionAllowed(true);
 
+        seriesTable.setDefaultRenderer(Object.class, new DefaultTableRenderer(new SeriesTableRendererProvider()));
+
         if (UIManager.getBoolean("laf.dark")) {
             seriesTable.setShowHorizontalLines(true);
         }
         seriesTable.getSelectionModel().addListSelectionListener(this::tableSelectionChanged);
-        seriesTable.revalidate();
-        seriesTable.repaint();
+        seriesTableModel.addTableModelListener(l -> {
+            pauseButton.setEnabled(!seriesTableModel.getSeries().isEmpty());
+        });
 
         ListSelectionModel cellSelectionModel = seriesTable.getSelectionModel();
         cellSelectionModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -157,11 +165,19 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
         resetChartButton.setIcon(Icons.RESET);
         resetChartButton.addActionListener(this::resetChartAction);
 
+        pauseButton.setIcon(Icons.PAUSE);
+        pauseButton.setText(LangUtil.getString("Pause"));
+        pauseButton.addActionListener(e -> {
+            paused = !paused;
+            pauseButton.setIcon(paused ? Icons.EXECUTE : Icons.PAUSE);
+            pauseButton.setText(paused ? LangUtil.getString("Resume") : LangUtil.getString("Pause"));
+        });
+
         favoriteSplitButton.addActionListener(this::saveSeriesAction);
     }
 
     protected void saveSeriesAction(ActionEvent e) {
-        if (getSeriesTableModel().getSeries().isEmpty()) {
+        if (seriesTableModel.getSeries().isEmpty()) {
             return;
         }
         Utils.Message.input(this, LangUtil.getString("EnterCollectionName"), (name) -> {
@@ -177,7 +193,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
                 }
             }
             favoriteSeries.removeIf(t -> t.getName().equals(name));
-            favoriteSeries.add(FavoriteSeries.of(name, getSeriesTableModel().getSeries()));
+            favoriteSeries.add(FavoriteSeries.of(name, seriesTableModel.getSeries()));
             Configuration.instance().changed();
             loadFavoriteSeries();
         });
@@ -217,9 +233,9 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
                 SplitIconMenuItem menuItem = new SplitIconMenuItem(item.getName(), null, Icons.REMOVE);
                 menu.add(menuItem);
                 menuItem.addActionListener(e -> {
-                    getSeriesTableModel().removeAll();
+                    seriesTableModel.removeAll();
                     for (T series : item.getSeries()) {
-                        getSeriesTableModel().addRow(series);
+                        seriesTableModel.addRow(series);
                     }
                     resetChartButton.doClick();
                 });
@@ -319,6 +335,12 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
         toolbar.add(resetChartButton);
         final JToolBar.Separator toolBar$Separator2 = new JToolBar.Separator();
         toolbar.add(toolBar$Separator2);
+        pauseButton = new JButton();
+        pauseButton.setEnabled(false);
+        pauseButton.setText("");
+        toolbar.add(pauseButton);
+        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
+        toolbar.add(toolBar$Separator3);
         toolbar.add(favoriteSplitButton);
         tableScrollPanel = new JScrollPane();
         topPanel.add(tableScrollPanel, BorderLayout.CENTER);

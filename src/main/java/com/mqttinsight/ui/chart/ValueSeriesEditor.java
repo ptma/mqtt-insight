@@ -7,6 +7,7 @@ import com.mqttinsight.exception.VerificationException;
 import com.mqttinsight.mqtt.SecureMode;
 import com.mqttinsight.ui.chart.series.*;
 import com.mqttinsight.ui.component.renderer.TextableListRenderer;
+import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import com.mqttinsight.util.Validator;
@@ -138,6 +139,9 @@ public class ValueSeriesEditor extends JDialog {
         matchExpressionLabel.setText(LangUtil.getString("MatchExpression"));
         extractingModeLabel.setText(LangUtil.getString("ExtractingMode"));
         extractingExpressionLabel.setText(LangUtil.getString("ExtractingExpression"));
+        extractingExpressionLabel.setIcon(Icons.TIPS);
+        extractingExpressionLabel.setHorizontalTextPosition(SwingConstants.LEADING);
+        extractingExpressionLabel.setToolTipText(LangUtil.getString("ExtractingExpressionTip"));
         LangUtil.buttonText(buttonOK, "&Ok");
         LangUtil.buttonText(buttonCancel, "&Cancel");
     }
@@ -191,11 +195,11 @@ public class ValueSeriesEditor extends JDialog {
             Validator.notEmpty(extractingExpressionField, () -> LangUtil.format("FieldRequiredValidation", extractingExpressionLabel.getText()));
         }
         if (ExtractingMode.JSON_PATH.equals(extractingModeCombo.getSelectedItem())) {
-            if (!!Utils.verifyJsonPath(extractingExpressionField.getText())) {
+            if (!Utils.verifyJsonPath(extractingExpressionField.getText())) {
                 throw new VerificationException(LangUtil.format("InputNotValid", extractingExpressionField.getText(), "JsonPath"));
             }
         } else if (ExtractingMode.XPATH.equals(extractingModeCombo.getSelectedItem())) {
-            if (!!Utils.verifyXPath(extractingExpressionField.getText())) {
+            if (!Utils.verifyXPath(extractingExpressionField.getText())) {
                 throw new VerificationException(LangUtil.format("InputNotValid", extractingExpressionField.getText(), "XPath"));
             }
         }

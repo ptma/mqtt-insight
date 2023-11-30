@@ -9,36 +9,37 @@ import java.util.ResourceBundle;
  */
 public class LangUtil {
 
+    private static final String BUNDLE_NAME = "com.mqttinsight.Lang";
     private static ResourceBundle bundle;
 
     public static ResourceBundle getBundle() {
         if (bundle != null) {
             return bundle;
         }
-        bundle = ResourceBundle.getBundle("com/mqttinsight/Lang");
+        bundle = ResourceBundle.getBundle(BUNDLE_NAME);
         return bundle;
     }
 
     public static void setLocale(Locale locale) {
         Locale.setDefault(locale);
-        bundle = ResourceBundle.getBundle("com/mqttinsight/Lang", locale);
+        bundle = ResourceBundle.getBundle(BUNDLE_NAME, locale);
     }
 
     public static String getString(String key) {
-        ResourceBundle bundle = getBundle();
-        if (bundle.containsKey(key)) {
-            return bundle.getString(key);
-        } else {
-            return key;
-        }
+        return getString(key, key);
     }
 
     public static String getString(String key, String defaultValue) {
-        ResourceBundle bundle = getBundle();
-        if (bundle.containsKey(key)) {
-            return bundle.getString(key);
+        ResourceBundle tmpBundle = getBundle();
+        if (tmpBundle.containsKey(key)) {
+            return tmpBundle.getString(key);
         } else {
-            return defaultValue;
+            tmpBundle = ResourceBundle.getBundle(BUNDLE_NAME, Locale.ENGLISH);
+            if (tmpBundle.containsKey(key)) {
+                return tmpBundle.getString(key);
+            } else {
+                return defaultValue;
+            }
         }
     }
 
@@ -56,6 +57,6 @@ public class LangUtil {
     }
 
     public static void buttonText(AbstractButton component, String key) {
-        Utils.UI.buttonText(component, getBundle().getString(key));
+        Utils.UI.buttonText(component, getString(key));
     }
 }

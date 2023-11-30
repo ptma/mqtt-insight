@@ -23,7 +23,7 @@ public class ValueSeriesProperties implements SeriesProperties {
     private ExtractingMode extractingMode;
     private String extractingExpression;
 
-    private transient LimitedList<ValueSeriesXYData> xyDatas = new LimitedList<>();
+    private final transient LimitedList<ValueSeriesXYData> xyDatas = new LimitedList<>();
 
     public void setXYDataLimit(Limit limit) {
         xyDatas.setLimit(limit);

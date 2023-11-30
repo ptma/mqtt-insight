@@ -287,10 +287,10 @@ public class ConnectionManagerForm extends JDialog {
     private void initTreeTable() {
         treeTableModel = ConnectionTreeTableModel.newInstance();
         treeTable = new JXTreeTable(treeTableModel);
-        treeTable.getColumnModel().getColumn(1).setPreferredWidth(300);
+        treeTable.getColumnModel().getColumn(1).setPreferredWidth(200);
         treeTable.getColumnModel().getColumn(1).setMaxWidth(400);
-        treeTable.getColumnModel().getColumn(1).setMinWidth(200);
-        treeTable.getColumnModel().getColumn(2).setPreferredWidth(100);
+        treeTable.getColumnModel().getColumn(1).setMinWidth(100);
+        treeTable.getColumnModel().getColumn(2).setPreferredWidth(80);
         treeTable.getColumnModel().getColumn(2).setMaxWidth(100);
         treeTable.getColumnModel().getColumn(2).setMinWidth(50);
         treeTable.setOpenIcon(Icons.FOLDER_OPEN);

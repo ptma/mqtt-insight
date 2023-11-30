@@ -23,8 +23,8 @@ public class LoadSeriesProperties implements SeriesProperties {
     private StatisticalMethod statisticalMethod;
     private Duration window;
 
-    private transient LimitedList<LoadSeriesMessage> messages = new LimitedList<>();
-    private transient LimitedList<LoadSeriesXYData> xyDatas = new LimitedList<>();
+    private final transient LimitedList<LoadSeriesMessage> messages = new LimitedList<>();
+    private final transient LimitedList<LoadSeriesXYData> xyDatas = new LimitedList<>();
 
     public void setXYDataLimit(Limit limit) {
         xyDatas.setLimit(limit);

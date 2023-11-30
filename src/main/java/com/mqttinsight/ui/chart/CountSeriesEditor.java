@@ -7,6 +7,7 @@ import com.mqttinsight.exception.VerificationException;
 import com.mqttinsight.mqtt.SecureMode;
 import com.mqttinsight.ui.chart.series.*;
 import com.mqttinsight.ui.component.renderer.TextableListRenderer;
+import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import com.mqttinsight.util.Validator;
@@ -127,6 +128,9 @@ public class CountSeriesEditor extends JDialog {
         matchLabel.setText(LangUtil.getString("Match"));
         matchModeLabel.setText(LangUtil.getString("MatchMode"));
         matchExpressionLabel.setText(LangUtil.getString("MatchExpression"));
+        matchExpressionLabel.setIcon(Icons.TIPS);
+        matchExpressionLabel.setHorizontalTextPosition(SwingConstants.LEADING);
+        matchExpressionLabel.setToolTipText(LangUtil.getString("MatchExpressionTip"));
         LangUtil.buttonText(buttonOK, "&Ok");
         LangUtil.buttonText(buttonCancel, "&Cancel");
     }

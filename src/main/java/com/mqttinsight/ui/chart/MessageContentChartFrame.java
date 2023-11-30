@@ -37,7 +37,6 @@ import java.util.concurrent.ExecutorService;
 public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperties> {
 
     private PopupMenuButton seriesLimitButton;
-    private ValueSeriesTableModel seriesTableModel;
 
     private ExecutorService executorService;
     private XYChart chart;
@@ -124,15 +123,17 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
                     Number value = extractValue(series, message);
                     if (value != null) {
                         series.addXyData(new Date(message.getTimestamp()), value);
-                        if (chart.getSeriesMap().containsKey(series.getSeriesName())) {
-                            chart.updateXYSeries(series.getSeriesName(), series.xDataList(), series.yDataList(), null);
-                        } else {
-                            chart.addSeries(series.getSeriesName(), series.xDataList(), series.yDataList());
-                            XYSeries xySeries = chart.getSeriesMap().get(series.getSeriesName());
-                            xySeries.setSmooth(true);
+                        if (!isPaused()) {
+                            if (chart.getSeriesMap().containsKey(series.getSeriesName())) {
+                                chart.updateXYSeries(series.getSeriesName(), series.xDataList(), series.yDataList(), null);
+                            } else {
+                                chart.addSeries(series.getSeriesName(), series.xDataList(), series.yDataList());
+                                XYSeries xySeries = chart.getSeriesMap().get(series.getSeriesName());
+                                xySeries.setSmooth(true);
+                            }
+                            chartPanel.revalidate();
+                            chartPanel.repaint();
                         }
-                        chartPanel.revalidate();
-                        chartPanel.repaint();
                     }
                 }
             }
@@ -150,13 +151,11 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
     }
 
     @Override
-    protected AbstractSeriesTableModel<ValueSeriesProperties> getSeriesTableModel() {
-        return seriesTableModel;
+    protected AbstractSeriesTableModel<ValueSeriesProperties> createSeriesTableModel() {
+        return new ValueSeriesTableModel();
     }
 
     private void initComponents() {
-        seriesTableModel = new ValueSeriesTableModel();
-        seriesTable.setModel(seriesTableModel);
         initTableColumns();
 
         //Chart series data length or time limit
@@ -202,12 +201,14 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         column.setWidth(80);
         column.setMinWidth(80);
         column.setMaxWidth(80);
+        column.putClientProperty("Alignment", JLabel.CENTER);
         // Type column
         column = seriesTable.getColumnExt(2);
-        column.setPreferredWidth(130);
-        column.setWidth(130);
-        column.setMinWidth(100);
+        column.setPreferredWidth(100);
+        column.setWidth(100);
+        column.setMinWidth(80);
         column.setMaxWidth(150);
+        column.putClientProperty("Alignment", JLabel.CENTER);
         // Expression column
         column = seriesTable.getColumnExt(3);
         column.setPreferredWidth(300);
@@ -216,10 +217,11 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         column = seriesTable.getColumnExt(4);
         column.setPreferredWidth(100);
         column.setWidth(100);
+        column.putClientProperty("Alignment", JLabel.CENTER);
         // Window column
         column = seriesTable.getColumnExt(5);
-        column.setPreferredWidth(100);
-        column.setWidth(100);
+        column.setPreferredWidth(300);
+        column.setWidth(300);
     }
 
     private void initChart() {

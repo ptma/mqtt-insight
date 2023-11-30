@@ -56,6 +56,17 @@
                     <constraints/>
                     <properties/>
                   </component>
+                  <component id="36fd6" class="javax.swing.JButton" binding="pauseButton">
+                    <constraints/>
+                    <properties>
+                      <enabled value="false"/>
+                      <text value=""/>
+                    </properties>
+                  </component>
+                  <component id="da63b" class="javax.swing.JToolBar$Separator">
+                    <constraints/>
+                    <properties/>
+                  </component>
                   <component id="8dfec" class="com.mqttinsight.ui.component.SplitButton" binding="favoriteSplitButton" custom-create="true">
                     <constraints/>
                     <properties/>
@@ -83,7 +94,9 @@
               <splitpane position="right"/>
             </constraints>
             <properties/>
-            <border type="none"/>
+            <border type="none">
+              <color color="-5524801"/>
+            </border>
             <children/>
           </grid>
         </children>

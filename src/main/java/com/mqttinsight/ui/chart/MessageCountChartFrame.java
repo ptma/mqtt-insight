@@ -36,8 +36,6 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     private JToggleButton pieChartButton;
     private JToggleButton barChartButton;
 
-    private CountSeriesTableModel seriesTableModel;
-
     private ExecutorService executorService;
     private Map<String, AtomicInteger> seriesCache = new ConcurrentHashMap<>();
 
@@ -87,7 +85,11 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     protected void removeSeriesAction(ActionEvent e) {
         int selectedRow = seriesTable.getSelectedRow();
         if (selectedRow >= 0) {
-            seriesTableModel.removeRow(seriesTable.convertRowIndexToModel(selectedRow));
+            int modelRowIndex = seriesTable.convertRowIndexToModel(selectedRow);
+            CountSeriesProperties series = seriesTableModel.getRow(modelRowIndex);
+            seriesTableModel.removeRow(modelRowIndex);
+            seriesCache.remove(series.getSeriesName());
+            chart.removeSeries(series.getSeriesName());
         }
     }
 
@@ -100,8 +102,8 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     }
 
     @Override
-    protected AbstractSeriesTableModel<CountSeriesProperties> getSeriesTableModel() {
-        return seriesTableModel;
+    protected AbstractSeriesTableModel<CountSeriesProperties> createSeriesTableModel() {
+        return new CountSeriesTableModel();
     }
 
     @Override
@@ -130,8 +132,6 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     }
 
     private void initComponents() {
-        seriesTableModel = new CountSeriesTableModel();
-        seriesTable.setModel(seriesTableModel);
         initTableColumns();
 
         pieChartButton.addActionListener(this::chartChanged);
@@ -149,18 +149,21 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
         column.setWidth(60);
         column.setMinWidth(60);
         column.setMaxWidth(60);
+        column.putClientProperty("Alignment", JLabel.CENTER);
         // Match column
         column = seriesTable.getColumnExt(2);
         column.setPreferredWidth(80);
         column.setWidth(80);
         column.setMinWidth(80);
         column.setMaxWidth(80);
+        column.putClientProperty("Alignment", JLabel.CENTER);
         // Type column
         column = seriesTable.getColumnExt(3);
         column.setPreferredWidth(130);
         column.setWidth(130);
         column.setMinWidth(100);
         column.setMaxWidth(150);
+        column.putClientProperty("Alignment", JLabel.CENTER);
         // Expression column
         column = seriesTable.getColumnExt(4);
         column.setPreferredWidth(300);
@@ -299,31 +302,27 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     private void saveOrUpdateSeriesData(String seriesName) {
         if (StrUtil.isNotBlank(seriesName)) {
             SwingUtilities.invokeLater(() -> {
-                AtomicInteger seriesValue;
-                if (seriesCache.containsKey(seriesName)) {
-                    seriesValue = seriesCache.get(seriesName);
-                } else {
-                    seriesValue = new AtomicInteger(0);
-                    seriesCache.put(seriesName, seriesValue);
-                }
+                AtomicInteger seriesValue = seriesCache.computeIfAbsent(seriesName, (key) -> new AtomicInteger(0));
                 int value = seriesValue.incrementAndGet();
-                if (chart.getSeriesMap().containsKey(seriesName)) {
-                    if (ChartMode.PIE.equals(chartMode)) {
-                        PieSeries exists = ((PieChart) chart).getSeriesMap().get(seriesName);
-                        exists.replaceData(value);
+                if (!isPaused()) {
+                    if (chart.getSeriesMap().containsKey(seriesName)) {
+                        if (ChartMode.PIE.equals(chartMode)) {
+                            PieSeries exists = ((PieChart) chart).getSeriesMap().get(seriesName);
+                            exists.replaceData(value);
+                        } else {
+                            CategorySeries exist = ((CategoryChart) chart).getSeriesMap().get(seriesName);
+                            exist.replaceData(List.of(value));
+                        }
                     } else {
-                        CategorySeries exist = ((CategoryChart) chart).getSeriesMap().get(seriesName);
-                        exist.replaceData(List.of(value));
+                        if (ChartMode.PIE.equals(chartMode)) {
+                            ((PieChart) chart).addSeries(seriesName, value);
+                        } else {
+                            ((CategoryChart) chart).addSeries(seriesName, List.of(seriesName), List.of(value));
+                        }
                     }
-                } else {
-                    if (ChartMode.PIE.equals(chartMode)) {
-                        ((PieChart) chart).addSeries(seriesName, value);
-                    } else {
-                        ((CategoryChart) chart).addSeries(seriesName, List.of(seriesName), List.of(value));
-                    }
+                    chartPanel.revalidate();
+                    chartPanel.repaint();
                 }
-                chartPanel.revalidate();
-                chartPanel.repaint();
             });
         }
     }
