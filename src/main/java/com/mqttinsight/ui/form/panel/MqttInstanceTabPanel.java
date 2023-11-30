@@ -408,11 +408,20 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             }
             favoriteSubscriptions.sort(Comparator.comparing(FavoriteSubscription::getTopic));
             favoriteSubscriptions.forEach(favorite -> {
-                favoriteMenu.add(Utils.UI.createMenuItem(favorite.getTopic()))
+                SplitIconMenuItem menuItem = new SplitIconMenuItem(favorite.getTopic(), null, Icons.REMOVE);
+                favoriteMenu.add(menuItem)
                     .addActionListener(e -> {
                         Subscription subscription = new Subscription(this, favorite.getTopic(), favorite.getQos(), favorite.getPayloadFormat(), Utils.generateRandomColor());
                         this.subscribe(subscription);
                     });
+                menuItem.addSplitActionListener(e -> {
+                    int opt = Utils.Message.confirm(this, LangUtil.format("RemoveFavoriteSubscription", favorite.getTopic()));
+                    if (JOptionPane.YES_OPTION == opt) {
+                        favoriteSubscriptions.remove(favorite);
+                        favoriteMenu.remove(menuItem);
+                        Configuration.instance().changed();
+                    }
+                });
             });
         } else {
             favoriteMenu.add(Utils.UI.createMenuItem(LangUtil.getString("NoSubscriptions")));
