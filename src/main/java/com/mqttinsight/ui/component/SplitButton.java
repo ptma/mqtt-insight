@@ -13,7 +13,7 @@ public class SplitButton extends JButton {
     private static Color buttonHoverArrowColor = UIManager.getColor("ComboBox.buttonHoverArrowColor");
     private static Color buttonPressedArrowColor = UIManager.getColor("ComboBox.buttonPressedArrowColor");
     private static int separatorSpacing = 4;
-    private static int splitWidth = 24;
+    private static int splitWidth = 28;
     private static int arrowSize = 9;
 
     private boolean hover;

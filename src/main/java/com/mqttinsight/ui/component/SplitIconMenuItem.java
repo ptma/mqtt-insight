@@ -14,7 +14,7 @@ import java.awt.event.MouseEvent;
 public class SplitIconMenuItem extends JMenuItem {
 
     private static int separatorSpacing = 4;
-    private static int splitWidth = 48;
+    private static int splitWidth = 40;
     private static int splitIconSize = 16;
 
     private boolean onSplit;
