@@ -1,17 +1,17 @@
 @file:Suppress("UNCHECKED_CAST")
 
+import groovy.json.JsonSlurper
 import groovy.lang.Closure
 import io.github.fvarrui.javapackager.gradle.PackagePluginExtension
 import io.github.fvarrui.javapackager.gradle.PackageTask
+import io.github.fvarrui.javapackager.model.HeaderType
 import io.github.fvarrui.javapackager.model.LinuxConfig
 import io.github.fvarrui.javapackager.model.MacConfig
+import io.github.fvarrui.javapackager.model.MacStartup
 import io.github.fvarrui.javapackager.model.Platform
 import io.github.fvarrui.javapackager.model.WindowsConfig
-import io.github.fvarrui.javapackager.model.HeaderType
-import io.github.fvarrui.javapackager.model.MacStartup
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.internal.os.OperatingSystem
-import java.nio.charset.Charset
 
 plugins {
     `java-library`
@@ -24,19 +24,22 @@ buildscript {
         mavenCentral()
         dependencies {
             // ********* package with gradle 7.6.2 *********
-            classpath("io.github.fvarrui:javapackager:1.6.7")
+            // @see https://githubfast.com/fvarrui/JavaPackager/issues/315
+            // classpath("io.github.fvarrui:javapackager:1.6.7")
+            classpath("io.github.fvarrui:javapackager:1.7.3")
         }
     }
 }
 
 plugins.apply("io.github.fvarrui.javapackager.plugin")
 
-val appliactionVersion: String = "1.0.2"
+val versionConfig = "${rootProject.projectDir.path}/src/main/resources/version.json"
+val versionJson = JsonSlurper().parse(File(versionConfig)) as Map<String, String>
+val appliactionVersion = versionJson.get("version")
 val applicationName: String = "MqttInsight"
 val organization: String = "ptma@163.com"
-val copyright: String = "copyright 2023 ptma@163.com"
+val copyright: String = "Copyright 2023 ptma@163.com"
 val supportUrl: String = "https://github.com/ptma/mqtt-insight"
-
 
 val flatlafVersion = "3.2.1"
 val fatJar = false
@@ -90,6 +93,7 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
     implementation("org.slf4j:slf4j-api:2.0.7")
+    implementation("org.slf4j:jul-to-slf4j:2.0.9")
     implementation("ch.qos.logback:logback-classic:1.4.8")
 
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
@@ -100,6 +104,8 @@ dependencies {
     } else {
         implementation("com.caoccao.javet:javet:2.2.2") // Linux and Windows (x86_64)
     }
+    implementation("org.knowm.xchart:xchart:3.8.5")
+    implementation("com.jayway.jsonpath:json-path:2.8.0")
 }
 repositories {
     mavenCentral()
@@ -117,19 +123,14 @@ tasks.compileJava {
     options.isDeprecation = false
 }
 
-tasks.processResources {
-    updateVersion()
-}
-
-
 tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     manifest {
         attributes("Main-Class" to "com.mqttinsight.MqttInsightApplication")
         attributes("Implementation-Vendor" to "https://github.com/ptma/mqtt-insight")
-        attributes("Implementation-Copyright" to "MqttInsight")
-        attributes("Implementation-Version" to project.version)
+        attributes("Implementation-Copyright" to copyright)
+        attributes("Implementation-Version" to appliactionVersion)
         attributes("Multi-Release" to "true")
     }
 
@@ -264,8 +265,3 @@ fun getIconFile(fileName: String): File {
     return File(projectDir.absolutePath + File.separator + "assets" + File.separator + fileName)
 }
 
-fun updateVersion() {
-    val jsonFile =
-        File(projectDir.absolutePath + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "version.json")
-    jsonFile.writeText("{\"version\": \"${appliactionVersion}\"}", Charset.forName("utf-8"))
-}

@@ -1,5 +1,6 @@
 package com.mqttinsight.ui.form;
 
+import cn.hutool.core.date.DatePattern;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -56,10 +57,12 @@ public class OptionsForm extends JDialog {
     private JLabel defaultViewLabel;
     private JLabel maxMessageRowsLabel;
     private JSpinner maxMessageRowsField;
+    private JComboBox<String> timeFormatComboBox;
+    private JLabel timeFormatLabel;
 
     public static void open() {
         JDialog dialog = new OptionsForm(MqttInsightApplication.frame);
-        dialog.setMinimumSize(new Dimension(450, 360));
+        dialog.setMinimumSize(new Dimension(450, 380));
         dialog.setLocationRelativeTo(MqttInsightApplication.frame);
         dialog.setResizable(false);
         dialog.pack();
@@ -105,6 +108,8 @@ public class OptionsForm extends JDialog {
 
         maxMessageRowsLabel.setText(LangUtil.getString("MaxMessageRows"));
         maxMessageRowsLabel.setToolTipText(LangUtil.getString("MaxMessageRowsTip"));
+
+        timeFormatLabel.setText(LangUtil.getString("TimeFormat"));
 
         LangUtil.buttonText(buttonOK, "&Ok");
         LangUtil.buttonText(buttonCancel, "&Cancel");
@@ -160,6 +165,8 @@ public class OptionsForm extends JDialog {
         maxMessageRowsField.setModel(new SpinnerNumberModel(maxMessageRows, 0, 15, 1));
         maxMessageRowsField.setEditor(new JSpinner.NumberEditor(maxMessageRowsField, "####"));
         maxMessageRowsField.addChangeListener(e -> optionsChanged = true);
+
+        timeFormatComboBox.setSelectedItem(Configuration.instance().getString(ConfKeys.TIME_FORMAT, DatePattern.NORM_DATETIME_MS_PATTERN));
     }
 
     private Set<String> loadMonospaceFonts() {
@@ -180,6 +187,7 @@ public class OptionsForm extends JDialog {
             Configuration.instance().set(ConfKeys.FONT_SIZE, fontSizeField.getValue());
             Configuration.instance().set(ConfKeys.MESSAGE_VIEW, messageViewComboBox.getSelectedItem());
             Configuration.instance().set(ConfKeys.MAX_MESSAGE_ROWS, maxMessageRowsField.getValue());
+            Configuration.instance().set(ConfKeys.TIME_FORMAT, timeFormatComboBox.getSelectedItem());
             Configuration.instance().save(true);
         }
         dispose();
@@ -216,7 +224,7 @@ public class OptionsForm extends JDialog {
         buttonCancel.setText("Cancel");
         buttonPanel.add(buttonCancel, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         mainPanel = new JPanel();
-        mainPanel.setLayout(new FormLayout("fill:10dlu:noGrow,left:4dlu:noGrow,fill:d:noGrow,left:4dlu:noGrow,fill:max(d;4px):noGrow,left:20dlu:noGrow,fill:max(d;4px):noGrow,left:4dlu:noGrow,fill:d:noGrow,left:4dlu:noGrow,fill:max(d;4px):grow", "center:max(d;4px):noGrow,top:4dlu:noGrow,center:d:noGrow,top:4dlu:noGrow,center:max(d;4px):noGrow,top:10dlu:noGrow,center:max(d;4px):noGrow,top:4dlu:noGrow,center:max(d;4px):noGrow,top:10dlu:noGrow,center:max(d;4px):noGrow,top:4dlu:noGrow,center:max(d;4px):noGrow"));
+        mainPanel.setLayout(new FormLayout("fill:10dlu:noGrow,left:4dlu:noGrow,fill:d:noGrow,left:4dlu:noGrow,fill:max(d;4px):noGrow,left:20dlu:noGrow,fill:max(d;4px):noGrow,left:4dlu:noGrow,fill:d:noGrow,left:4dlu:noGrow,fill:max(d;4px):grow", "center:max(d;4px):noGrow,top:4dlu:noGrow,center:d:noGrow,top:4dlu:noGrow,center:max(d;4px):noGrow,top:10dlu:noGrow,center:max(d;4px):noGrow,top:4dlu:noGrow,center:max(d;4px):noGrow,top:10dlu:noGrow,center:max(d;4px):noGrow,top:4dlu:noGrow,center:max(d;4px):noGrow,top:4dlu:noGrow,center:max(d;4px):noGrow"));
         contentPane.add(mainPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         mainPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         themeLabel = new JLabel();
@@ -259,6 +267,19 @@ public class OptionsForm extends JDialog {
         mainPanel.add(maxMessageRowsLabel, cc.xy(7, 13));
         maxMessageRowsField = new JSpinner();
         mainPanel.add(maxMessageRowsField, cc.xy(9, 13, CellConstraints.FILL, CellConstraints.DEFAULT));
+        timeFormatLabel = new JLabel();
+        timeFormatLabel.setText("Time Format");
+        mainPanel.add(timeFormatLabel, cc.xy(3, 15));
+        timeFormatComboBox = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
+        defaultComboBoxModel1.addElement("yyyy-MM-dd HH:mm:ss.SSS");
+        defaultComboBoxModel1.addElement("yyyy-MM-dd HH:mm:ss");
+        defaultComboBoxModel1.addElement("yyyy/MM/dd HH:mm:ss.SSS");
+        defaultComboBoxModel1.addElement("yyyy/MM/dd HH:mm:ss");
+        defaultComboBoxModel1.addElement("HH:mm:ss.SSS");
+        defaultComboBoxModel1.addElement("HH:mm:ss");
+        timeFormatComboBox.setModel(defaultComboBoxModel1);
+        mainPanel.add(timeFormatComboBox, cc.xyw(5, 15, 5));
     }
 
     /**

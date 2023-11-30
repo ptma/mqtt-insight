@@ -32,7 +32,6 @@ public class WillMessage implements Serializable, Cloneable {
 
     @Override
     public WillMessage clone() throws CloneNotSupportedException {
-        WillMessage clone = (WillMessage) super.clone();
-        return clone;
+        return (WillMessage) super.clone();
     }
 }

@@ -3,7 +3,7 @@ package com.mqttinsight.ui.event;
 import java.awt.*;
 
 /**
- * @author jinjq
+ * @author ptma
  */
 public interface ColorSelectionListener {
 

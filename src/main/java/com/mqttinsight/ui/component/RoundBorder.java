@@ -33,6 +33,7 @@ public class RoundBorder extends FlatRoundBorder {
         this.margin = margin;
     }
 
+    @Override
     public Insets getBorderInsets(Component c, Insets insets) {
         insets.top = margin != null ? margin.top : 0;
         insets.left = margin != null ? margin.left : 0;

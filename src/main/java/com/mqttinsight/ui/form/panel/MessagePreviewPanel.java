@@ -4,6 +4,7 @@ import cn.hutool.core.thread.ThreadUtil;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
+import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.ui.component.SingleLineBorder;
 import com.mqttinsight.ui.component.SyntaxTextEditor;
@@ -46,10 +47,10 @@ public class MessagePreviewPanel extends JPanel {
     private JXLabel retainedLabel;
     private JLabel formatLabel;
     private JComboBox<String> formatComboBox;
-    private JCheckBox prettyChechbox;
+    private JCheckBox prettyCheckbox;
     private JPanel payloadPanel;
 
-    private ExecutorService previewExcutorService = ThreadUtil.newFixedExecutor(1, 2, "Preview", new ThreadPoolExecutor.DiscardOldestPolicy());
+    private final ExecutorService previewExecutorService = ThreadUtil.newFixedExecutor(1, 2, "Preview", new ThreadPoolExecutor.DiscardOldestPolicy());
 
     public MessagePreviewPanel(MqttInstance mqttInstance) {
         this.mqttInstance = mqttInstance;
@@ -119,10 +120,14 @@ public class MessagePreviewPanel extends JPanel {
         formatComboBox.addActionListener(e -> this.updatePreviewMessage());
         topPanel.add(formatComboBox, "");
 
-        prettyChechbox = new JCheckBox(LangUtil.getString("Pretty"));
-        prettyChechbox.setSelected(true);
-        prettyChechbox.addActionListener(e -> this.updatePreviewMessage());
-        topPanel.add(prettyChechbox, "");
+        prettyCheckbox = new JCheckBox(LangUtil.getString("Pretty"));
+        prettyCheckbox.setSelected(mqttInstance.getProperties().isPrettyDuringPreview());
+        prettyCheckbox.addActionListener(e -> {
+            mqttInstance.getProperties().setPrettyDuringPreview(prettyCheckbox.isSelected());
+            Configuration.instance().changed();
+            this.updatePreviewMessage();
+        });
+        topPanel.add(prettyCheckbox, "");
 
         payloadEditor = new SyntaxTextEditor();
         payloadEditor.textArea().setEditable(false);
@@ -145,7 +150,12 @@ public class MessagePreviewPanel extends JPanel {
     }
 
     private void initEventListeners() {
-        mqttInstance.addEventListeners(new InstanceEventAdapter() {
+        mqttInstance.addEventListener(new InstanceEventAdapter() {
+            @Override
+            public void payloadFormatChanged() {
+                updatePreviewMessage();
+            }
+
             @Override
             public void clearAllMessages() {
                 previewMessage(null);
@@ -173,9 +183,9 @@ public class MessagePreviewPanel extends JPanel {
     }
 
     private void updatePreviewMessage() {
+        boolean pretty = prettyCheckbox.isSelected();
         if (previewedMessage != null) {
             String format = (String) formatComboBox.getSelectedItem();
-            boolean pretty = prettyChechbox.isSelected();
             if (CodecSupport.DEFAULT.equals(format)) {
                 payloadEditor.setText(previewedMessage.payloadAsString(pretty));
                 CodecSupport codec = CodecSupports.instance().getByName(previewedMessage.getPayloadFormat());
@@ -189,9 +199,9 @@ public class MessagePreviewPanel extends JPanel {
     }
 
     private void previewMessage(final MqttMessage message) {
-        previewedMessage = message;
-        previewExcutorService.execute(() -> {
-            if (message == null) {
+        this.previewedMessage = message;
+        previewExecutorService.execute(() -> {
+            if (previewedMessage == null) {
                 SwingUtilities.invokeLater(() -> {
                     topicField.setText(" ");
                     retainedLabel.setVisible(false);
@@ -202,21 +212,23 @@ public class MessagePreviewPanel extends JPanel {
             } else {
                 String format = (String) formatComboBox.getSelectedItem();
                 if (CodecSupport.DEFAULT.equals(format)) {
-                    format = message.getPayloadFormat();
+                    format = previewedMessage.getPayloadFormat();
                 }
                 CodecSupport codec = CodecSupports.instance().getByName(format);
-                String previewText = message.decodePayload(codec, prettyChechbox.isSelected());
+                String previewText = previewedMessage.decodePayload(codec, prettyCheckbox.isSelected());
 
                 SwingUtilities.invokeLater(() -> {
-                    topicField.setText(message.getTopic());
-                    retainedLabel.setVisible(message.isRetained());
-                    qosLabel.setText(String.format("QoS %d", message.getQos()));
-                    timeLabel.setText(message.getTime());
-                    payloadEditor.setText(previewText);
-                    payloadEditor.setSyntax(codec.getSyntax());
+                    if (previewedMessage != null) {
+                        topicField.setText(previewedMessage.getTopic());
+                        retainedLabel.setVisible(previewedMessage.isRetained());
+                        qosLabel.setText(String.format("QoS %d", previewedMessage.getQos()));
+                        timeLabel.setText(previewedMessage.getTime());
+                        payloadEditor.setText(previewText);
+                        payloadEditor.setSyntax(codec.getSyntax());
 
-                    if (toolbarPanel.isVisible()) {
-                        textSearchToolbar.find(true);
+                        if (toolbarPanel.isVisible()) {
+                            textSearchToolbar.find(true);
+                        }
                     }
                 });
             }

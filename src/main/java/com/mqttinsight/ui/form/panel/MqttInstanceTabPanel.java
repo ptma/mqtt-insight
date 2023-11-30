@@ -17,8 +17,9 @@ import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -29,9 +30,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 
-@Slf4j
+/**
+ * @author ptma
+ */
 public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstance {
+
+    protected static final Logger log = LoggerFactory.getLogger(MqttInstanceTabPanel.class);
 
     private static final int PREVIEW_PANEL_MIN_HEIGHT = 105;
     private static final int PREVIEW_PANEL_MIN_WIDTH = 370;
@@ -165,8 +171,32 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         topPanel.add(messageToolbar, "cell 3 0");
     }
 
+    private void applyLayout(MessageViewMode viewMode) {
+        if (this.viewMode != null && this.viewMode.equals(viewMode)) {
+            return;
+        }
+        if (viewMode == MessageViewMode.TABLE) {
+            messageSplitPanel.setOrientation(JSplitPane.VERTICAL_SPLIT);
+            Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_VERTICAL_DIVIDER, 500);
+            int maxHeight = messageSplitPanel.getPreferredSize().height - PREVIEW_PANEL_MIN_HEIGHT;
+            messageSplitPanel.setDividerLocation(Math.min(divider, maxHeight));
+            detailTabbedPanel.setTabPlacement(JTabbedPane.LEFT);
+            detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.TOP);
+        } else {
+            messageSplitPanel.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
+            Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_HORIZONTAL_DIVIDER, 850);
+            int maxWidth = messageSplitPanel.getPreferredSize().width - PREVIEW_PANEL_MIN_WIDTH;
+            messageSplitPanel.setDividerLocation(Math.min(divider, maxWidth));
+            detailTabbedPanel.setTabPlacement(JTabbedPane.TOP);
+            detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.LEADING);
+        }
+        this.viewMode = viewMode;
+        messagePublishPanel.toggleViewMode(viewMode);
+        messagePreviewPanel.toggleViewMode(viewMode);
+    }
+
     private void initEventListeners() {
-        addEventListeners(new InstanceEventAdapter() {
+        addEventListener(new InstanceEventAdapter() {
             @Override
             public void onViewModeChanged(MessageViewMode viewMode) {
                 applyLayout(viewMode);
@@ -201,9 +231,12 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     @Override
     public void close() {
+        if (scriptLoader != null) {
+            scriptLoader.closeAll();
+        }
         if (isConnected()) {
             onConnectionChanged(ConnectionStatus.DISCONNECTING);
-            disconnect();
+            disconnect(false);
         }
     }
 
@@ -213,13 +246,18 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     @Override
-    public void addEventListeners(InstanceEventListener eventListener) {
+    public void addEventListener(InstanceEventListener eventListener) {
         eventListeners.add(eventListener);
     }
 
     @Override
-    public List<InstanceEventListener> getEventListeners() {
-        return eventListeners;
+    public void removeEventListener(InstanceEventListener eventListener) {
+        eventListeners.remove(eventListener);
+    }
+
+    @Override
+    public void applyEvent(Consumer<InstanceEventListener> action) {
+        eventListeners.forEach(action);
     }
 
     protected int getReasonCode() {
@@ -228,7 +266,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     protected void connectButtonAction() {
         if (connectionStatus.equals(ConnectionStatus.CONNECTED)) {
-            disconnect();
+            disconnect(false);
         } else if (connectionStatus.equals(ConnectionStatus.DISCONNECTED) || connectionStatus.equals(ConnectionStatus.FAILED)) {
             connect();
         }
@@ -245,6 +283,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                 } else {
                     statusLabel.setToolTipText(String.format("Code: %d, %s", reasonCode, lastCauseMessage));
                 }
+                this.disconnect(true);
             } else {
                 this.reasonCode = 0;
                 statusLabel.setIcon(status.getIcon());
@@ -284,9 +323,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     public void openSubscriptionForm() {
-        NewSubscriptionForm.open(this, (subscription) -> {
-            subscriptionListPanel.doSubscribe(subscription);
-        });
+        NewSubscriptionForm.open(this, this::subscribe);
     }
 
     @Override
@@ -296,58 +333,51 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     @Override
     public void messageReceived(MqttMessage message) {
-        getEventListeners().forEach(l -> l.onMessage(message));
+        applyEvent(l -> l.onMessage(message));
         if (scriptLoader != null && message instanceof ReceivedMqttMessage) {
             ReceivedMqttMessage receivedMessage = (ReceivedMqttMessage) message;
-            if (receivedMessage.getSubscription().isMuted()) {
+            if (receivedMessage.getSubscription() != null && receivedMessage.getSubscription().isMuted()) {
                 return;
             }
             SwingUtilities.invokeLater(() -> {
-                scriptLoader.decode(receivedMessage, decodedMessage -> {
-                    if (decodedMessage != null) {
-                        getEventListeners().forEach(l -> l.onMessage(decodedMessage));
-                    }
-                });
+                try {
+                    scriptLoader.decode(receivedMessage, decodedMessage -> {
+                        if (decodedMessage != null) {
+                            applyEvent(l -> l.onMessage(decodedMessage, message));
+                        }
+                    });
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                }
             });
         }
     }
 
-    private void applyLayout(MessageViewMode viewMode) {
-        if (this.viewMode != null && this.viewMode.equals(viewMode)) {
-            return;
-        }
-        if (viewMode == MessageViewMode.TABLE) {
-            messageSplitPanel.setOrientation(JSplitPane.VERTICAL_SPLIT);
-            Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_VERTICAL_DIVIDER, 500);
-            int maxHeight = messageSplitPanel.getPreferredSize().height - PREVIEW_PANEL_MIN_HEIGHT;
-            messageSplitPanel.setDividerLocation(Math.min(divider, maxHeight));
-            detailTabbedPanel.setTabPlacement(JTabbedPane.LEFT);
-            detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.TOP);
-        } else {
-            messageSplitPanel.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
-            Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_HORIZONTAL_DIVIDER, 850);
-            int maxWidth = messageSplitPanel.getPreferredSize().width - PREVIEW_PANEL_MIN_WIDTH;
-            messageSplitPanel.setDividerLocation(Math.min(divider, maxWidth));
-            detailTabbedPanel.setTabPlacement(JTabbedPane.TOP);
-            detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.LEADING);
-        }
-        this.viewMode = viewMode;
-        messagePublishPanel.toggleViewMode(viewMode);
-        messagePreviewPanel.toggleViewMode(viewMode);
-    }
+    public abstract boolean doPublishMessage(final PublishedMqttMessage message);
 
-    public abstract boolean doPublishMessage(PublishedMqttMessage message);
+    public abstract boolean doSubscribe(final Subscription subscription);
+
+    @Override
+    public boolean subscribe(Subscription subscription) {
+        for (SubscriptionItem existItem : subscriptionListPanel.getSubscriptions()) {
+            if (existItem.hasTopic(subscription.getTopic())) {
+                if (existItem.isSubscribed()) {
+                    Utils.Toast.info(LangUtil.getString("TopicSubscribed"));
+                    return false;
+                } else {
+                    // resubscribe
+                    return this.doSubscribe(existItem.getSubscription());
+                }
+            }
+        }
+        return this.doSubscribe(subscription);
+    }
 
     @Override
     public void publishMessage(PublishedMqttMessage message) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                if (doPublishMessage(message)) {
-                    getEventListeners().forEach(l -> l.onMessage(message));
-                }
-            } catch (RuntimeException e) {
-                Utils.Toast.warn(e.getMessage());
-                log.error(e.getMessage(), e);
+        ThreadUtil.execute(() -> {
+            if (doPublishMessage(message)) {
+                applyEvent(l -> l.onMessage(message));
             }
         });
     }
@@ -367,25 +397,34 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         List<FavoriteSubscription> favoriteSubscriptions = getProperties().getFavoriteSubscriptions();
         if (favoriteSubscriptions != null && !favoriteSubscriptions.isEmpty()) {
             if (favoriteSubscriptions.size() > 1) {
-                favoriteMenu.add(LangUtil.getString("SubscribeAll"))
+                favoriteMenu.add(Utils.UI.createMenuItem(LangUtil.getString("SubscribeAll")))
                     .addActionListener(e -> {
                         favoriteSubscriptions.forEach(favorite -> {
                             Subscription subscription = new Subscription(this, favorite.getTopic(), favorite.getQos(), favorite.getPayloadFormat(), Utils.generateRandomColor());
-                            subscriptionListPanel.doSubscribe(subscription);
+                            this.subscribe(subscription);
                         });
                     });
                 favoriteMenu.addSeparator();
             }
             favoriteSubscriptions.sort(Comparator.comparing(FavoriteSubscription::getTopic));
             favoriteSubscriptions.forEach(favorite -> {
-                favoriteMenu.add(favorite.getTopic())
+                SplitIconMenuItem menuItem = new SplitIconMenuItem(favorite.getTopic(), null, Icons.REMOVE);
+                favoriteMenu.add(menuItem)
                     .addActionListener(e -> {
                         Subscription subscription = new Subscription(this, favorite.getTopic(), favorite.getQos(), favorite.getPayloadFormat(), Utils.generateRandomColor());
-                        subscriptionListPanel.doSubscribe(subscription);
+                        this.subscribe(subscription);
                     });
+                menuItem.addSplitActionListener(e -> {
+                    int opt = Utils.Message.confirm(this, LangUtil.format("RemoveFavoriteSubscription", favorite.getTopic()));
+                    if (JOptionPane.YES_OPTION == opt) {
+                        favoriteSubscriptions.remove(favorite);
+                        favoriteMenu.remove(menuItem);
+                        Configuration.instance().changed();
+                    }
+                });
             });
         } else {
-            favoriteMenu.add(LangUtil.getString("NoSubscriptions"));
+            favoriteMenu.add(Utils.UI.createMenuItem(LangUtil.getString("NoSubscriptions")));
         }
     }
 
@@ -421,10 +460,10 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             scriptLoader.loadScript(scriptFile, (result) -> {
                 if (result.isSuccess()) {
                     if (!isReload) {
-                        getEventListeners().forEach(l -> l.scriptLoaded(scriptFile));
+                        applyEvent(l -> l.scriptLoaded(scriptFile));
                     }
                     String message = LangUtil.format("ScriptSuccess", scriptFile.getAbsolutePath());
-                    log.debug(message);
+                    log.info(message);
                     Utils.Toast.success(message);
                 } else if (result.getException() != null) {
                     String error = LangUtil.format("ScriptError", scriptFile.getAbsolutePath());

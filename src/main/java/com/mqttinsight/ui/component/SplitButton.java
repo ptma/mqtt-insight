@@ -13,7 +13,7 @@ public class SplitButton extends JButton {
     private static Color buttonHoverArrowColor = UIManager.getColor("ComboBox.buttonHoverArrowColor");
     private static Color buttonPressedArrowColor = UIManager.getColor("ComboBox.buttonPressedArrowColor");
     private static int separatorSpacing = 4;
-    private static int splitWidth = 24;
+    private static int splitWidth = 28;
     private static int arrowSize = 9;
 
     private boolean hover;
@@ -78,7 +78,6 @@ public class SplitButton extends JButton {
 
     public void setPopupMenu(JPopupMenu popup) {
         popupMenu = popup;
-        this.setComponentPopupMenu(popup);
     }
 
     public JPopupMenu getPopupMenu() {
@@ -124,7 +123,7 @@ public class SplitButton extends JButton {
         if (getOptionsCount() > 0) {
             JPopupMenu menu = getPopupMenu();
             menu.setVisible(true);
-            menu.show(this, (getWidth() - menu.getWidth()), getHeight());
+            menu.show(this, 0, getHeight());
         }
     }
 

@@ -17,9 +17,9 @@ public class CodecSupports {
         return CodecSupportsHolder.INSTANCE;
     }
 
-    private Map<String, CodecSupport> supports = new LinkedHashMap<>();
+    private final Map<String, CodecSupport> supports = new LinkedHashMap<>();
 
-    private PlainCodecSupport plainCodec = new PlainCodecSupport();
+    private final PlainCodecSupport plainCodec = new PlainCodecSupport();
 
     private CodecSupports() {
         register(plainCodec);

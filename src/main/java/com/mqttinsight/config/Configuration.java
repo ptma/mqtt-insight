@@ -80,6 +80,17 @@ public final class Configuration implements Serializable {
         return userPath;
     }
 
+    public String getTempPath() {
+        return userPath + File.separator + "temp";
+    }
+
+    public void clearTempPath() {
+        try {
+            FileUtil.clean(new File(getTempPath()));
+        } catch (Exception ignored) {
+        }
+    }
+
     public void appendRecentConnection(String id) {
         recentConnections.remove(id);
         recentConnections.add(0, id);

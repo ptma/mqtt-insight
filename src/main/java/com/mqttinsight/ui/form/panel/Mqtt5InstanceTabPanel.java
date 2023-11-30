@@ -4,9 +4,9 @@ import cn.hutool.core.thread.ThreadUtil;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.*;
 import com.mqttinsight.mqtt.options.Mqtt5Options;
+import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.mqttv5.client.*;
 import org.eclipse.paho.mqttv5.client.persist.MqttDefaultFilePersistence;
 import org.eclipse.paho.mqttv5.common.MqttException;
@@ -14,7 +14,6 @@ import org.eclipse.paho.mqttv5.common.MqttMessage;
 import org.eclipse.paho.mqttv5.common.MqttSubscription;
 import org.eclipse.paho.mqttv5.common.packet.MqttReturnCode;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.List;
@@ -25,10 +24,10 @@ import java.util.function.Consumer;
  *
  * @author ptma
  */
-@Slf4j
 public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
 
     protected MqttAsyncClient mqttClient;
+    private MqttClientPersistence persistence;
 
     public Mqtt5InstanceTabPanel(MqttProperties properties) {
         super(properties);
@@ -41,7 +40,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
     @Override
     @SneakyThrows
     public void initMqttClient() {
-        MqttClientPersistence persistence = new MqttDefaultFilePersistence(Configuration.instance().getUserPath() + File.separator + "temp");
+        persistence = new MqttDefaultFilePersistence(Configuration.instance().getTempPath());
         mqttClient = new MqttAsyncClient(
             properties.completeServerURI(),
             properties.getClientId(),
@@ -57,16 +56,18 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
                 if (mqttClient == null) {
                     initMqttClient();
                 }
-                if (mqttClient.isConnected()) {
-                    onConnectionChanged(ConnectionStatus.DISCONNECTING);
-                    mqttClient.disconnect();
-                }
                 onConnectionChanged(ConnectionStatus.CONNECTING);
-                mqttClient.connect(Mqtt5Options.fromProperties(properties),
-                    Collections.EMPTY_MAP,
-                    new Mqtt5ActionHandler()
-                );
+                if (mqttClient.isConnected()) {
+                    mqttClient.reconnect();
+                } else {
+                    mqttClient.connect(Mqtt5Options.fromProperties(properties),
+                        Collections.EMPTY_MAP,
+                        new Mqtt5ActionHandler()
+                    );
+                }
             } catch (MqttException e) {
+                String causeMessage = getCauseMessage(e);
+                onConnectionFailed(e.getReasonCode(), causeMessage);
                 log.error(e.getMessage(), e);
             }
         });
@@ -74,8 +75,16 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
 
     @Override
     @SneakyThrows
-    public void disconnect() {
-        if (mqttClient.isConnected()) {
+    public void disconnect(boolean withFail) {
+        if (withFail) {
+            ThreadUtil.execute(() -> {
+                try {
+                    mqttClient.disconnectForcibly();
+                } catch (Exception e) {
+                    log.warn(e.getMessage(), e);
+                }
+            });
+        } else {
             onConnectionChanged(ConnectionStatus.DISCONNECTING);
             mqttClient.disconnect();
             onConnectionChanged(ConnectionStatus.DISCONNECTED);
@@ -88,6 +97,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
         super.close();
         try {
             mqttClient.close(true);
+            persistence.close();
         } catch (Exception ignore) {
 
         }
@@ -99,7 +109,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
     }
 
     @Override
-    public boolean subscribe(final Subscription subscription) {
+    public boolean doSubscribe(final Subscription subscription) {
         try {
             org.eclipse.paho.mqttv5.common.packet.MqttProperties prop = new org.eclipse.paho.mqttv5.common.packet.MqttProperties();
             prop.setSubscriptionIdentifiers(List.of(0));
@@ -118,13 +128,14 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
                     messageReceived(mqttMessage);
                 },
                 prop);
-            boolean successed = token.getException() == null;
-            if (successed) {
-                log.info("Subscribe topic successed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
+            boolean success = token.getException() == null;
+            if (success) {
+                applyEvent(l -> l.onSubscribe(subscription));
+                log.info("Successfully subscribed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
             } else {
-                log.warn("Subscribe topic failed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
+                log.warn("Failed to subscribe. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
             }
-            return successed;
+            return success;
         } catch (MqttException e) {
             String causeMessage = getCauseMessage(e);
             Utils.Toast.error(causeMessage);
@@ -140,13 +151,13 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
                 @Override
                 public void onSuccess(IMqttToken token) {
                     unsubscribed.accept(Boolean.TRUE);
-                    log.info("Unsubscribe topic successed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
+                    log.info("Successfully unsubscribed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
                 }
 
                 @Override
                 public void onFailure(IMqttToken token, Throwable exception) {
                     unsubscribed.accept(Boolean.FALSE);
-                    log.warn("Unsubscribe topic failed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
+                    log.warn("Failed to unsubscribe. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
                 }
             };
 
@@ -181,25 +192,25 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
                 null,
                 new MqttActionListener() {
                     @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
+                    public void onSuccess(IMqttToken token) {
 
                     }
 
                     @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    public void onFailure(IMqttToken token, Throwable exception) {
                         Utils.Toast.error(exception.getMessage());
-                        log.error(exception.getMessage(), exception);
+                        log.warn("Failed to publish message. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained(), exception);
                     }
                 }
             );
-            token.waitForCompletion();
-            boolean successed = token.getException() == null;
-            if (successed) {
-                log.info("Publish message successed. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained());
+            token.waitForCompletion(5000);
+            boolean success = token.getException() == null;
+            if (success) {
+                log.info("Successfully published message. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained());
             } else {
-                log.warn("Publish message failed. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained(), token.getException());
+                log.warn("Failed to publish message. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained(), token.getException());
             }
-            return successed;
+            return success;
         } catch (MqttException e) {
             String causeMessage = getCauseMessage(e);
             Utils.Toast.error(causeMessage);
@@ -212,15 +223,15 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
         @Override
         public void onSuccess(IMqttToken token) {
             onConnectionChanged(ConnectionStatus.CONNECTED);
-            log.info("Connect to {} successed.", properties.completeServerURI());
+            log.info("Successfully connected to {}.", properties.completeServerURI());
         }
 
         @Override
-        public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-            log.warn("Connect to {} failed.", properties.completeServerURI(), exception);
+        public void onFailure(IMqttToken token, Throwable exception) {
             MqttException ex = (MqttException) exception;
             String causeMessage = getCauseMessage(ex);
             onConnectionFailed(ex.getReasonCode(), causeMessage);
+            log.warn("Failed to connect to {}. errorCode: {}, {}", properties.completeServerURI(), ex.getReasonCode(), causeMessage);
         }
     }
 
@@ -230,22 +241,31 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
             if (response.getReturnCode() == MqttReturnCode.RETURN_CODE_SUCCESS
                 || response.getReturnCode() == MqttReturnCode.RETURN_CODE_DISCONNECT_WITH_WILL_MESSAGE) {
                 Mqtt5InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.DISCONNECTED);
-                log.info("Disconnect to {} successed.", properties.completeServerURI());
+                log.info("Successfully disconnected from {}.", properties.completeServerURI());
             } else {
                 String causeMessage = getCauseMessage(response.getException());
                 Mqtt5InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.FAILED, response.getReturnCode(), causeMessage);
-                log.warn("Disconnect with error from {}, code: {}.", properties.completeServerURI(), response.getReturnCode(), response.getException());
+                log.warn("Disconnect with error from {}. errorCode: {}, {}", properties.completeServerURI(), response.getReturnCode(), causeMessage);
             }
         }
 
         @Override
         public void mqttErrorOccurred(MqttException exception) {
-            log.warn("Mqtt error from {}, code: {}.", properties.completeServerURI(), exception.getReasonCode(), exception);
+            String causeMessage = getCauseMessage(exception);
+            log.warn("Mqtt error occurred from {}. errorCode: {}, {}", properties.completeServerURI(), exception.getReasonCode(), causeMessage);
         }
 
         @Override
         public void messageArrived(String topic, MqttMessage message) {
-
+            ReceivedMqttMessage mqttMessage = ReceivedMqttMessage.of(null,
+                topic,
+                message.getPayload(),
+                message.getQos(),
+                message.isRetained(),
+                message.isDuplicate()
+            );
+            mqttMessage.setFormat(properties.getPayloadFormat());
+            messageReceived(mqttMessage);
         }
 
         @Override
@@ -256,7 +276,9 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
         @Override
         public void connectComplete(boolean reconnect, String serverURI) {
             Mqtt5InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.CONNECTED);
-            log.info("Connect to {} successed.", serverURI);
+            if (reconnect) {
+                log.info("Successfully reconnected to {}.", serverURI);
+            }
         }
 
         @Override
@@ -266,10 +288,6 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
     }
 
     private String getCauseMessage(MqttException exception) {
-        String causeMessage = exception.getMessage();
-        if (exception.getCause() != null) {
-            causeMessage = exception.getCause().getMessage();
-        }
-        return causeMessage;
+        return LangUtil.getString("MqttReasonCode_" + exception.getReasonCode(), exception.getMessage());
     }
 }

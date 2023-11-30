@@ -1,6 +1,7 @@
 package com.mqttinsight.ui.form.panel;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.config.ConfKeys;
@@ -27,6 +28,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -79,7 +82,7 @@ public class MessageViewPanel {
             @Override
             public void mouseReleased(MouseEvent e) {
                 if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
-                    mqttInstance.getEventListeners().forEach(InstanceEventListener::requestFocusPreview);
+                    mqttInstance.applyEvent(InstanceEventListener::requestFocusPreview);
                 }
             }
         });
@@ -88,11 +91,11 @@ public class MessageViewPanel {
         if (lastSelectedRow >= 0) {
             messageTable.goAndSelectRow(lastSelectedRow);
         }
-        mqttInstance.getEventListeners().forEach(InstanceEventListener::viewInitializeCompleted);
+        mqttInstance.applyEvent(InstanceEventListener::viewInitializeCompleted);
     }
 
     private void initEventListeners() {
-        mqttInstance.addEventListeners(new InstanceEventAdapter() {
+        mqttInstance.addEventListener(new InstanceEventAdapter() {
             @Override
             public void onViewModeChanged(MessageViewMode viewMode) {
                 MessageViewPanel.this.toggleViewMode(viewMode);
@@ -101,11 +104,18 @@ public class MessageViewPanel {
             @Override
             public void clearAllMessages() {
                 messageTableModel.clear();
+                lastSelectedRow = -1;
+                messageTable.goAndSelectRow(-1);
             }
 
             @Override
             public void onMessage(MqttMessage message) {
-                MessageViewPanel.this.messageReceived(message);
+                MessageViewPanel.this.messageReceived(message, null);
+            }
+
+            @Override
+            public void onMessage(MqttMessage message, MqttMessage parent) {
+                MessageViewPanel.this.messageReceived(message, parent);
             }
 
             @Override
@@ -115,7 +125,7 @@ public class MessageViewPanel {
 
             @Override
             public void exportAllMessages() {
-                MessageViewPanel.this.exportAllMessages();
+                MessageViewPanel.this.exportMessages(null);
             }
 
             @Override
@@ -153,49 +163,35 @@ public class MessageViewPanel {
         }
     }
 
-    private void exportAllMessages() {
-        JFileChooser jFileChooser = new JFileChooser();
-        jFileChooser.setAcceptAllFileFilterUsed(false);
-        jFileChooser.addChoosableFileFilter(new FileNameExtensionFilter(LangUtil.getString("JsonFileFilter"), "json"));
-        jFileChooser.addChoosableFileFilter(new FileNameExtensionFilter(LangUtil.getString("TextFileFilter"), "txt"));
-        jFileChooser.setDialogTitle(LangUtil.getString("ExportMessages"));
-        String directory = Configuration.instance().getString(ConfKeys.EXPORT_SAVE_DIALOG_PATH);
-        if (directory != null) {
-            jFileChooser.setCurrentDirectory(new File(directory));
+    private String toCsvLineText(MqttMessage message) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(message.timeWithFormat("yyyy/MM/dd HH:mm:ss")).append(",");
+        sb.append(message.getMessageType().name()).append(",");
+        sb.append(message.getTopic()).append(",");
+        String payload = message.getPayload();
+        if (StrUtil.contains(payload, ",")) {
+            sb.append("\"").append(payload.replaceAll("\"", "\"\"")).append("\",");
+        } else {
+            sb.append(payload).append(",");
         }
-        int result = jFileChooser.showSaveDialog(MqttInsightApplication.frame);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            Configuration.instance().set(ConfKeys.EXPORT_SAVE_DIALOG_PATH, jFileChooser.getCurrentDirectory().getAbsolutePath());
-            File file = jFileChooser.getSelectedFile();
-            FileNameExtensionFilter currentFilter = (FileNameExtensionFilter) jFileChooser.getFileFilter();
-            String ext = currentFilter.getExtensions()[0];
-            String absolutePath = file.getAbsolutePath();
-            if (!absolutePath.endsWith("." + ext)) {
-                absolutePath += "." + ext;
-                file = new File(absolutePath);
-            }
-            if (file.exists()) {
-                int opt = Utils.Message.confirm(String.format(LangUtil.getString("FileExists"), file.getName()));
-                if (JOptionPane.YES_OPTION != opt) {
-                    return;
-                }
-            }
-            String fileContent = messageTableModel.getMessages()
-                .stream()
-                .map(m -> JSONUtil.parse(m).toJSONString(0))
-                .collect(Collectors.joining("\n"));
-            FileUtil.writeString(fileContent, file, StandardCharsets.UTF_8);
-        }
+        sb.append(message.getQos()).append(",");
+        sb.append(message.isRetained()).append(",");
+        sb.append(message.isDuplicate());
+        return sb.toString();
     }
 
     private void clearMessages(Subscription subscription) {
         messageTableModel.cleanMessages(subscription);
     }
 
+    /**
+     * @param subscription if null, export all messages
+     */
     private void exportMessages(Subscription subscription) {
         JFileChooser jFileChooser = new JFileChooser();
         jFileChooser.setAcceptAllFileFilterUsed(false);
         jFileChooser.addChoosableFileFilter(new FileNameExtensionFilter(LangUtil.getString("JsonFileFilter"), "json"));
+        jFileChooser.addChoosableFileFilter(new FileNameExtensionFilter(LangUtil.getString("CsvFileFilter"), "csv"));
         jFileChooser.addChoosableFileFilter(new FileNameExtensionFilter(LangUtil.getString("TextFileFilter"), "txt"));
         jFileChooser.setDialogTitle(LangUtil.getString("ExportMessages"));
         String directory = Configuration.instance().getString(ConfKeys.EXPORT_SAVE_DIALOG_PATH);
@@ -219,29 +215,84 @@ public class MessageViewPanel {
                     return;
                 }
             }
-            String fileContent = messageTableModel.getMessages()
-                .stream()
-                .filter(m -> m instanceof ReceivedMqttMessage)
-                .map(m -> (ReceivedMqttMessage) m)
-                .filter(m -> m.getSubscription().equals(subscription))
-                .map(m -> JSONUtil.parse(m).toJSONString(0))
-                .collect(Collectors.joining("\n"));
-            FileUtil.writeString(fileContent, file, StandardCharsets.UTF_8);
+
+            List<MqttMessage> exportingMessages;
+
+            if (subscription == null) {
+                // export from view
+                if (messageTable.getRowFilter() == null) {
+                    exportingMessages = messageTableModel.getMessages();
+                } else {
+                    // Filter has been used, only export filtered messages
+                    exportingMessages = new ArrayList<>();
+                    for (int i = 0; i < messageTable.getRowCount(); i++) {
+                        int modelRow = messageTable.convertRowIndexToModel(i);
+                        exportingMessages.add(messageTableModel.getMessages().get(modelRow));
+                    }
+                }
+            } else {
+                // export from subscription
+                exportingMessages = messageTableModel.getMessages()
+                    .stream()
+                    .filter(m -> m instanceof ReceivedMqttMessage)
+                    .map(m -> (ReceivedMqttMessage) m)
+                    .filter(m -> m.getSubscription() != null && m.getSubscription().equals(subscription))
+                    .collect(Collectors.toList());
+            }
+            StringBuffer lines = new StringBuffer();
+            switch (ext) {
+                case "csv":
+                    lines.append("Time,MessageType,Topic,Payload,QoS,Retained,Duplicate\n");
+                    lines.append(
+                        exportingMessages
+                            .stream()
+                            .map(this::toCsvLineText)
+                            .collect(Collectors.joining("\n"))
+                    );
+                    break;
+                case "json":
+                    lines.append("[\n");
+                    lines.append(
+                        exportingMessages
+                            .stream()
+                            .map(m -> JSONUtil.parse(m).toJSONString(0))
+                            .collect(Collectors.joining(",\n"))
+                    );
+                    lines.append("\n]");
+                    break;
+                default:
+                    lines.append(
+                        exportingMessages
+                            .stream()
+                            .map(m -> JSONUtil.parse(m).toJSONString(0))
+                            .collect(Collectors.joining("\n"))
+                    );
+            }
+            FileUtil.writeString(lines.toString(), file, StandardCharsets.UTF_8);
         }
     }
 
     /**
      * When received or published a message
      */
-    private void messageReceived(MqttMessage message) {
+    private void messageReceived(MqttMessage message, MqttMessage parent) {
         SwingUtilities.invokeLater(() -> {
             if (message instanceof ReceivedMqttMessage) {
-                ReceivedMqttMessage subscriptionMessage = (ReceivedMqttMessage) message;
-                if (subscriptionMessage.getSubscription().isMuted()) {
+                ReceivedMqttMessage receivedMessage = (ReceivedMqttMessage) message;
+                if (receivedMessage.getSubscription() != null && receivedMessage.getSubscription().isMuted()) {
                     return;
                 }
             }
-            messageTableModel.add(message);
+            if (parent != null) {
+                int parentIndex = messageTableModel.lastIndexOf(parent);
+                if (parentIndex >= 0) {
+                    messageTableModel.add(parentIndex + 1, message);
+                } else {
+                    messageTableModel.add(message);
+                }
+            } else {
+                messageTableModel.add(message);
+            }
             if (messageTable.isAutoScroll()) {
                 messageTable.goAndSelectRow(messageTable.getRowCount() - 1);
             }
@@ -256,10 +307,10 @@ public class MessageViewPanel {
                 if (selectedRow != lastSelectedRow) {
                     lastSelectedRow = selectedRow;
                     final MqttMessage message = messageTableModel.get(messageTable.convertRowIndexToModel(selectedRow));
-                    mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(message));
+                    mqttInstance.applyEvent(l -> l.tableSelectionChanged(message));
                 }
             } else {
-                mqttInstance.getEventListeners().forEach(l -> l.tableSelectionChanged(null));
+                mqttInstance.applyEvent(l -> l.tableSelectionChanged(null));
             }
         }
     }

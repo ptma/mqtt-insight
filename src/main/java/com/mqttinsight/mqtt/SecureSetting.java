@@ -123,7 +123,6 @@ public class SecureSetting implements Serializable, Cloneable {
 
     @Override
     public SecureSetting clone() throws CloneNotSupportedException {
-        SecureSetting clone = (SecureSetting) super.clone();
-        return clone;
+        return (SecureSetting) super.clone();
     }
 }

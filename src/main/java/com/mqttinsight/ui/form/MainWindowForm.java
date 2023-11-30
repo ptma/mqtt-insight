@@ -11,7 +11,6 @@ import com.mqttinsight.ui.form.panel.Mqtt5InstanceTabPanel;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.ui.form.panel.MqttInstanceTabPanel;
 import com.mqttinsight.ui.log.LogTab;
-import com.mqttinsight.ui.log.StdHook;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
@@ -52,9 +51,7 @@ public class MainWindowForm {
         initComponents();
         contentPanel.setDoubleBuffered(true);
         ShortcutManager.instance().registerShortcut(KeyStroke.getKeyStroke("ctrl O"), ConnectionManagerForm::open);
-        ShortcutManager.instance().registerShortcut(KeyStroke.getKeyStroke("ctrl shift S"), () -> {
-            newSubscription();
-        });
+        ShortcutManager.instance().registerShortcut(KeyStroke.getKeyStroke("ctrl shift S"), this::newSubscription);
     }
 
     public void openLogTab() {
@@ -167,7 +164,7 @@ public class MainWindowForm {
         trailing.setFloatable(false);
         trailing.setBorder(null);
         JButton connManagerButton = new JButton(Icons.ADD);
-        connManagerButton.setToolTipText(LangUtil.getString("OpenConnection"));
+        connManagerButton.setToolTipText(LangUtil.getString("OpenConnection") + " (Ctrl + O)");
         trailing.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         connManagerButton.addActionListener(e -> ConnectionManagerForm.open());
         trailing.add(connManagerButton);
@@ -185,11 +182,6 @@ public class MainWindowForm {
         tabPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK, (BiConsumer<JTabbedPane, Integer>) (tabbedPane, tabIndex) -> {
             if (isMqttInstanceAtTab(tabIndex)) {
                 getMqttInstanceAtTab(tabIndex).close();
-            }
-            // Close Log
-            Component component = tabPanel.getComponentAt(tabIndex);
-            if (component instanceof LogTab) {
-                StdHook.reset();
             }
             tabPanel.removeTabAt(tabIndex);
             System.gc();

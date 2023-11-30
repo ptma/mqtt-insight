@@ -44,7 +44,7 @@ public final class Icons {
     public static final Icon REMOVE = new FlatSVGIcon("svg/icons/remove.svg");
     public static final Icon EXECUTE = new FlatSVGIcon("svg/icons/execute.svg");
     public static final Icon SUSPEND = new FlatSVGIcon("svg/icons/suspend.svg");
-
+    public static final Icon PAUSE = new FlatSVGIcon("svg/icons/pause.svg");
 
     public static final Icon CHECKBOX = new FlatSVGIcon("svg/icons/checkbox.svg");
     public static final Icon CHECKBOX_CHECKED = new FlatSVGIcon("svg/icons/checkbox_checked.svg");
@@ -90,5 +90,11 @@ public final class Icons {
     public static final Icon CANCEL = new FlatSVGIcon("svg/icons/cancel.svg");
     public static final Icon CLEAR = new FlatSVGIcon("svg/icons/clear.svg");
     public static final Icon EXPORT = new FlatSVGIcon("svg/icons/export.svg");
+
+    public static final Icon CLOCK = new FlatSVGIcon("svg/icons/clock.svg");
+    public static final Icon RESET = new FlatSVGIcon("svg/icons/reset.svg");
+    public static final Icon CHART_PIE = new FlatSVGIcon("svg/icons/chartPie.svg");
+    public static final Icon CHART_BAR = new FlatSVGIcon("svg/icons/chartBar.svg");
+    public static final Icon CHART_LINE = new FlatSVGIcon("svg/icons/chartLine.svg");
 
 }

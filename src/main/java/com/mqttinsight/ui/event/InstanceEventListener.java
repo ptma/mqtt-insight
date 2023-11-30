@@ -12,7 +12,15 @@ public interface InstanceEventListener {
 
     void viewInitializeCompleted();
 
+    void onSubscribe(Subscription subscription);
+
+    void onUnsubscribe(Subscription subscription, boolean closable);
+
     void onMessage(MqttMessage message);
+
+    void onMessage(MqttMessage message, MqttMessage parent);
+
+    void payloadFormatChanged();
 
     void clearAllMessages();
 

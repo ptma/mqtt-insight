@@ -18,7 +18,7 @@ public interface MqttInstance {
 
     void connect();
 
-    void disconnect();
+    void disconnect(boolean withFail);
 
     boolean isConnected();
 
@@ -34,9 +34,15 @@ public interface MqttInstance {
 
     MessageTable getMessageTable();
 
-    void addEventListeners(InstanceEventListener eventListener);
+    default List<MqttMessage> getMessage() {
+        return getMessageTable().getMessage();
+    }
 
-    List<InstanceEventListener> getEventListeners();
+    void addEventListener(InstanceEventListener eventListener);
+
+    void removeEventListener(InstanceEventListener eventListener);
+
+    void applyEvent(Consumer<InstanceEventListener> action);
 
     void messageReceived(MqttMessage message);
 

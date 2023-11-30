@@ -4,6 +4,10 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mqttinsight.codec.CodecSupport;
+import com.mqttinsight.ui.chart.series.CountSeriesProperties;
+import com.mqttinsight.ui.chart.series.FavoriteSeries;
+import com.mqttinsight.ui.chart.series.LoadSeriesProperties;
+import com.mqttinsight.ui.chart.series.ValueSeriesProperties;
 import com.mqttinsight.util.Const;
 import lombok.Getter;
 import lombok.Setter;
@@ -65,10 +69,16 @@ public class MqttProperties implements Serializable, Cloneable {
     protected ReconnectionSettings reconnection = new ReconnectionSettings();
     protected List<String> searchHistory;
     protected List<FavoriteSubscription> favoriteSubscriptions;
-    protected List<String> publishedTopics;
+    protected List<PublishedItem> publishedHistory;
+    protected List<FavoriteSeries<CountSeriesProperties>> favoriteCountSeries;
+    protected List<FavoriteSeries<LoadSeriesProperties>> favoriteLoadSeries;
+    protected List<FavoriteSeries<ValueSeriesProperties>> favoriteValueSeries;
+
+
     protected Integer maxMessageStored = Const.MESSAGES_STORED_MAX_SIZE;
     protected String payloadFormat;
     protected boolean clearUnsubMessage = true;
+    protected boolean prettyDuringPreview = true;
 
     /* ============== Getter and Setter ============== */
     public String getUsername() {
@@ -102,20 +112,10 @@ public class MqttProperties implements Serializable, Cloneable {
     }
 
     public String completeServerURI() {
-        String serverURI = StrUtil.format("{}:{}", host, port);
-        boolean sslEnabled = secure != null && secure.isEnable();
+        boolean ssl = secure != null && secure.isEnable();
         boolean websocket = Transport.WEB_SOCKET.equals(transport);
-        if (sslEnabled && websocket) {
-            serverURI = "wss://" + serverURI;
-        } else if (sslEnabled && !websocket) {
-            serverURI = "ssl://" + serverURI;
-        } else if (!sslEnabled && websocket) {
-            serverURI = "ws://" + serverURI;
-        } else {
-            serverURI = "tcp://" + serverURI;
-        }
-
-        return serverURI;
+        String protocol = websocket ? (ssl ? "wss" : "ws") : (ssl ? "ssl" : "tcp");
+        return StrUtil.format("{}://{}:{}", protocol, host, port);
     }
 
     public List<FavoriteSubscription> getFavoriteSubscriptions() {
@@ -126,39 +126,38 @@ public class MqttProperties implements Serializable, Cloneable {
     }
 
     public boolean isFavorite(String topic) {
-        if (favoriteSubscriptions != null) {
-            for (int i = 0; i < favoriteSubscriptions.size(); i++) {
-                if (favoriteSubscriptions.get(i).getTopic().equals(topic)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return getFavoriteSubscriptions().stream()
+            .anyMatch(favorite -> favorite.getTopic().equals(topic));
     }
 
     public void addFavorite(String topic, int qos, String format) {
-        if (favoriteSubscriptions == null) {
-            favoriteSubscriptions = new ArrayList<>();
+        getFavoriteSubscriptions().add(new FavoriteSubscription(topic, qos, format));
+    }
+
+    public void updateFavorite(String topic, int qos, String format) {
+        for (FavoriteSubscription favorite : getFavoriteSubscriptions()) {
+            if (favorite.getTopic().equals(topic)) {
+                favorite.setQos(qos);
+                favorite.setPayloadFormat(format);
+                break;
+            }
         }
-        favoriteSubscriptions.add(new FavoriteSubscription(topic, qos, format));
     }
 
     public void removeFavorite(String topic) {
-        if (favoriteSubscriptions != null) {
-            for (int i = 0; i < favoriteSubscriptions.size(); i++) {
-                if (favoriteSubscriptions.get(i).getTopic().equals(topic)) {
-                    favoriteSubscriptions.remove(i);
-                    return;
-                }
-            }
-        }
+        getFavoriteSubscriptions().removeIf(favorite -> favorite.getTopic().equals(topic));
     }
 
 
     @Override
     public MqttProperties clone() throws CloneNotSupportedException {
         MqttProperties clone = (MqttProperties) super.clone();
+        // reset id
         clone.id = IdUtil.fastUUID();
+        // clear lists
+        clone.setSearchHistory(null);
+        clone.setPublishedHistory(null);
+        clone.setFavoriteSubscriptions(null);
         return clone;
     }
 }

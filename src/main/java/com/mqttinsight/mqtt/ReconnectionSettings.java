@@ -25,7 +25,6 @@ public class ReconnectionSettings implements Serializable, Cloneable {
 
     @Override
     public ReconnectionSettings clone() throws CloneNotSupportedException {
-        ReconnectionSettings clone = (ReconnectionSettings) super.clone();
-        return clone;
+        return (ReconnectionSettings) super.clone();
     }
 }

@@ -22,7 +22,7 @@ public abstract class AbstractMqttMessage implements MqttMessage {
 
     private final boolean duplicate;
 
-    private final Date messageTime;
+    private final Date time;
 
     protected transient String decodeFormat;
     protected transient String decodedPayload;
@@ -33,7 +33,7 @@ public abstract class AbstractMqttMessage implements MqttMessage {
         this.qos = qos;
         this.retained = retained;
         this.duplicate = duplicate;
-        messageTime = new Date();
+        time = new Date();
     }
 
     @Override
@@ -57,7 +57,17 @@ public abstract class AbstractMqttMessage implements MqttMessage {
 
     @Override
     public String getTime() {
-        return DateUtil.format(messageTime, DatePattern.NORM_DATETIME_MS_FORMAT);
+        return DateUtil.format(time, DatePattern.NORM_DATETIME_MS_FORMAT);
+    }
+
+    @Override
+    public long getTimestamp() {
+        return time.getTime();
+    }
+
+    @Override
+    public String timeWithFormat(String dateTimeFormat) {
+        return DateUtil.format(time, dateTimeFormat);
     }
 
     @Override

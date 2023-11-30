@@ -1,5 +1,6 @@
 package com.mqttinsight.ui.component.renderer;
 
+import cn.hutool.core.date.DatePattern;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
@@ -21,6 +22,7 @@ import java.awt.*;
 public class DialogueViewRendererProvider extends ComponentProvider<DialogueBubble> {
 
     private static final Color PUBLISH_BG = UIManager.getBoolean("laf.dark") ? Color.decode("#133918") : Color.decode("#C5EBCA");
+    private static final String TIME_FORMAT = Configuration.instance().getString(ConfKeys.TIME_FORMAT, DatePattern.NORM_DATETIME_MS_PATTERN);
 
     private MessageTableModel messageModel;
 
@@ -61,7 +63,7 @@ public class DialogueViewRendererProvider extends ComponentProvider<DialogueBubb
             DialogueBubble itemComponent = (DialogueBubble) rendererComponent;
             itemComponent.setTopic(message.getTopic());
             itemComponent.setQos(message.getQos());
-            itemComponent.setTime(message.getTime());
+            itemComponent.setTime(message.timeWithFormat(TIME_FORMAT));
             itemComponent.setPayload(message.getPayload());
             if (message instanceof PublishedMqttMessage) {
                 itemComponent.setBodyAlignment("right");

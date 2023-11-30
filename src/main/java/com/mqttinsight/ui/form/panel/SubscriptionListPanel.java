@@ -1,11 +1,12 @@
 package com.mqttinsight.ui.form.panel;
 
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.mqttinsight.mqtt.*;
+import com.mqttinsight.mqtt.ConnectionStatus;
+import com.mqttinsight.mqtt.MqttMessage;
+import com.mqttinsight.mqtt.ReceivedMqttMessage;
+import com.mqttinsight.mqtt.Subscription;
 import com.mqttinsight.ui.component.SubscriptionItem;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
-import com.mqttinsight.util.LangUtil;
-import com.mqttinsight.util.Utils;
 import lombok.Getter;
 import org.jdesktop.swingx.VerticalLayout;
 
@@ -21,8 +22,8 @@ public class SubscriptionListPanel {
 
     @Getter
     private final MqttInstance mqttInstance;
-    private final List<SubscriptionItem> subscriptionList;
-    private SubscriptionItem selectedItem;
+    @Getter
+    private final List<SubscriptionItem> subscriptions;
 
     private JPanel rootPanel;
     private JScrollPane scrollPanel;
@@ -30,7 +31,7 @@ public class SubscriptionListPanel {
 
     public SubscriptionListPanel(final MqttInstance mqttInstance) {
         this.mqttInstance = mqttInstance;
-        this.subscriptionList = new ArrayList<>();
+        this.subscriptions = new ArrayList<>();
         $$$setupUI$$$();
         initComponents();
         initEventListeners();
@@ -43,7 +44,18 @@ public class SubscriptionListPanel {
     }
 
     private void initEventListeners() {
-        mqttInstance.addEventListeners(new InstanceEventAdapter() {
+        mqttInstance.addEventListener(new InstanceEventAdapter() {
+
+            @Override
+            public void onSubscribe(Subscription subscription) {
+                updateOnSubscribe(subscription);
+            }
+
+            @Override
+            public void onUnsubscribe(Subscription subscription, boolean closable) {
+                updateOnUnsubscribe(subscription, closable);
+            }
+
             @Override
             public void onMessage(MqttMessage message) {
                 onMessageReceived(message);
@@ -52,7 +64,7 @@ public class SubscriptionListPanel {
             @Override
             public void clearAllMessages() {
                 SwingUtilities.invokeLater(() -> {
-                    for (SubscriptionItem listItem : subscriptionList) {
+                    for (SubscriptionItem listItem : subscriptions) {
                         listItem.resetMessageCount();
                     }
                 });
@@ -63,10 +75,10 @@ public class SubscriptionListPanel {
     private void onMessageReceived(MqttMessage message) {
         SwingUtilities.invokeLater(() -> {
             if (message instanceof ReceivedMqttMessage) {
-                ReceivedMqttMessage receivedMqttMessage = (ReceivedMqttMessage) message;
-                for (SubscriptionItem listItem : subscriptionList) {
-                    if (listItem.hasSubscription(receivedMqttMessage.getSubscription())) {
-                        listItem.updateMessageCounter();
+                for (SubscriptionItem item : subscriptions) {
+                    if (item.hasSubscription(((ReceivedMqttMessage) message).getSubscription())) {
+                        item.updateMessageCounter();
+                        return;
                     }
                 }
             }
@@ -81,11 +93,11 @@ public class SubscriptionListPanel {
             boolean connected = status.equals(ConnectionStatus.CONNECTED);
             if (!connected) {
                 // Connection lost, disable all subscriptions
-                for (SubscriptionItem listItem : subscriptionList) {
+                for (SubscriptionItem listItem : subscriptions) {
                     listItem.setSubscribed(false);
                 }
             } else {
-                for (SubscriptionItem listItem : subscriptionList) {
+                for (SubscriptionItem listItem : subscriptions) {
                     if (!listItem.isSubscribed()) {
                         listItem.resubscribe();
                     }
@@ -98,95 +110,60 @@ public class SubscriptionListPanel {
         return rootPanel;
     }
 
-    public MqttProperties getProperties() {
-        return mqttInstance.getProperties();
-    }
-
-    public void doSubscribe(Subscription subscription) {
+    private void updateOnSubscribe(Subscription subscription) {
         SwingUtilities.invokeLater(() -> {
-            for (SubscriptionItem listItem : subscriptionList) {
-                if (listItem.hasTopic(subscription.getTopic())) {
-                    Utils.Toast.info(LangUtil.getString("TopicSubscribed"));
+            // 订阅条目是否已存在
+            for (SubscriptionItem item : subscriptions) {
+                if (item.hasTopic(subscription.getTopic())) {
+                    item.setSubscribed(true);
+                    containerPanel.revalidate();
+                    containerPanel.repaint();
                     return;
                 }
             }
-            if (mqttInstance.subscribe(subscription)) {
-                SubscriptionItem itemPanel = new SubscriptionItem(this, subscription, (closable) -> {
-                    unsubscribe(subscription, closable);
-                });
-                containerPanel.add(itemPanel);
-                subscriptionList.add(itemPanel);
-            }
+            SubscriptionItem newItem = new SubscriptionItem(mqttInstance, subscription);
+            containerPanel.add(newItem);
+            subscriptions.add(newItem);
+            containerPanel.revalidate();
+            containerPanel.repaint();
         });
     }
 
-    private void unsubscribe(Subscription subscription, boolean closable) {
+    private void updateOnUnsubscribe(Subscription subscription, boolean closable) {
         SwingUtilities.invokeLater(() -> {
-            mqttInstance.unsubscribe(subscription, (success) -> {
-                if (success) {
-                    for (SubscriptionItem listItem : subscriptionList) {
-                        if (listItem.hasSubscription(subscription)) {
-                            listItem.setSubscribed(false);
-                            if (closable) {
-                                containerPanel.remove(listItem);
-                                subscriptionList.remove(listItem);
-                                if (selectedItem != null && selectedItem.equals(listItem)) {
-                                    selectedItem = null;
-                                }
-                                if (mqttInstance.getProperties().isClearUnsubMessage()) {
-                                    clearMessages(subscription);
+            subscriptions.stream()
+                .filter(item -> item.hasSubscription(subscription))
+                .findFirst()
+                .ifPresent(item -> {
+                    if (item.isSubscribed()) {
+                        mqttInstance.unsubscribe(subscription, (success) -> {
+                            if (success) {
+                                if (closable) {
+                                    removeItem(item);
+                                } else {
+                                    item.setSubscribed(false);
+                                    containerPanel.revalidate();
+                                    containerPanel.repaint();
                                 }
                             }
-                            return;
-                        }
+                        });
+                    } else if (closable) {
+                        removeItem(item);
                     }
-                }
+                });
+        });
+    }
+
+    private void removeItem(SubscriptionItem item) {
+        subscriptions.remove(item);
+        containerPanel.remove(item);
+        if (mqttInstance.getProperties().isClearUnsubMessage()) {
+            mqttInstance.applyEvent(eventListener -> {
+                eventListener.clearMessages(item.getSubscription());
             });
-        });
-    }
-
-    public void remove(Subscription subscription) {
-        SwingUtilities.invokeLater(() -> {
-            for (SubscriptionItem listItem : subscriptionList) {
-                if (listItem.hasSubscription(subscription)) {
-                    containerPanel.remove(listItem);
-                    subscriptionList.remove(listItem);
-                    if (mqttInstance.getProperties().isClearUnsubMessage()) {
-                        clearMessages(subscription);
-                    }
-                    if (selectedItem != null && selectedItem.equals(listItem)) {
-                        selectedItem = null;
-                    }
-                    return;
-                }
-            }
-        });
-    }
-
-    public void select(SubscriptionItem itemPanel) {
-        SwingUtilities.invokeLater(() -> {
-            if (selectedItem != null) {
-                selectedItem.setSelected(false);
-                selectedItem.updateComponents();
-            }
-            if (itemPanel != null) {
-                selectedItem = itemPanel;
-                selectedItem.setSelected(true);
-                selectedItem.updateComponents();
-            }
-        });
-    }
-
-    public void clearMessages(Subscription subscription) {
-        mqttInstance.getEventListeners().forEach(eventListener -> {
-            eventListener.clearMessages(subscription);
-        });
-    }
-
-    public void exportMessages(Subscription subscription) {
-        mqttInstance.getEventListeners().forEach(eventListener -> {
-            eventListener.exportMessages(subscription);
-        });
+        }
+        containerPanel.revalidate();
+        containerPanel.repaint();
     }
 
     /**

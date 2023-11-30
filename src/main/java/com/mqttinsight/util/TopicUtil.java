@@ -20,7 +20,6 @@ public class TopicUtil {
      * 订阅主题是否合法
      *
      * @param topicFilter 定于的主题，支持通配符
-     * @return 是否合法
      */
     public static void validate(String topicFilter) throws VerificationException {
         parseTopic(topicFilter);
@@ -61,14 +60,14 @@ public class TopicUtil {
             String s = splitted[i];
             if (s.isEmpty()) {
                 res.add(Token.EMPTY);
-            } else if (s.equals("#")) {
+            } else if ("#".equals(s)) {
                 if (i != splitted.length - 1) {
-                    throw new VerificationException(LangUtil.getString("InvaildTopicOfMultiSymbol"));
+                    throw new VerificationException(LangUtil.getString("InvalidTopicOfMultiSymbol"));
                 }
                 res.add(Token.MULTI);
             } else if (s.contains("#")) {
                 throw new VerificationException(String.format(LangUtil.getString("InvalidSubtopic"), s));
-            } else if (s.equals("+")) {
+            } else if ("+".equals(s)) {
                 res.add(Token.SINGLE);
             } else if (s.contains("+")) {
                 throw new VerificationException(String.format(LangUtil.getString("InvalidSubtopic"), s));

@@ -26,6 +26,7 @@ public class RendererLabel extends JLabel implements PainterAware, IconAware {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setPainter(Painter painter) {
         Painter old = getPainter();
         this.painter = painter;
@@ -35,6 +36,7 @@ public class RendererLabel extends JLabel implements PainterAware, IconAware {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Painter getPainter() {
         return painter;
     }
@@ -88,15 +90,16 @@ public class RendererLabel extends JLabel implements PainterAware, IconAware {
      * @param g the graphics to paint on
      */
     private void paintPainter(Graphics g) {
-        if (painter == null) return;
+        if (painter == null) {
+            return;
+        }
         // fail fast: we assume that g must not be null
         // which throws an NPE here instead deeper down the bowels
         // this differs from corresponding core implementation!
         Graphics2D scratch = (Graphics2D) g.create();
         try {
             painter.paint(scratch, this, getWidth(), getHeight());
-        }
-        finally {
+        } finally {
             scratch.dispose();
         }
     }

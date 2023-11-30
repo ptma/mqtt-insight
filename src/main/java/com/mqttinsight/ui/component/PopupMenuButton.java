@@ -31,11 +31,11 @@ public class PopupMenuButton extends AbstractPopupButton {
         super(text, icon, showArrow);
     }
 
-    public JMenuItem addMunuItem(String menuText) {
-        return addMunuItem(new JMenuItem(menuText));
+    public JMenuItem addMenuItem(String menuText) {
+        return addMenuItem(new NormalMenuItem(menuText));
     }
 
-    public JMenuItem addMunuItem(JMenuItem menuItem) {
+    public JMenuItem addMenuItem(JMenuItem menuItem) {
         return getPopupMenu().add(menuItem);
     }
 

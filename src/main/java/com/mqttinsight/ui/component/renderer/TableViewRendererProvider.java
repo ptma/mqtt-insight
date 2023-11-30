@@ -1,5 +1,8 @@
 package com.mqttinsight.ui.component.renderer;
 
+import cn.hutool.core.date.DatePattern;
+import com.mqttinsight.config.ConfKeys;
+import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.PublishedMqttMessage;
 import com.mqttinsight.ui.component.model.MessageTableModel;
@@ -20,6 +23,7 @@ import java.awt.*;
 public class TableViewRendererProvider extends ComponentProvider<JLabel> {
 
     private static final Color PUBLISH_BG = UIManager.getBoolean("laf.dark") ? Color.decode("#133918") : Color.decode("#C5EBCA");
+    private static final String TIME_FORMAT = Configuration.instance().getString(ConfKeys.TIME_FORMAT, DatePattern.NORM_DATETIME_MS_PATTERN);
 
     private MessageTableModel tableModel;
 
@@ -101,7 +105,7 @@ public class TableViewRendererProvider extends ComponentProvider<JLabel> {
                 rendererComponent.setHorizontalAlignment(JLabel.CENTER);
                 break;
             case MessageTableModel.COLUMN_TIME:
-                rendererComponent.setText(message.getTime());
+                rendererComponent.setText(message.timeWithFormat(TIME_FORMAT));
                 rendererComponent.setIcon(null);
                 rendererComponent.setHorizontalAlignment(JLabel.CENTER);
                 break;

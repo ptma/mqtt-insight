@@ -3,7 +3,6 @@ package com.mqttinsight.mqtt;
 import com.mqttinsight.ui.component.Textable;
 import com.mqttinsight.util.LangUtil;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * @author ptma
@@ -21,10 +20,9 @@ public enum SecureMode implements Textable {
 
     PROPERTIES("SecureMode.properties", "SslModeProperties");
 
-    @Setter
-    private String key;
+    private final String key;
 
-    private String lngKey;
+    private final String lngKey;
 
     SecureMode(String key, String lngKey) {
         this.key = key;

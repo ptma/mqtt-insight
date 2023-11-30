@@ -5,6 +5,7 @@ import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.exception.VerificationException;
+import com.mqttinsight.mqtt.PublishedItem;
 import com.mqttinsight.mqtt.PublishedMqttMessage;
 import com.mqttinsight.ui.component.SyntaxTextEditor;
 import com.mqttinsight.ui.component.model.MessageViewMode;
@@ -19,6 +20,7 @@ import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -30,7 +32,7 @@ public class MessagePublishPanel extends JPanel {
     private MigLayout topPanelLayout;
     private SyntaxTextEditor payloadEditor;
     private JPanel topPanel;
-    private JComboBox<String> topicComboBox;
+    private JComboBox<PublishedItem> topicComboBox;
     private JLabel qosLabel;
     private JComboBox<Integer> qosComboBox;
     private JCheckBox retainedCheckBox;
@@ -69,6 +71,17 @@ public class MessagePublishPanel extends JPanel {
         loadPublishedTopics();
         topicComboBox.setSelectedItem("");
         topicComboBox.setRenderer(new TextableListRenderer());
+        topicComboBox.addActionListener(e -> {
+            if ("comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
+                Object sel = topicComboBox.getSelectedItem();
+                if (sel instanceof PublishedItem) {
+                    PublishedItem item = (PublishedItem) sel;
+                    payloadEditor.setText(item.getPayload());
+                    qosComboBox.setSelectedItem(item.getQos());
+                    formatComboBox.setSelectedItem(item.getPayloadFormat());
+                }
+            }
+        });
         topPanel.add(topicComboBox, "growx");
 
         qosLabel = new JLabel("QoS");
@@ -100,8 +113,7 @@ public class MessagePublishPanel extends JPanel {
         payloadEditor = new SyntaxTextEditor();
         payloadPanel.add(payloadEditor, BorderLayout.CENTER);
 
-        publishButton = new JButton(Icons.SEND_GREEN);
-        LangUtil.buttonText(publishButton, "PublishMessage");
+        publishButton = new JButton(LangUtil.getString("PublishMessage") + " (Ctrl + Enter)", Icons.SEND_GREEN);
         publishButton.addActionListener(e -> publishMessage());
         buttonPanel.add(publishButton, BorderLayout.WEST);
 
@@ -109,7 +121,7 @@ public class MessagePublishPanel extends JPanel {
         InputMap inputMap = payloadEditor.textArea().getInputMap();
         while (inputMap != null) {
             inputMap = inputMap.getParent();
-            if (inputMap != null && inputMap instanceof RSyntaxTextAreaDefaultInputMap) {
+            if (inputMap instanceof RSyntaxTextAreaDefaultInputMap) {
                 // remove key binding
                 inputMap.remove(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK));
                 break;
@@ -124,28 +136,28 @@ public class MessagePublishPanel extends JPanel {
     }
 
     private void loadPublishedTopics() {
-        List<String> publishedTopics = mqttInstance.getProperties().getPublishedTopics();
-        if (publishedTopics != null) {
+        List<PublishedItem> publishedHistory = mqttInstance.getProperties().getPublishedHistory();
+        if (publishedHistory != null) {
             topicComboBox.removeAllItems();
-            publishedTopics.sort(String::compareTo);
-            publishedTopics.forEach(topic -> topicComboBox.addItem(topic));
+            publishedHistory.sort(Comparator.comparing(PublishedItem::getTopic));
+            publishedHistory.forEach(topic -> topicComboBox.addItem(topic));
         }
     }
 
-    private void addPublishedTopic(String newTopic) {
-        List<String> publishedTopics = mqttInstance.getProperties().getPublishedTopics();
-        if (publishedTopics == null) {
-            publishedTopics = new ArrayList<>();
-            mqttInstance.getProperties().setPublishedTopics(publishedTopics);
+    private void addPublishedTopic(String topic, String payload, int qos, boolean retained, String payloadFormat) {
+        List<PublishedItem> publishedHistory = mqttInstance.getProperties().getPublishedHistory();
+        if (publishedHistory == null) {
+            publishedHistory = new ArrayList<>();
+            mqttInstance.getProperties().setPublishedHistory(publishedHistory);
             Configuration.instance().changed();
         }
-        if (!publishedTopics.contains(newTopic)) {
-            publishedTopics.add(newTopic);
-            topicComboBox.removeAllItems();
-            publishedTopics.sort(String::compareTo);
-            publishedTopics.forEach(topic -> topicComboBox.addItem(topic));
-            topicComboBox.setSelectedItem(newTopic);
-        }
+        publishedHistory.removeIf(t -> t.getTopic().equals(topic));
+        PublishedItem newItem = new PublishedItem(topic, payload, qos, retained, payloadFormat);
+        publishedHistory.add(newItem);
+        topicComboBox.removeAllItems();
+        publishedHistory.sort(Comparator.comparing(PublishedItem::getTopic));
+        publishedHistory.forEach(item -> topicComboBox.addItem(item));
+        topicComboBox.setSelectedItem(newItem);
     }
 
     public void toggleViewMode(MessageViewMode viewMode) {
@@ -162,7 +174,7 @@ public class MessagePublishPanel extends JPanel {
 
     private void verifyFields() throws VerificationException {
         Validator.notEmpty(topicComboBox, () -> LangUtil.format("FieldRequiredValidation", LangUtil.getString("Topic")));
-        TopicUtil.validate((String) topicComboBox.getSelectedItem());
+        TopicUtil.validate(topicComboBox.getSelectedItem().toString());
     }
 
     public void publishMessage() {
@@ -173,18 +185,20 @@ public class MessagePublishPanel extends JPanel {
             return;
         }
         SwingUtilities.invokeLater(() -> {
-            String topic = (String) topicComboBox.getSelectedItem();
+            String topic = topicComboBox.getSelectedItem().toString();
             String payloadString = payloadEditor.getText();
+            int qos = qosComboBox.getSelectedIndex();
+            boolean retained = retainedCheckBox.isSelected();
             String format = (String) formatComboBox.getSelectedItem();
             byte[] payload = CodecSupports.instance().getByName(format).toPayload(payloadString);
             mqttInstance.publishMessage(PublishedMqttMessage.of(
                 topic,
                 payload,
-                qosComboBox.getSelectedIndex(),
-                retainedCheckBox.isSelected(),
+                qos,
+                retained,
                 format
             ));
-            addPublishedTopic(topic);
+            addPublishedTopic(topic, payloadString, qos, retained, format);
         });
     }
 

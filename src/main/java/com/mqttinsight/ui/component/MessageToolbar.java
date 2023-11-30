@@ -132,10 +132,10 @@ public class MessageToolbar extends JToolBar {
         historyButton.addActionListener(e -> {
             JPopupMenu popupMenu = new JPopupMenu();
             if (searchHistory.isEmpty()) {
-                popupMenu.add(LangUtil.getString("Empty"));
+                popupMenu.add(Utils.UI.createMenuItem(LangUtil.getString("Empty")));
             } else {
                 for (String searchText : searchHistory) {
-                    popupMenu.add(searchText).addActionListener(searchHistoryMenuAction);
+                    popupMenu.add(Utils.UI.createMenuItem(searchText, searchHistoryMenuAction));
                 }
             }
             popupMenu.show(historyButton, 0, historyButton.getHeight());
@@ -146,21 +146,21 @@ public class MessageToolbar extends JToolBar {
         matchCaseButton = new JToggleButton(Icons.SEARCH_MATCHCASE);
         matchCaseButton.setRolloverIcon(Icons.SEARCH_MATCHCASE_HOVER);
         matchCaseButton.setSelectedIcon(Icons.SEARCH_MATCHCASE_SELECTED);
-        matchCaseButton.setToolTipText(LangUtil.getString("MatchCase"));
+        matchCaseButton.setToolTipText(LangUtil.getString("MatchCase") + " (Alt + C)");
         matchCaseButton.addActionListener(e -> find(true));
 
         // whole words button
         wordsButton = new JToggleButton(Icons.SEARCH_WORDS);
         wordsButton.setRolloverIcon(Icons.SEARCH_WORDS_HOVER);
         wordsButton.setSelectedIcon(Icons.SEARCH_WORDS_SELECTED);
-        wordsButton.setToolTipText(LangUtil.getString("WholeWords"));
+        wordsButton.setToolTipText(LangUtil.getString("WholeWords") + " (Alt + W)");
         wordsButton.addActionListener(e -> find(true));
 
         // regex button
         regexButton = new JToggleButton(Icons.SEARCH_REGEX);
         regexButton.setRolloverIcon(Icons.SEARCH_REGEX_HOVER);
         regexButton.setSelectedIcon(Icons.SEARCH_REGEX_SELECTED);
-        regexButton.setToolTipText(LangUtil.getString("RegularExpression"));
+        regexButton.setToolTipText(LangUtil.getString("RegularExpression") + " (Alt + X)");
         regexButton.addActionListener(e -> find(true));
 
         // search inpput trailing buttons
@@ -174,21 +174,21 @@ public class MessageToolbar extends JToolBar {
         searchPrevButton = new JButton(Icons.PREVIOUS_OCCURENCE);
         searchPrevButton.setEnabled(false);
         searchPrevButton.addActionListener(e -> find(false));
-        searchPrevButton.setToolTipText(LangUtil.getString("PreviousOccurrence"));
+        searchPrevButton.setToolTipText(LangUtil.getString("PreviousOccurrence") + " (Shift + F3)");
         this.add(searchPrevButton);
 
         // next button
         searchNextButton = new JButton(Icons.NEXT_OCCURENCE);
         searchNextButton.setEnabled(false);
         searchNextButton.addActionListener(e -> find(true));
-        searchNextButton.setToolTipText(LangUtil.getString("NextOccurrence"));
+        searchNextButton.setToolTipText(LangUtil.getString("NextOccurrence") + " (F3)");
         this.add(searchNextButton);
 
         this.addSeparator();
 
         // filter button
         filterButton = new JToggleButton(Icons.FILTER);
-        filterButton.setToolTipText(LangUtil.getString("FilterSearchResults"));
+        filterButton.setToolTipText(LangUtil.getString("FilterSearchResults") + " (Ctrl + Alt + F)");
         filterButton.addActionListener(e -> filter());
         this.add(filterButton);
 
@@ -274,33 +274,33 @@ public class MessageToolbar extends JToolBar {
         {
             scriptMenu = new JMenu();
             LangUtil.buttonText(scriptMenu, "Script");
-            JMenuItem loadScriptMenu = new JMenuItem();
+            JMenuItem loadScriptMenu = new NormalMenuItem();
             LangUtil.buttonText(loadScriptMenu, "LoadScript");
             loadScriptMenu.addActionListener(this::loadScript);
             scriptMenu.add(loadScriptMenu);
             scriptMenu.addSeparator();
-            moreMenuButton.addMunuItem(scriptMenu);
+            moreMenuButton.addMenuItem(scriptMenu);
         }
 
         {
             formatMenu = new JMenu();
             LangUtil.buttonText(formatMenu, "PayloadFormat");
-            moreMenuButton.addMunuItem(formatMenu);
+            moreMenuButton.addMenuItem(formatMenu);
             loadFormatMenus();
         }
 
         moreMenuButton.addSeparator();
-        JMenuItem clearMessageMenu = new JMenuItem(Icons.CLEAR);
+        JMenuItem clearMessageMenu = new NormalMenuItem(Icons.CLEAR);
         LangUtil.buttonText(clearMessageMenu, "ClearAllMessages");
-        moreMenuButton.addMunuItem(clearMessageMenu).addActionListener(this::clearAllMessages);
-        JMenuItem exportMenu = new JMenuItem(Icons.EXPORT);
+        moreMenuButton.addMenuItem(clearMessageMenu).addActionListener(this::clearAllMessages);
+        JMenuItem exportMenu = new NormalMenuItem(Icons.EXPORT);
         LangUtil.buttonText(exportMenu, "ExportAllMessages");
-        moreMenuButton.addMunuItem(exportMenu).addActionListener(this::exportAllMessages);
+        moreMenuButton.addMenuItem(exportMenu).addActionListener(this::exportAllMessages);
         add(moreMenuButton);
     }
 
     private void initEventListeners() {
-        mqttInstance.addEventListeners(new InstanceEventAdapter() {
+        mqttInstance.addEventListener(new InstanceEventAdapter() {
             @Override
             public void viewInitializeCompleted() {
                 resetMessageTableActions();
@@ -308,6 +308,11 @@ public class MessageToolbar extends JToolBar {
 
             @Override
             public void onMessage(MqttMessage message) {
+                updateMessageNavigation();
+            }
+
+            @Override
+            public void onMessage(MqttMessage message, MqttMessage parent) {
                 updateMessageNavigation();
             }
 
@@ -337,8 +342,8 @@ public class MessageToolbar extends JToolBar {
         formatMenu.removeAll();
         ButtonGroup formatGroup = new ButtonGroup();
         for (CodecSupport codecSupport : CodecSupports.instance().getCodes()) {
-            JCheckBoxMenuItem formatMenuItem = new JCheckBoxMenuItem(codecSupport.getName());
-            formatMenuItem.addActionListener(this::payloadFormatChanged);
+            JCheckBoxMenuItem formatMenuItem = new NormalCheckBoxMenuItem(codecSupport.getName());
+            formatMenuItem.addActionListener(this::payloadFormatChangeAction);
             if (codecSupport.getName().equals(mqttInstance.getPayloadFormat())) {
                 formatMenuItem.setSelected(true);
             }
@@ -348,7 +353,7 @@ public class MessageToolbar extends JToolBar {
     }
 
     private void loadScript(ActionEvent e) {
-        mqttInstance.getEventListeners().forEach(InstanceEventListener::fireLoadScript);
+        mqttInstance.applyEvent(InstanceEventListener::fireLoadScript);
     }
 
     private void onScriptLoaded(final File scriptFile) {
@@ -360,14 +365,14 @@ public class MessageToolbar extends JToolBar {
                 if (filePath.equals(subMenu.getActionCommand())) {
                     int opt = Utils.Message.confirm(String.format(LangUtil.getString("ScriptReloadConfirm"), filePath));
                     if (JOptionPane.YES_OPTION == opt) {
-                        mqttInstance.getEventListeners().forEach(l -> l.fireScriptReload(scriptFile));
+                        mqttInstance.applyEvent(l -> l.fireScriptReload(scriptFile));
                     }
                     return;
                 }
             }
         }
 
-        final JMenuItem menuItem = new JMenuItem(scriptFile.getName());
+        final JMenuItem menuItem = new NormalMenuItem(scriptFile.getName());
         menuItem.setActionCommand(scriptFile.getAbsolutePath());
         menuItem.addActionListener(e -> {
             Window window = SwingUtilities.windowForComponent(this);
@@ -399,10 +404,10 @@ public class MessageToolbar extends JToolBar {
 
             switch (choice) {
                 case 0:
-                    mqttInstance.getEventListeners().forEach(l -> l.fireScriptReload(scriptFile));
+                    mqttInstance.applyEvent(l -> l.fireScriptReload(scriptFile));
                     break;
                 case 1:
-                    mqttInstance.getEventListeners().forEach(l -> {
+                    mqttInstance.applyEvent(l -> {
                         l.fireScriptRemove(scriptFile);
                         scriptMenu.remove(menuItem);
                     });
@@ -487,6 +492,7 @@ public class MessageToolbar extends JToolBar {
 
     public void cancelSearch() {
         searchPatternModel.setRawText("");
+        searchPatternModel.setFoundIndex(-1);
         doSearch();
         searchPrevButton.setEnabled(false);
         searchNextButton.setEnabled(false);
@@ -494,8 +500,12 @@ public class MessageToolbar extends JToolBar {
     }
 
     public void filter() {
-        if (filterButton.isSelected() && !searchField.getText().isEmpty()) {
-            doFilter();
+        if (filterButton.isSelected() && StrUtil.isNotEmpty(searchField.getText())) {
+            if (!searchField.getText().equals(searchPatternModel.getRawText())) {
+                find(true);
+            } else {
+                doFilter();
+            }
         } else {
             clearFilter();
         }
@@ -530,7 +540,7 @@ public class MessageToolbar extends JToolBar {
         } else {
             viewMode = MessageViewMode.DIALOGUE;
         }
-        mqttInstance.getEventListeners().forEach(l -> l.onViewModeChanged(viewMode));
+        mqttInstance.applyEvent(l -> l.onViewModeChanged(viewMode));
     }
 
     private void updateMessageNavigation() {
@@ -560,20 +570,21 @@ public class MessageToolbar extends JToolBar {
     }
 
     private void toggleAutoScroll(ActionEvent e) {
-        mqttInstance.getEventListeners().forEach(l -> l.toggleAutoScroll(autoScrollButton.isSelected()));
+        mqttInstance.applyEvent(l -> l.toggleAutoScroll(autoScrollButton.isSelected()));
     }
 
-    private void payloadFormatChanged(ActionEvent e) {
+    private void payloadFormatChangeAction(ActionEvent e) {
         String format = e.getActionCommand();
         mqttInstance.setPayloadFormat(format);
+        mqttInstance.applyEvent(InstanceEventListener::payloadFormatChanged);
     }
 
     private void clearAllMessages(ActionEvent e) {
-        mqttInstance.getEventListeners().forEach(InstanceEventListener::clearAllMessages);
+        mqttInstance.applyEvent(InstanceEventListener::clearAllMessages);
     }
 
     private void exportAllMessages(ActionEvent e) {
-        mqttInstance.getEventListeners().forEach(InstanceEventListener::exportAllMessages);
+        mqttInstance.applyEvent(InstanceEventListener::exportAllMessages);
     }
 
     public static class RegexSearchCreator extends PatternModel.RegexCreator {

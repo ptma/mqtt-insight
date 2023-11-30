@@ -3,6 +3,9 @@ package com.mqttinsight.ui.component;
 import com.formdev.flatlaf.extras.components.FlatPopupMenu;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
+import com.mqttinsight.ui.chart.MessageContentChartFrame;
+import com.mqttinsight.ui.chart.MessageCountChartFrame;
+import com.mqttinsight.ui.chart.MessageLoadChartFrame;
 import com.mqttinsight.ui.component.model.MessageTableModel;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.component.renderer.DialogueViewRendererProvider;
@@ -29,6 +32,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 
 /**
  * @author ptma
@@ -102,17 +106,38 @@ public class MessageTable extends JXTable {
         popupMenu = new FlatPopupMenu();
         menuCopyTopic = Utils.UI.createMenuItem(LangUtil.getString("Copy&Topic"), (e) -> copyTopic());
         popupMenu.add(menuCopyTopic);
-        menuCopy = Utils.UI.createMenuItem(LangUtil.getString("Copy&Payload"), (e) -> copyPayload());
+        menuCopy = Utils.UI.createMenuItem(LangUtil.getString("Copy&Payload") + " (Ctrl + C)", (e) -> copyPayload());
         popupMenu.add(menuCopy);
         menuDelete = Utils.UI.createMenuItem(LangUtil.getString("&Delete"), (e) -> deleteSelectedRow());
         menuDelete.setIcon(Icons.REMOVE);
         popupMenu.add(menuDelete);
-        popupMenu.add(new JSeparator());
 
-        JMenuItem menuClear = Utils.UI.createMenuItem(LangUtil.getString("ClearAllMessages"), (e) -> mqttInstance.getEventListeners().forEach(InstanceEventListener::clearAllMessages));
+        popupMenu.addSeparator();
+
+        JMenu chartMenu = new JMenu(LangUtil.getString("Chart"));
+        JMenuItem countChartMenu = new JMenuItem(LangUtil.getString("MessageCountStatisticsChart"));
+        countChartMenu.addActionListener(e -> {
+            MessageCountChartFrame.open(mqttInstance);
+        });
+        chartMenu.add(countChartMenu);
+        JMenuItem loadChartMenu = new JMenuItem(LangUtil.getString("MessageLoadStatisticsChart"));
+        loadChartMenu.addActionListener(e -> {
+            MessageLoadChartFrame.open(mqttInstance);
+        });
+        chartMenu.add(loadChartMenu);
+        JMenuItem contentChartMenu = new JMenuItem(LangUtil.getString("MessageContentStatisticsChart"));
+        contentChartMenu.addActionListener(e -> {
+            MessageContentChartFrame.open(mqttInstance);
+        });
+        chartMenu.add(contentChartMenu);
+        popupMenu.add(chartMenu);
+
+        popupMenu.addSeparator();
+
+        JMenuItem menuClear = Utils.UI.createMenuItem(LangUtil.getString("ClearAllMessages"), (e) -> mqttInstance.applyEvent(InstanceEventListener::clearAllMessages));
         menuClear.setIcon(Icons.CLEAR);
         popupMenu.add(menuClear);
-        JMenuItem menuExport = Utils.UI.createMenuItem(LangUtil.getString("ExportAllMessages"), (e) -> mqttInstance.getEventListeners().forEach(InstanceEventListener::exportAllMessages));
+        JMenuItem menuExport = Utils.UI.createMenuItem(LangUtil.getString("ExportAllMessages"), (e) -> mqttInstance.applyEvent(InstanceEventListener::exportAllMessages));
         menuExport.setIcon(Icons.EXPORT);
         popupMenu.add(menuExport);
 
@@ -138,6 +163,10 @@ public class MessageTable extends JXTable {
         if (autoScroll && getSelectedRow() == row) {
             scrollRowToVisible(row);
         }
+    }
+
+    public int getModelRowCount() {
+        return tableModel.getRowCount();
     }
 
     @Override
@@ -181,7 +210,6 @@ public class MessageTable extends JXTable {
     }
 
     private void initTableViewColumns() {
-        TableColumnExt column;
         // Icon column
         TableColumnExt colDirection = this.getColumnExt(0);
         colDirection.setWidth(25);
@@ -228,7 +256,7 @@ public class MessageTable extends JXTable {
         TableColumnExt colTime = this.getColumnExt(5);
         colTime.setWidth(160);
         colTime.setPreferredWidth(160);
-        colTime.setMinWidth(100);
+        colTime.setMinWidth(50);
         colTime.setMaxWidth(160);
         colTime.putClientProperty("columnIndex", MessageTableModel.COLUMN_TIME);
 
@@ -255,7 +283,6 @@ public class MessageTable extends JXTable {
     }
 
     public void copyTopic() {
-        int selectedRow = getSelectedRow();
         int modelIndex = convertRowIndexToModel(getSelectedRow());
         MqttMessage message = tableModel.get(modelIndex);
         StringSelection selec = new StringSelection(message.getTopic());
@@ -264,7 +291,6 @@ public class MessageTable extends JXTable {
     }
 
     public void copyPayload() {
-        int selectedRow = getSelectedRow();
         int modelIndex = convertRowIndexToModel(getSelectedRow());
         MqttMessage message = tableModel.get(modelIndex);
         StringSelection selec = new StringSelection(message.getPayload());
@@ -274,16 +300,22 @@ public class MessageTable extends JXTable {
 
     public void goAndSelectRow(int row) {
         if (this.getRowCount() == 0) {
+            this.clearSelection();
             return;
         }
         if (row < 0) {
-            row = 0;
+            this.clearSelection();
+        } else {
+            if (row >= this.getRowCount()) {
+                row = this.getRowCount() - 1;
+            }
+            this.scrollRowToVisible(row);
+            this.setRowSelectionInterval(row, row);
         }
-        if (row >= this.getRowCount()) {
-            row = this.getRowCount() - 1;
-        }
-        this.scrollRowToVisible(row);
-        this.setRowSelectionInterval(row, row);
+    }
+
+    public List<MqttMessage> getMessage() {
+        return tableModel.getMessages();
     }
 
     public boolean isAutoScroll() {

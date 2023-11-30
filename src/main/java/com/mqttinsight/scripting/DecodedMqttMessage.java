@@ -29,9 +29,15 @@ public class DecodedMqttMessage extends AbstractMqttMessage implements MqttMessa
         this.payload = payload;
     }
 
+    public Subscription getSubscription() {
+        return subscription;
+    }
+
     @Override
     public Color getColor() {
-        return color != null ? ColorUtil.hexToColor(color) : subscription.getColor();
+        return color != null ? ColorUtil.hexToColor(color) : (
+            subscription == null ? null : subscription.getColor()
+        );
     }
 
     @Override
@@ -49,10 +55,9 @@ public class DecodedMqttMessage extends AbstractMqttMessage implements MqttMessa
 
     @Override
     public String getPayloadFormat() {
-        return format != null ? format :
-            (
-                subscription != null ? subscription.getPayloadFormat() : CodecSupport.PLAIN
-            );
+        return format != null ? format : (
+            subscription != null ? subscription.getPayloadFormat() : CodecSupport.PLAIN
+        );
     }
 
     @Override
