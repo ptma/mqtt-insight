@@ -492,6 +492,7 @@ public class MessageToolbar extends JToolBar {
 
     public void cancelSearch() {
         searchPatternModel.setRawText("");
+        searchPatternModel.setFoundIndex(-1);
         doSearch();
         searchPrevButton.setEnabled(false);
         searchNextButton.setEnabled(false);
@@ -499,8 +500,12 @@ public class MessageToolbar extends JToolBar {
     }
 
     public void filter() {
-        if (filterButton.isSelected() && !searchField.getText().isEmpty()) {
-            doFilter();
+        if (filterButton.isSelected() && StrUtil.isNotEmpty(searchField.getText())) {
+            if (!searchField.getText().equals(searchPatternModel.getRawText())) {
+                find(true);
+            } else {
+                doFilter();
+            }
         } else {
             clearFilter();
         }
