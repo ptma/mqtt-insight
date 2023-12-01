@@ -257,7 +257,11 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     @Override
     public void applyEvent(Consumer<InstanceEventListener> action) {
-        eventListeners.forEach(action);
+        try {
+            eventListeners.forEach(action);
+        } catch (Exception e) {
+            log.warn(e.getMessage(), e);
+        }
     }
 
     protected int getReasonCode() {
