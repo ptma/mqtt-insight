@@ -1,5 +1,6 @@
 package com.mqttinsight.util;
 
+import cn.hutool.core.img.ColorUtil;
 import cn.hutool.core.lang.PatternPool;
 import com.jayway.jsonpath.JsonPath;
 import com.mqttinsight.MqttInsightApplication;
@@ -32,6 +33,9 @@ import java.util.regex.Pattern;
 public class Utils {
 
     private static final Random RANDOM = new Random(System.currentTimeMillis());
+
+    private static final Color DARKER_TEXT_COLOR = Color.BLACK;
+    private static final Color LIGHTER_TEXT_COLOR = ColorUtil.hexToColor("#ABB2BF");
 
     private static final Map<String, XPathExpression> XPATH_CACHE = new ConcurrentHashMap<>();
 
@@ -273,7 +277,7 @@ public class Utils {
 
     public static Color getReverseForegroundColor(Color color) {
         float grayLevel = (color.getRed() * 299 + color.getGreen() * 587 + color.getBlue() * 114) / 1000f / 255;
-        return grayLevel >= 0.45 ? Color.BLACK : Color.WHITE;
+        return grayLevel >= 0.45 ? DARKER_TEXT_COLOR : LIGHTER_TEXT_COLOR;
     }
 
     public static String md5(String content) throws NoSuchAlgorithmException {
