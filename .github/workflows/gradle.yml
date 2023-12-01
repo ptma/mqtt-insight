@@ -73,16 +73,17 @@ jobs:
                 run: chmod +x gradlew
             -   name: Build with Gradle
                 run: ./gradlew packageForMac_M1
-            -   id: set_var
-                run: |
-                    content=`cat ./src/main/resources/version.json`
-                    echo "::set-output name=versionJson::$content"
+            -   name: JSON to variables
+                uses: antifree/json-to-variables@v1.0.1
+                with:
+                    filename: './src/main/resources/version.json'
+                    prefix: 'conf'
             -   name: Upload binaries to release
                 uses: svenstaro/upload-release-action@v2
                 with:
                     repo_token: ${{ secrets.REPO_TOKEN }}
-                    file: ./build/MqttInsight_${{fromJson(steps.set_var.outputs.versionJson).version}}.dmg
-                    asset_name: MqttInsight_${{fromJson(steps.set_var.outputs.versionJson).version}}_M1.dmg
+                    file: ./build/MqttInsight_${{ env.conf_version }}.dmg
+                    asset_name: MqttInsight_${{ env.conf_version }}_M1.dmg
                     tag: ${{ github.ref }}
                     release_name: ${{ github.ref }}
                     overwrite: true
