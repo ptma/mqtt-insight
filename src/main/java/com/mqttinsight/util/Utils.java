@@ -20,8 +20,8 @@ import java.awt.event.ActionListener;
 import java.io.StringReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  */
 public class Utils {
 
-    private static final Random RANDOM = new Random(System.currentTimeMillis());
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private static final Color DARKER_TEXT_COLOR = Color.BLACK;
     private static final Color LIGHTER_TEXT_COLOR = ColorUtil.hexToColor("#ABB2BF");
@@ -263,7 +263,7 @@ public class Utils {
         float lightness = (RANDOM.nextInt(40) + 30) / 100f;//0.3--0.7
         float randomHue = RANDOM.nextInt(360) / 360f;
         Color color = ColorUtilities.HSLtoRGB(randomHue, 1.0f, lightness);
-        int randomAlpha = RANDOM.nextInt(20) + 20; // 20--40
+        int randomAlpha = RANDOM.nextInt(30) + 10; // 10--40
         return Utils.mixColorsWithAlpha(UIManager.getColor("Table.background"), color, randomAlpha);
     }
 
