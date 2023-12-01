@@ -9,6 +9,7 @@ import com.mqttinsight.ui.component.PopupMenuButton;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
+import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.jdesktop.swingx.table.TableColumnExt;
 import org.knowm.xchart.XChartPanel;
@@ -26,7 +27,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
@@ -38,7 +38,6 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
     private PopupMenuButton seriesIntervalButton;
     private PopupMenuButton seriesLimitButton;
 
-    private ExecutorService executorService;
     private ScheduledThreadPoolExecutor scheduledExecutor;
     private XYChart chart;
     private XChartPanel chartPanel;
@@ -130,13 +129,11 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
 
     @Override
     protected void onMessage(MqttMessage message) {
-        executorService.execute(() -> {
-            for (LoadSeriesProperties series : seriesTableModel.getSeries()) {
-                if (messageMatchesSeries(series, message)) {
-                    series.addMessageData(message.getTimestamp(), message.payloadSize());
-                }
+        for (LoadSeriesProperties series : seriesTableModel.getSeries()) {
+            if (messageMatchesSeries(series, message)) {
+                series.addMessageData(message.getTimestamp(), message.payloadSize());
             }
-        });
+        }
     }
 
     @Override
@@ -204,11 +201,9 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
     }
 
     private void initMessageEvent() {
-        executorService = ThreadUtil.newFixedExecutor(1, "Load Chart ", false);
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                executorService.shutdown();
                 if (scheduledExecutor != null) {
                     scheduledExecutor.shutdownNow();
                 }
@@ -286,9 +281,13 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         chart.getStyler().setZoomEnabled(true);
         chart.getStyler().setZoomResetByDoubleClick(true);
         chart.getStyler().setDatePattern("HH:mm:ss");
-        chart.getStyler().setChartPadding(10);
+        chart.getStyler().setChartPadding(5);
         chart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideS);
         chart.getStyler().setLegendLayout(Styler.LegendLayout.Horizontal);
+        chart.getStyler().setLegendSeriesLineLength(12);
+        chart.getStyler().setMarkerSize(6);
+        chart.getStyler().setCursorEnabled(true);
+        chart.getStyler().setCursorFont(UIManager.getFont("Label.font"));
         chart.getStyler().setToolTipsEnabled(true);
         chart.getStyler().setToolTipType(Styler.ToolTipType.xAndYLabels);
         chart.getStyler().setBaseFont(UIManager.getFont("Label.font"));
@@ -310,6 +309,10 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
             chart.getStyler().setToolTipBackgroundColor(UIManager.getColor("ToolTip.background"));
             chart.getStyler().setToolTipFont(UIManager.getFont("ToolTip.font"));
             chart.getStyler().setToolTipBorderColor(UIManager.getColor("Component.borderColor"));
+
+            chart.getStyler().setCursorColor(Utils.brighter(UIManager.getColor("Component.borderColor"), 0.7f));
+        } else {
+            chart.getStyler().setCursorColor(Utils.darker(UIManager.getColor("Component.borderColor"), 0.7f));
         }
         chartPanel = new XChartPanel(chart);
         chartPanel.setSaveAsString(LangUtil.getString("SaveAs"));

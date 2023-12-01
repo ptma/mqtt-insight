@@ -1,5 +1,6 @@
 package com.mqttinsight.ui.chart;
 
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mqttinsight.config.Configuration;
@@ -26,6 +27,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @author ptma
@@ -47,6 +49,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     private JButton pauseButton;
     protected AbstractSeriesTableModel<T> seriesTableModel;
     protected InstanceEventAdapter eventAdapter;
+    private ExecutorService executorService;
     @Getter
     private boolean paused = false;
 
@@ -208,17 +211,23 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     }
 
     private void initMessageEvent() {
+        // Create a thread pool first, then add event listeners
+        executorService = ThreadUtil.newFixedExecutor(1, "Chart ", false);
         eventAdapter = new InstanceEventAdapter() {
             @Override
             public void onMessage(MqttMessage message) {
-                BaseChartFrame.this.onMessage(message);
+                executorService.execute(() -> {
+                    BaseChartFrame.this.onMessage(message);
+                });
             }
         };
         mqttInstance.addEventListener(eventAdapter);
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                // Remove event listening first, then close the thread pool
                 mqttInstance.removeEventListener(eventAdapter);
+                executorService.shutdown();
                 super.windowClosing(e);
             }
         });

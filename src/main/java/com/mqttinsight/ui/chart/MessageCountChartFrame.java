@@ -1,7 +1,6 @@
 package com.mqttinsight.ui.chart;
 
 import cn.hutool.core.img.ColorUtil;
-import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.mqtt.MqttMessage;
@@ -25,7 +24,6 @@ import java.awt.event.WindowEvent;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -36,7 +34,6 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     private JToggleButton pieChartButton;
     private JToggleButton barChartButton;
 
-    private ExecutorService executorService;
     private Map<String, AtomicInteger> seriesCache = new ConcurrentHashMap<>();
 
     private Chart chart;
@@ -108,17 +105,15 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
 
     @Override
     protected void onMessage(MqttMessage message) {
-        executorService.execute(() -> {
-            for (CountSeriesProperties series : seriesTableModel.getSeries()) {
-                if (series.isDynamic()) {
-                    dynamicSeries(series, message);
-                } else {
-                    if (messageMatchesSeries(series, message)) {
-                        saveOrUpdateSeriesData(series.getSeriesName());
-                    }
+        for (CountSeriesProperties series : seriesTableModel.getSeries()) {
+            if (series.isDynamic()) {
+                dynamicSeries(series, message);
+            } else {
+                if (messageMatchesSeries(series, message)) {
+                    saveOrUpdateSeriesData(series.getSeriesName());
                 }
             }
-        });
+        }
     }
 
     @Override
@@ -178,8 +173,9 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
                 .height(bottomPanel.getPreferredSize().height)
                 .build();
             pieChart.getStyler().setLabelType(PieStyler.LabelType.NameAndPercentage);
-            pieChart.getStyler().setLabelsDistance(1.1);
+            pieChart.getStyler().setLabelsDistance(1.15);
             pieChart.getStyler().setSliceBorderWidth(2);
+            pieChart.getStyler().setPlotContentSize(0.8);
             if (UIManager.getBoolean("laf.dark")) {
                 pieChart.getStyler().setLabelsFontColor(UIManager.getColor("Label.foreground"));
                 pieChart.getStyler().setLabelsFontColorAutomaticEnabled(false);
@@ -204,7 +200,7 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
             chart = barChart;
         }
 
-        chart.getStyler().setChartPadding(10);
+        chart.getStyler().setChartPadding(5);
         chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNE);
         chart.getStyler().setToolTipsEnabled(true);
         chart.getStyler().setToolTipType(Styler.ToolTipType.xAndYLabels);
@@ -251,11 +247,9 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     }
 
     private void initMessageEvent() {
-        executorService = ThreadUtil.newFixedExecutor(1, "Count Chart ", false);
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                executorService.shutdown();
                 super.windowClosing(e);
             }
         });
