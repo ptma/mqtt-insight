@@ -40,17 +40,19 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
     private XChartPanel chartPanel;
 
     private final static List<Limit> seriesLimitList = Arrays.asList(
+        Limit.of(0, 0, LangUtil.getString("Unlimited")),
         Limit.of(100, 0, "100 " + LangUtil.getString("DataPoints")),
         Limit.of(200, 0, "200 " + LangUtil.getString("DataPoints")),
         Limit.of(500, 0, "500 " + LangUtil.getString("DataPoints")),
         Limit.of(1000, 0, "1K " + LangUtil.getString("DataPoints")),
         Limit.of(0, 1000 * 60, "1 " + LangUtil.getString("Minutes")),
+        Limit.of(0, 1000 * 60 * 2, "2 " + LangUtil.getString("Minutes")),
         Limit.of(0, 1000 * 60 * 5, "5 " + LangUtil.getString("Minutes")),
         Limit.of(0, 1000 * 60 * 10, "10 " + LangUtil.getString("Minutes")),
         Limit.of(0, 1000 * 60 * 30, "30 " + LangUtil.getString("Minutes")),
         Limit.of(0, 1000 * 60 * 60, "1 " + LangUtil.getString("Hours"))
     );
-    private Limit defaultSeriesLimit = seriesLimitList.get(0);
+    private Limit defaultSeriesLimit = seriesLimitList.get(1);
 
 
     public static void open(MqttInstance mqttInstance) {
@@ -150,6 +152,11 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         return new ValueSeriesTableModel();
     }
 
+    @Override
+    protected void beforeSeriesLoad(ValueSeriesProperties series) {
+        series.setXYDataLimit(defaultSeriesLimit);
+    }
+
     private void initComponents() {
         initTableColumns();
 
@@ -234,8 +241,6 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         chart.getStyler().setLegendLayout(Styler.LegendLayout.Horizontal);
         chart.getStyler().setLegendSeriesLineLength(12);
         chart.getStyler().setMarkerSize(6);
-        chart.getStyler().setCursorEnabled(true);
-        chart.getStyler().setCursorFont(UIManager.getFont("Label.font"));
         chart.getStyler().setToolTipsEnabled(true);
         chart.getStyler().setToolTipType(Styler.ToolTipType.xAndYLabels);
         chart.getStyler().setBaseFont(UIManager.getFont("Label.font"));
@@ -245,7 +250,6 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
 
             chart.getStyler().setPlotBackgroundColor(ColorUtil.hexToColor("#282c34"));
             chart.getStyler().setPlotBorderColor(UIManager.getColor("Component.borderColor"));
-            chart.getStyler().setPlotContentSize(0.8);
 
             chart.getStyler().setLegendBackgroundColor(ColorUtil.hexToColor("#282c34"));
             chart.getStyler().setLegendBorderColor(UIManager.getColor("Component.borderColor"));
@@ -298,8 +302,10 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
     }
 
     private void createUIComponents() {
-        toolbar.add(new JToolBar.Separator());
+        toolbar.addSeparator();
+
         seriesLimitButton = new PopupMenuButton("", Icons.CHART_LINE, true);
+        seriesLimitButton.setToolTipText(LangUtil.getString("XAxisDataQuantity"));
         toolbar.add(seriesLimitButton);
     }
 

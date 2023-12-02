@@ -90,6 +90,11 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
      * 获取子类实际使用的表格模型
      */
     protected abstract AbstractSeriesTableModel<T> createSeriesTableModel();
+    
+    /**
+     * 系列加载到表格前调用, 子类可以对系列做一些处理
+     */
+    protected abstract void beforeSeriesLoad(T series);
 
     /**
      * 接收到 MQTT 消息时调用，子类实现具体的业务逻辑。
@@ -244,6 +249,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
                 menuItem.addActionListener(e -> {
                     seriesTableModel.removeAll();
                     for (T series : item.getSeries()) {
+                        beforeSeriesLoad(series);
                         seriesTableModel.addRow(series);
                     }
                     resetChartButton.doClick();

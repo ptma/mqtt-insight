@@ -104,6 +104,11 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     }
 
     @Override
+    protected void beforeSeriesLoad(CountSeriesProperties series) {
+
+    }
+
+    @Override
     protected void onMessage(MqttMessage message) {
         for (CountSeriesProperties series : seriesTableModel.getSeries()) {
             if (series.isDynamic()) {
@@ -349,8 +354,8 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     }
 
     private void createUIComponents() {
-        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
-        toolbar.add(toolBar$Separator3);
+        toolbar.addSeparator();
+
         pieChartButton = new JToggleButton(Icons.CHART_PIE);
         pieChartButton.setToolTipText(ChartMode.PIE.getText());
         barChartButton = new JToggleButton(Icons.CHART_BAR);
