@@ -88,8 +88,7 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
 
     @Override
     @SneakyThrows
-    public void close() {
-        super.close();
+    public void doClose() {
         try {
             mqttClient.close(true);
             persistence.close();

@@ -270,7 +270,7 @@ public class ConnectionEditorForm extends JDialog {
         buttonTest.addActionListener(e -> onTest());
         buttonOk.addActionListener(e -> onOk());
         buttonCancel.addActionListener(e -> onCancel());
-        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {

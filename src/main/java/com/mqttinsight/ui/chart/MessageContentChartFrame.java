@@ -69,7 +69,6 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         createUIComponents();
         initComponents();
         initChart();
-        initMessageEvent();
         setTitle(String.format(LangUtil.getString("MessageContentStatisticsChartTitle"), mqttInstance.getProperties().getName()));
     }
 
@@ -181,15 +180,6 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         seriesLimitButton.setText(defaultSeriesLimit.getName());
     }
 
-    private void initMessageEvent() {
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                super.windowClosing(e);
-            }
-        });
-    }
-
     private void initTableColumns() {
         // Name column
         TableColumnExt column = seriesTable.getColumnExt(0);
@@ -236,7 +226,7 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         chart.getStyler().setZoomEnabled(true);
         chart.getStyler().setZoomResetByDoubleClick(true);
         chart.getStyler().setDatePattern("HH:mm:ss");
-        chart.getStyler().setChartPadding(5);
+        chart.getStyler().setChartPadding(10);
         chart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideS);
         chart.getStyler().setLegendLayout(Styler.LegendLayout.Horizontal);
         chart.getStyler().setLegendSeriesLineLength(12);

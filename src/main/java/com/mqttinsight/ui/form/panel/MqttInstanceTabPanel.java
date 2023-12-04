@@ -7,6 +7,8 @@ import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.*;
 import com.mqttinsight.scripting.ScriptLoader;
+import com.mqttinsight.ui.chart.BaseChartFrame;
+import com.mqttinsight.ui.chart.series.SeriesProperties;
 import com.mqttinsight.ui.component.*;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
@@ -29,8 +31,10 @@ import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * @author ptma
@@ -71,12 +75,15 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     private final List<InstanceEventListener> eventListeners;
 
+    private final List<BaseChartFrame> chartFrames;
+
     private ScriptLoader scriptLoader;
 
     public MqttInstanceTabPanel(MqttProperties properties) {
         super();
         this.properties = properties;
         eventListeners = new ArrayList<>();
+        chartFrames = new ArrayList<>();
         setLayout(new BorderLayout());
         $$$setupUI$$$();
         add(rootPanel, BorderLayout.CENTER);
@@ -230,7 +237,16 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     @Override
-    public void close() {
+    public boolean close() {
+        if (!chartFrames.isEmpty()) {
+            int opt = Utils.Message.confirm(LangUtil.getString("CloseTabConfirm"));
+            if (JOptionPane.NO_OPTION == opt) {
+                return false;
+            } else {
+                // 复制 list , 避免 ConcurrentModificationException
+                chartFrames.stream().toList().forEach(BaseChartFrame::dispose);
+            }
+        }
         if (scriptLoader != null) {
             scriptLoader.closeAll();
         }
@@ -238,6 +254,8 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             onConnectionChanged(ConnectionStatus.DISCONNECTING);
             disconnect(false);
         }
+        doClose();
+        return true;
     }
 
     @Override
@@ -360,6 +378,8 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     public abstract boolean doPublishMessage(final PublishedMqttMessage message);
 
     public abstract boolean doSubscribe(final Subscription subscription);
+
+    public abstract void doClose();
 
     @Override
     public boolean subscribe(Subscription subscription) {
@@ -488,6 +508,16 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         if (scriptLoader != null) {
             scriptLoader.removeScript(scriptFile.getAbsolutePath());
         }
+    }
+
+    @Override
+    public void registerChartFrame(BaseChartFrame<? extends SeriesProperties> chartFrame) {
+        chartFrames.add(chartFrame);
+    }
+
+    @Override
+    public void unregisterChartFrame(BaseChartFrame<? extends SeriesProperties> chartFrame) {
+        chartFrames.remove(chartFrame);
     }
 
     /**

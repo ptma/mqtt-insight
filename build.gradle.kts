@@ -104,7 +104,7 @@ dependencies {
     } else {
         implementation("com.caoccao.javet:javet:2.2.2") // Linux and Windows (x86_64)
     }
-    implementation("org.knowm.xchart:xchart:3.8.5")
+    implementation("org.knowm.xchart:xchart:3.8.6")
     implementation("com.jayway.jsonpath:json-path:2.8.0")
 }
 repositories {

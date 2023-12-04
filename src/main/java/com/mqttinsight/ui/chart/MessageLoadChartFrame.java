@@ -85,7 +85,6 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         createUIComponents();
         initComponents();
         initChart();
-        initMessageEvent();
         setTitle(String.format(LangUtil.getString("MessageLoadStatisticsChartTitle"), mqttInstance.getProperties().getName()));
     }
 
@@ -208,16 +207,12 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         seriesLimitButton.setText(defaultSeriesLimit.getName());
     }
 
-    private void initMessageEvent() {
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                if (scheduledExecutor != null) {
-                    scheduledExecutor.shutdownNow();
-                }
-                super.windowClosing(e);
-            }
-        });
+    @Override
+    public void dispose() {
+        if (scheduledExecutor != null) {
+            scheduledExecutor.shutdownNow();
+        }
+        super.dispose();
     }
 
     private void initScheduledSeriesDataTasks(boolean reSchedule) {
@@ -289,7 +284,7 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         chart.getStyler().setZoomEnabled(true);
         chart.getStyler().setZoomResetByDoubleClick(true);
         chart.getStyler().setDatePattern("HH:mm:ss");
-        chart.getStyler().setChartPadding(5);
+        chart.getStyler().setChartPadding(10);
         chart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideS);
         chart.getStyler().setLegendLayout(Styler.LegendLayout.Horizontal);
         chart.getStyler().setLegendSeriesLineLength(12);

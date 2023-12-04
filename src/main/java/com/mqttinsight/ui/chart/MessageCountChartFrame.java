@@ -54,7 +54,6 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
         createUIComponents();
         initComponents();
         initChart(ChartMode.PIE);
-        initMessageEvent();
         setTitle(String.format(LangUtil.getString("MessageCountStatisticsChartTitle"), mqttInstance.getProperties().getName()));
     }
 
@@ -205,7 +204,7 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
             chart = barChart;
         }
 
-        chart.getStyler().setChartPadding(5);
+        chart.getStyler().setChartPadding(10);
         chart.getStyler().setLegendPosition(Styler.LegendPosition.InsideNE);
         chart.getStyler().setToolTipsEnabled(true);
         chart.getStyler().setToolTipType(Styler.ToolTipType.xAndYLabels);
@@ -249,15 +248,6 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
         bottomPanel.add(chartPanel, BorderLayout.CENTER);
         chartPanel.revalidate();
         chartPanel.repaint();
-    }
-
-    private void initMessageEvent() {
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                super.windowClosing(e);
-            }
-        });
     }
 
     private void chartChanged(ActionEvent e) {

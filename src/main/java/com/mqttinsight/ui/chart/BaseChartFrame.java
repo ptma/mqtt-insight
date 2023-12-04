@@ -59,11 +59,12 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
         $$$setupUI$$$();
         setIconImages(Icons.WINDOW_ICON);
         setContentPane(contentPanel);
-
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         initComponents();
         initMessageEvent();
         loadFavoriteSeries();
         applyLanguage();
+        mqttInstance.registerChartFrame(this);
     }
 
     /**
@@ -90,7 +91,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
      * 获取子类实际使用的表格模型
      */
     protected abstract AbstractSeriesTableModel<T> createSeriesTableModel();
-    
+
     /**
      * 系列加载到表格前调用, 子类可以对系列做一些处理
      */
@@ -227,15 +228,14 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
             }
         };
         mqttInstance.addEventListener(eventAdapter);
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                // Remove event listening first, then close the thread pool
-                mqttInstance.removeEventListener(eventAdapter);
-                executorService.shutdown();
-                super.windowClosing(e);
-            }
-        });
+    }
+
+    @Override
+    public void dispose() {
+        mqttInstance.removeEventListener(eventAdapter);
+        mqttInstance.unregisterChartFrame(BaseChartFrame.this);
+        executorService.shutdown();
+        super.dispose();
     }
 
     void loadFavoriteSeries() {

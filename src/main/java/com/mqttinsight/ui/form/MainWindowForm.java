@@ -181,10 +181,13 @@ public class MainWindowForm {
         tabPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_TOOLTIPTEXT, LangUtil.getString("Close"));
         tabPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK, (BiConsumer<JTabbedPane, Integer>) (tabbedPane, tabIndex) -> {
             if (isMqttInstanceAtTab(tabIndex)) {
-                getMqttInstanceAtTab(tabIndex).close();
+                if (getMqttInstanceAtTab(tabIndex).close()) {
+                    tabPanel.removeTabAt(tabIndex);
+                    System.gc();
+                }
+            } else {
+                tabPanel.removeTabAt(tabIndex);
             }
-            tabPanel.removeTabAt(tabIndex);
-            System.gc();
         });
         contentPanel.add(tabPanel, BorderLayout.CENTER, 0);
     }
