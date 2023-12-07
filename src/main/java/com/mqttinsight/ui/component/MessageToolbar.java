@@ -10,6 +10,7 @@ import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.Subscription;
+import com.mqttinsight.ui.component.model.MessageTableModel;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.ui.event.InstanceEventListener;
@@ -512,7 +513,10 @@ public class MessageToolbar extends JToolBar {
     }
 
     public void doFilter() {
-        RowFilter rowFilter = RowFilter.regexFilter(searchPatternModel.getPattern().pattern());
+        RowFilter rowFilter = RowFilter.regexFilter(searchPatternModel.getPattern().pattern(),
+            MessageTableModel.COLUMN_TOPIC,
+            MessageTableModel.COLUMN_PAYLOAD
+        );
         mqttInstance.getMessageTable().setRowFilter(rowFilter);
     }
 
