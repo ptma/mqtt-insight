@@ -225,6 +225,15 @@ public class Utils {
             }
             return menuItem;
         }
+
+        public static JMenuItem createMenuItem(String menuText, Action action) {
+            JMenuItem menuItem = new NormalMenuItem();
+            if (action != null) {
+                menuItem.setAction(action);
+            }
+            Utils.UI.buttonText(menuItem, menuText);
+            return menuItem;
+        }
     }
 
     public static Color brighter(Color color, float factor) {
