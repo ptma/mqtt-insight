@@ -19,6 +19,7 @@ import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import org.jdesktop.swingx.search.PatternModel;
+import org.jdesktop.swingx.sort.RowFilters;
 
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
@@ -513,7 +514,7 @@ public class MessageToolbar extends JToolBar {
     }
 
     public void doFilter() {
-        RowFilter rowFilter = RowFilter.regexFilter(searchPatternModel.getPattern().pattern(),
+        RowFilter rowFilter = RowFilters.regexFilter(searchPatternModel.getPattern(),
             MessageTableModel.COLUMN_TOPIC,
             MessageTableModel.COLUMN_PAYLOAD
         );
