@@ -22,6 +22,9 @@ import java.awt.event.MouseEvent;
 import java.net.URI;
 import java.util.Hashtable;
 
+/**
+ * @author jinjq
+ */
 public class AboutForm extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
@@ -29,18 +32,18 @@ public class AboutForm extends JDialog {
     private JLabel nameLabel;
     private JLabel openSourceLabel;
     private JLabel githubLinkLabel;
-    private JEditorPane projectsPanel;
+    private JEditorPane openSourceEditor;
     private JLabel giteeLinkLabel;
     private JLabel versionLabel;
     private JPanel topPanel;
     private JPanel centerPanel;
     private JPanel bottomPanel;
+    private JScrollPane openSourceScrollPanel;
 
     public static void open() {
         AboutForm aboutForm = new AboutForm();
-        aboutForm.setMinimumSize(new Dimension(400, 420));
+        aboutForm.setMinimumSize(new Dimension(400, 380));
         aboutForm.setResizable(false);
-        aboutForm.pack();
         aboutForm.setLocationRelativeTo(MqttInsightApplication.frame);
         aboutForm.setVisible(true);
     }
@@ -91,9 +94,9 @@ public class AboutForm extends JDialog {
         openSourceLabel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
         openSourceLabel.setText(LangUtil.getString("AboutOpenSource"));
 
-        projectsPanel.setContentType("text/html");
-        projectsPanel.setEditable(false);
-        projectsPanel.setText(""
+        openSourceEditor.setContentType("text/html");
+        openSourceEditor.setEditable(false);
+        openSourceEditor.setText(""
             + "<html>"
             + "<a href=\"https://www.formdev.com/flatlaf/\">Flatlaf</a><br>"
             + "<a href=\"https://en.wikipedia.org/wiki/SwingLabs\">swingx</a><br>"
@@ -103,10 +106,12 @@ public class AboutForm extends JDialog {
             + "<a href=\"https://github.com/caoccao/Javet\">Javet</a><br>"
             + "<a href=\"https://github.com/dromara/hutool\">HuTool</a><br>"
             + "<a href=\"https://github.com/DJ-Raven/swing-toast-notifications\">Swing Toast Notifications</a><br>"
+            + "<a href=\"https://github.com/json-path/JsonPath\">JsonPath</a><br>"
+            + "<a href=\"https://github.com/timmolter/xchart\">XChart</a><br>"
             + "</html>"
         );
 
-        projectsPanel.addHyperlinkListener(e -> {
+        openSourceEditor.addHyperlinkListener(e -> {
             if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
                 try {
                     Desktop.getDesktop().browse(e.getURL().toURI());
@@ -115,6 +120,7 @@ public class AboutForm extends JDialog {
                 }
             }
         });
+        openSourceEditor.setCaretPosition(0);
 
         LangUtil.buttonText(buttonOK, "&Ok");
         buttonOK.addActionListener(e -> onOK());
@@ -180,21 +186,23 @@ public class AboutForm extends JDialog {
         giteeLinkLabel.setText("Gitee");
         topPanel.add(giteeLinkLabel, cc.xy(3, 7));
         centerPanel = new JPanel();
-        centerPanel.setLayout(new GridLayoutManager(3, 1, new Insets(10, 20, 10, 20), -1, -1));
+        centerPanel.setLayout(new GridLayoutManager(2, 1, new Insets(10, 20, 10, 20), -1, -1));
         contentPane.add(centerPanel, BorderLayout.CENTER);
-        final Spacer spacer1 = new Spacer();
-        centerPanel.add(spacer1, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         openSourceLabel = new JLabel();
         openSourceLabel.setText("AboutOpenSource");
         centerPanel.add(openSourceLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        projectsPanel = new JEditorPane();
-        centerPanel.add(projectsPanel, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 50), null, 3, false));
+        openSourceScrollPanel = new JScrollPane();
+        openSourceScrollPanel.setVerticalScrollBarPolicy(22);
+        centerPanel.add(openSourceScrollPanel, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 3, false));
+        openSourceScrollPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        openSourceEditor = new JEditorPane();
+        openSourceScrollPanel.setViewportView(openSourceEditor);
         bottomPanel = new JPanel();
         bottomPanel.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(bottomPanel, BorderLayout.SOUTH);
         bottomPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
-        final Spacer spacer2 = new Spacer();
-        bottomPanel.add(spacer2, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        bottomPanel.add(spacer1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         bottomPanel.add(panel1, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));

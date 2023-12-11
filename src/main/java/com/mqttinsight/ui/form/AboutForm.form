@@ -78,17 +78,12 @@
           </component>
         </children>
       </grid>
-      <grid id="e3588" binding="centerPanel" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="e3588" binding="centerPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="10" left="20" bottom="10" right="20"/>
         <constraints border-constraint="Center"/>
         <properties/>
         <border type="none"/>
         <children>
-          <vspacer id="af299">
-            <constraints>
-              <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
-            </constraints>
-          </vspacer>
           <component id="93cd2" class="javax.swing.JLabel" binding="openSourceLabel">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
@@ -97,14 +92,21 @@
               <text value="AboutOpenSource"/>
             </properties>
           </component>
-          <component id="ab78a" class="javax.swing.JEditorPane" binding="projectsPanel">
+          <scrollpane id="33241" binding="openSourceScrollPanel">
             <constraints>
-              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="3" use-parent-layout="false">
-                <preferred-size width="150" height="50"/>
-              </grid>
+              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="3" use-parent-layout="false"/>
             </constraints>
-            <properties/>
-          </component>
+            <properties>
+              <verticalScrollBarPolicy value="22"/>
+            </properties>
+            <border type="etched"/>
+            <children>
+              <component id="97453" class="javax.swing.JEditorPane" binding="openSourceEditor">
+                <constraints/>
+                <properties/>
+              </component>
+            </children>
+          </scrollpane>
         </children>
       </grid>
       <grid id="94766" binding="bottomPanel" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
