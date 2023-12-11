@@ -14,7 +14,7 @@ public abstract class AbstractMqttMessage implements MqttMessage {
 
     private final String topic;
 
-    private final byte[] payload;
+    private byte[] payload;
 
     private final int qos;
 
@@ -93,5 +93,9 @@ public abstract class AbstractMqttMessage implements MqttMessage {
     @Override
     public boolean isDuplicate() {
         return duplicate;
+    }
+
+    public void setPayload(byte[] payload) {
+        this.payload = payload;
     }
 }

@@ -88,13 +88,11 @@ public class ScriptCodec {
         if (data == null) {
             return null;
         }
-        DecodedMqttMessage msg = DecodedMqttMessage.copyFrom(context.getMessage());
+        DecodedMqttMessage msg = DecodedMqttMessage.of(context.getSubscription(), context.getMessage());
         if (data instanceof String) {
-            msg.setSubscription(context.getSubscription());
             msg.setPayload(((String) data).getBytes());
         } else if (data instanceof Map) {
             Map<String, Object> map = (Map<String, Object>) data;
-            msg.setSubscription(context.getSubscription());
             if (map.containsKey("payload")) {
                 Object payload = map.get("payload");
                 if (payload instanceof String) {

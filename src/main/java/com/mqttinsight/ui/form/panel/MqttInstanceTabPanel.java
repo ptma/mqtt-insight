@@ -31,10 +31,8 @@ import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * @author ptma
@@ -358,9 +356,6 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         applyEvent(l -> l.onMessage(message));
         if (scriptLoader != null && message instanceof ReceivedMqttMessage) {
             ReceivedMqttMessage receivedMessage = (ReceivedMqttMessage) message;
-            if (receivedMessage.getSubscription() != null && receivedMessage.getSubscription().isMuted()) {
-                return;
-            }
             SwingUtilities.invokeLater(() -> {
                 try {
                     scriptLoader.decode(receivedMessage, decodedMessage -> {

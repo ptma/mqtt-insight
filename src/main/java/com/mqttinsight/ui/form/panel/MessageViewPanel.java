@@ -277,12 +277,6 @@ public class MessageViewPanel {
      */
     private void messageReceived(MqttMessage message, MqttMessage parent) {
         SwingUtilities.invokeLater(() -> {
-            if (message instanceof ReceivedMqttMessage) {
-                ReceivedMqttMessage receivedMessage = (ReceivedMqttMessage) message;
-                if (receivedMessage.getSubscription() != null && receivedMessage.getSubscription().isMuted()) {
-                    return;
-                }
-            }
             if (parent != null) {
                 int parentIndex = messageTableModel.lastIndexOf(parent);
                 if (parentIndex >= 0) {

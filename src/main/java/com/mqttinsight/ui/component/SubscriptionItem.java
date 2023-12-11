@@ -43,7 +43,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     private JToolBar toolBar;
     private JXLabel counterLabel;
     private JButton favoriteButton;
-    private JButton muteButton;
+    private JButton visibleButton;
     private PopupColorButton paletteButton;
     private PopupMenuButton moreButton;
     private JMenuItem unsubscribeMenu;
@@ -84,10 +84,10 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         favoriteButton.putClientProperty("FlatLaf.styleClass", "small");
         toolBar.add(favoriteButton);
 
-        muteButton = new JButton(Icons.EYE);
-        muteButton.setToolTipText(LangUtil.getString("Mute"));
-        muteButton.putClientProperty("FlatLaf.styleClass", "small");
-        toolBar.add(muteButton);
+        visibleButton = new JButton(Icons.EYE);
+        visibleButton.setToolTipText(LangUtil.getString("ShowOrHideMessages"));
+        visibleButton.putClientProperty("FlatLaf.styleClass", "small");
+        toolBar.add(visibleButton);
 
         paletteButton = new PopupColorButton(Icons.PALETTE, false);
         paletteButton.setMoreText(LangUtil.getString("MoreColor"));
@@ -161,14 +161,15 @@ public class SubscriptionItem extends JPanel implements MouseListener {
             Configuration.instance().changed();
         });
 
-        muteButton.addActionListener(e -> {
-            if (subscription.isMuted()) {
-                subscription.setMuted(false);
-                muteButton.setIcon(Icons.EYE);
+        visibleButton.addActionListener(e -> {
+            if (subscription.isVisible()) {
+                subscription.setVisible(false);
+                visibleButton.setIcon(Icons.EYE_CLOSE);
             } else {
-                subscription.setMuted(true);
-                muteButton.setIcon(Icons.EYE_CLOSE);
+                subscription.setVisible(true);
+                visibleButton.setIcon(Icons.EYE);
             }
+            mqttInstance.getMessageTable().getTableModel().fireTableDataChanged();
         });
 
         paletteButton.addColorSelectionListener(color -> {
@@ -320,7 +321,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
 
         this.setBackground(bgColor);
         favoriteButton.setIcon(isFavorite() ? Icons.FAVORITE_FILL : Icons.FAVORITE);
-        muteButton.setIcon(subscription.isMuted() ? Icons.EYE_CLOSE : Icons.EYE);
+        visibleButton.setIcon(subscription.isVisible() ? Icons.EYE : Icons.EYE_CLOSE);
     }
 
     @Override

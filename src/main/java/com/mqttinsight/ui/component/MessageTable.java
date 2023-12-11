@@ -3,6 +3,8 @@ package com.mqttinsight.ui.component;
 import com.formdev.flatlaf.extras.components.FlatPopupMenu;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
+import com.mqttinsight.mqtt.ReceivedMqttMessage;
+import com.mqttinsight.mqtt.Subscription;
 import com.mqttinsight.ui.chart.MessageContentChartFrame;
 import com.mqttinsight.ui.chart.MessageCountChartFrame;
 import com.mqttinsight.ui.chart.MessageLoadChartFrame;
@@ -25,6 +27,7 @@ import org.jdesktop.swingx.table.TableColumnExt;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -32,6 +35,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -48,6 +52,7 @@ public class MessageTable extends JXTable {
     private JMenuItem menuCopy;
     private JMenuItem menuDelete;
     private boolean autoScroll;
+    private final VisibleFilter visibleFilter = new VisibleFilter();
 
     public MessageTable(MqttInstance mqttInstance, MessageTableModel tableModel) {
         super(tableModel);
@@ -68,9 +73,7 @@ public class MessageTable extends JXTable {
             setRowHeight(28);
             initTableViewColumns();
             setColumnControlVisible(true);
-            if (UIManager.getBoolean("laf.dark")) {
-                setShowHorizontalLines(true);
-            }
+            setShowHorizontalLines(UIManager.getBoolean("laf.dark"));
         } else {
             tableRenderer = new DefaultTableRenderer(new DialogueViewRendererProvider(tableModel));
             initDialogueViewColumns();
@@ -100,6 +103,7 @@ public class MessageTable extends JXTable {
             }
         });
         initPopupMenu();
+        setRowFilter(null);
     }
 
     private void initPopupMenu() {
@@ -324,5 +328,44 @@ public class MessageTable extends JXTable {
 
     public void setAutoScroll(boolean autoScroll) {
         this.autoScroll = autoScroll;
+    }
+
+    public MessageTableModel getTableModel() {
+        return tableModel;
+    }
+
+    @Override
+    public <R extends TableModel> void setRowFilter(RowFilter<? super R, ? super Integer> filter) {
+        if (filter == null) {
+            super.setRowFilter(visibleFilter);
+        } else {
+            List filters = Arrays.asList(visibleFilter, filter);
+            super.setRowFilter(RowFilter.andFilter(filters));
+        }
+    }
+
+    static class VisibleFilter extends RowFilter<MessageTableModel, Integer> {
+
+        protected VisibleFilter() {
+        }
+
+        @Override
+        public boolean include(Entry<? extends MessageTableModel, ? extends Integer> entry) {
+            MessageTableModel tableModel = entry.getModel();
+            MqttMessage message = tableModel.get(entry.getIdentifier());
+            if (message instanceof ReceivedMqttMessage) {
+                return isVisible(((ReceivedMqttMessage) message).getSubscription());
+            } else {
+                return true;
+            }
+        }
+
+        boolean isVisible(Subscription subscription) {
+            if (subscription == null) {
+                return true;
+            } else {
+                return subscription.isVisible();
+            }
+        }
     }
 }

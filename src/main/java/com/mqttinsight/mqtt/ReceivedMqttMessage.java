@@ -9,17 +9,17 @@ import java.awt.*;
  */
 public class ReceivedMqttMessage extends AbstractMqttMessage implements MqttMessage {
 
-    private final transient Subscription subscription;
+    protected transient Subscription subscription;
 
     private final MessageType messageType = MessageType.RECEIVED;
 
-    private String format;
+    protected String format;
 
     public static ReceivedMqttMessage of(Subscription subscription, String topic, byte[] payload, int qos, boolean retained, boolean duplicate) {
         return new ReceivedMqttMessage(subscription, topic, payload, qos, retained, duplicate);
     }
 
-    private ReceivedMqttMessage(Subscription subscription, String topic, byte[] payload, int qos, boolean retained, boolean duplicate) {
+    protected ReceivedMqttMessage(Subscription subscription, String topic, byte[] payload, int qos, boolean retained, boolean duplicate) {
         super(topic, payload, qos, retained, duplicate);
         this.subscription = subscription;
     }
