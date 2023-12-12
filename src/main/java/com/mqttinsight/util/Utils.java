@@ -6,6 +6,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.ui.component.NormalMenuItem;
 import com.mqttinsight.ui.form.InputDialog;
+import net.minidev.json.JSONArray;
 import org.jdesktop.swingx.graphics.ColorUtilities;
 import org.xml.sax.InputSource;
 import raven.toast.Notifications;
@@ -322,7 +323,13 @@ public class Utils {
 
     public static String getByJsonPath(String jsonPath, String source) {
         try {
-            return JsonPath.read(source, jsonPath).toString();
+            Object value = JsonPath.read(source, jsonPath);
+            if (value instanceof net.minidev.json.JSONArray) {
+                JSONArray array = (JSONArray) value;
+                return array.isEmpty() ? "" : array.get(0).toString();
+            } else {
+                return value.toString();
+            }
         } catch (Exception ignore) {
             return null;
         }
