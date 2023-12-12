@@ -12,7 +12,9 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
-import java.awt.event.*;
+import java.awt.event.AWTEventListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
 
 /**
  * @author ptma
@@ -48,6 +50,7 @@ public class TextFieldPopupEventListener implements AWTEventListener {
             MouseEvent mev = (MouseEvent) event;
             if (mev.getComponent() instanceof JTextField && mev.getButton() == MouseEvent.BUTTON3) {
                 JTextField textField = (JTextField) mev.getComponent();
+                textField.requestFocusInWindow();
                 cutMenu.setEnabled(canCut(textField));
                 copyMenu.setEnabled(canCopy(textField));
                 pasteMenu.setEnabled(canPaste(textField));
