@@ -1,16 +1,18 @@
-MqttInsight Scripting
+MqttInsight 脚本使用说明
 --
 MqttInsight 仅提供了一些基本的 MQTT 功能，用户可以通过编写脚本来实现自己需要的扩展功能，
 例如：
 
-* 对订阅的消息进行自定义的解码
-* 将消息通过各种网络协议转发到其它的目标地址
+* 订阅的消息并自定义解码
+* 订阅消息并发布回复
+* 定时发布消息
+* 转发消息到其它的目标地址或接口
 
 脚本功能通过 Javet 框架实现， 支持 Node.js(v18.17.1) 中的大多数 API (fs, events, crypto, ...)。
 
 ## 脚本加载
 
-在打开的 MQTT 连接标签页右侧的工具栏选择 "更多... -> 脚本 -> 加载脚本..."。
+在打开的 MQTT 连接标签页右侧的工具栏选择 "更多... -> 脚本 -> 加载脚本..."。脚本成功加载后会在脚本菜单中附加脚本文件的菜单项，点击该菜单项可选择重新载入或移除脚本。
 
 加载的脚本的作用域为当前 MQTT 连接的标签页。
 
@@ -42,15 +44,21 @@ mqtt.subscribe("testtopic/#");
 
 ```javascript
 const fs = require("fs");
-const protobuf = require('protocol-buffers');
+const protobuf = require("protocol-buffers");
 
-var messages = protobuf(fs.readFileSync('SampleMessages.proto'))
+var messages = protobuf(fs.readFileSync("SampleMessages.proto"))
 mqtt.decode("test/sample", (message) => {
     let buffer = Buffer.from(message.getPayload());
-    var obj = messages.SampleMessage.decode(buffer)
+    let obj = messages.SampleMessage.decode(buffer);
+
+    // 直接返回消息文本
+    // return JSON.stringify(obj);
+
+    // 返回消息 JSON 对象
     return {
         payload: JSON.stringify(obj),
-        format: 'json'
+        format: "json",
+        color: "#00FF00"
     };
 });
 
@@ -80,24 +88,26 @@ mqtt.subscribe("test/sample", 1);
 
 #### mqtt.decode([String topic], callback)
 
+消息解码
+
 * `topic` - string, 匹配的主题，可选
-* `callback` - function (message), 消息处理回调方法，返回结果可选。
+* `callback` - function (message), 消息处理回调方法。
     - `message` - 收到的 MQTT 消息, 具有的方法如下:
         - `getTopic()` - string, 消息的主题
         - `getQos()` - int, 消息的 QoS
         - `isRetained()` - boolean, 是否为保留消息
         - `getPayload()` - Int8Array, 消息的载荷
         - `payloadAsString()` - string, 消息的字符串形式的载荷
-    - `return` - 返回的类型可以是:
-        - `string` - 消息体的文本
-        - `json` - 消息对象, 例如: ```{payload: "payload as json text ...", format: "json"}```, 消息对象支持的属性有:
-            * `payload` - string|Object, 消息体
-            * `format` - string, 值可以是 `plain`|`json`|`hex`|`xml`
-            * `color` - string, Hex 颜色代码, 例如```#FF0000```
+* `return` - string | json | 无返回值
+    - `string` - 消息体的文本
+    - `json` - 消息对象, 例如: ```{payload: "payload as json text ...", format: "json"}```, 消息对象支持的属性有:
+        * `payload` - string|Object, 消息体
+        * `format` - string, 值可以是 `plain`|`json`|`hex`|`xml`
+        * `color` - string, Hex 颜色代码, 例如```#FF0000```
 
 ### 2. toast
 
-toast 工具可以在 UI 上弹出各种提示消息, 格式化文本 `format` 中使用 `{}` 表示占位符
+toast 工具可以在 UI 上弹出各种提示消息, 格式化模板 `format` 中使用 `{}` 表示占位符
 
 #### toast.info(String format, [Object... arguments])
 
@@ -109,7 +119,7 @@ toast 工具可以在 UI 上弹出各种提示消息, 格式化文本 `format` �
 
 ### 3. logger
 
-日志工具, 格式化文本 `format` 中使用 `{}` 表示占位符
+日志工具, 格式化模板 `format` 中使用 `{}` 表示占位符
 
 #### logger.trace(String format, [Object... arguments])
 
