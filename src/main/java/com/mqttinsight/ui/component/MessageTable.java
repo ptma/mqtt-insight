@@ -118,23 +118,29 @@ public class MessageTable extends JXTable {
 
         popupMenu.addSeparator();
 
-        JMenu chartMenu = new JMenu(LangUtil.getString("Chart"));
-        JMenuItem countChartMenu = new JMenuItem(LangUtil.getString("MessageCountStatisticsChart"));
-        countChartMenu.addActionListener(e -> {
-            MessageCountChartFrame.open(mqttInstance);
-        });
-        chartMenu.add(countChartMenu);
-        JMenuItem loadChartMenu = new JMenuItem(LangUtil.getString("MessageLoadStatisticsChart"));
-        loadChartMenu.addActionListener(e -> {
-            MessageLoadChartFrame.open(mqttInstance);
-        });
-        chartMenu.add(loadChartMenu);
-        JMenuItem contentChartMenu = new JMenuItem(LangUtil.getString("MessageContentStatisticsChart"));
-        contentChartMenu.addActionListener(e -> {
-            MessageContentChartFrame.open(mqttInstance);
-        });
-        chartMenu.add(contentChartMenu);
-        popupMenu.add(chartMenu);
+        {
+            JMenu chartMenu = new JMenu(LangUtil.getString("Chart"));
+            chartMenu.setIcon(Icons.CHART_BAR);
+            JMenuItem countChartMenu = Utils.UI.createMenuItem(LangUtil.getString("MessageCountStatisticsChart"), e -> {
+                MessageCountChartFrame.open(mqttInstance);
+            });
+            countChartMenu.setIcon(Icons.CHART_PIE);
+            chartMenu.add(countChartMenu);
+
+            JMenuItem loadChartMenu = Utils.UI.createMenuItem(LangUtil.getString("MessageLoadStatisticsChart"), e -> {
+                MessageLoadChartFrame.open(mqttInstance);
+            });
+            loadChartMenu.setIcon(Icons.CHART_LINE);
+            chartMenu.add(loadChartMenu);
+
+            JMenuItem contentChartMenu = Utils.UI.createMenuItem(LangUtil.getString("MessageContentStatisticsChart"), e -> {
+                MessageContentChartFrame.open(mqttInstance);
+            });
+            contentChartMenu.setIcon(Icons.CHART_LINE);
+            chartMenu.add(contentChartMenu);
+
+            popupMenu.add(chartMenu);
+        }
 
         popupMenu.addSeparator();
 
@@ -157,6 +163,7 @@ public class MessageTable extends JXTable {
                     if (onRow) {
                         MessageTable.this.setRowSelectionInterval(rowIndex, rowIndex);
                     }
+                    menuExport.setEnabled(MessageTable.this.getRowCount() > 0);
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }

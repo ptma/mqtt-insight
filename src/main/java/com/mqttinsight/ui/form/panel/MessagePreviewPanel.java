@@ -79,8 +79,8 @@ public class MessagePreviewPanel extends JPanel {
 
         RectanglePainter badgePainter = new RectanglePainter();
         badgePainter.setRounded(true);
-        badgePainter.setRoundWidth(16);
-        badgePainter.setRoundHeight(16);
+        badgePainter.setRoundWidth(20);
+        badgePainter.setRoundHeight(20);
         boolean isDarkTheme = UIManager.getBoolean("laf.dark");
         Color bgColor = UIManager.getColor("Panel.background");
         Color badgeColor;
@@ -91,7 +91,7 @@ public class MessagePreviewPanel extends JPanel {
         }
         badgePainter.setFillPaint(badgeColor);
         badgePainter.setBorderPaint(new Color(badgeColor.getRed(), badgeColor.getGreen(), badgeColor.getBlue(), 128));
-        Border badgeBorder = BorderFactory.createEmptyBorder(0, 8, 0, 8);
+        Border badgeBorder = BorderFactory.createEmptyBorder(2, 8, 2, 8);
 
         timeLabel = new JXLabel(" ");
         timeLabel.setBackgroundPainter(badgePainter);

@@ -87,7 +87,7 @@ public class DialogueBubble extends JRendererPanel {
     }
 
     public void setTopic(String topic) {
-        topicLabel.setText(String.format("Topic: %s", topic));
+        topicLabel.setText(topic);
     }
 
     public void setQos(int qos) {

@@ -10,7 +10,7 @@ import lombok.Getter;
 @Getter
 public enum ExtractingMode implements Textable {
 
-    PAYLOAD(LangUtil.getString("Payload"), false),
+    PAYLOAD(LangUtil.getString("PayloadContent"), false),
     REGEXP(LangUtil.getString("RegularExpression"), true),
     JSON_PATH(LangUtil.getString("JsonPath"), true),
     XPATH("XPath", true);

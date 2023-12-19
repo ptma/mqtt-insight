@@ -48,6 +48,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     private PopupMenuButton moreButton;
     private JMenuItem unsubscribeMenu;
     private JMenuItem resubscribeMenu;
+    private JMenuItem exportMessageMenu;
     private JMenu formatMenu;
 
     public SubscriptionItem(MqttInstance mqttInstance, Subscription subscription) {
@@ -121,8 +122,9 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         LangUtil.buttonText(clearMessageMenu, "ClearMessages");
         moreButton.addMenuItem(clearMessageMenu).addActionListener(this::clearMessages);
 
-        JMenuItem exportMessageMenu = new NormalMenuItem(Icons.EXPORT);
+        exportMessageMenu = new NormalMenuItem(Icons.EXPORT);
         LangUtil.buttonText(exportMessageMenu, "ExportMessages");
+        exportMessageMenu.setEnabled(false);
         moreButton.addMenuItem(exportMessageMenu).addActionListener(this::exportMessages);
 
         moreButton.addSeparator();
@@ -266,6 +268,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         } else {
             if (counterLabel != null) {
                 counterLabel.setText(String.valueOf(subscription.getMessageCount()));
+                exportMessageMenu.setEnabled(subscription.getMessageCount().get() > 0);
             }
         }
     }
