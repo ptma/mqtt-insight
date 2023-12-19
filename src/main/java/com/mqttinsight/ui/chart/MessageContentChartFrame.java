@@ -22,8 +22,6 @@ import org.knowm.xchart.style.Styler;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -70,6 +68,11 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         initComponents();
         initChart();
         setTitle(String.format(LangUtil.getString("MessageContentStatisticsChartTitle"), mqttInstance.getProperties().getName()));
+    }
+
+    @Override
+    protected void bottomPanelResized(int width, int height) {
+        chart.getStyler().setPlotContentSize((width - 40d) / width);
     }
 
     @Override

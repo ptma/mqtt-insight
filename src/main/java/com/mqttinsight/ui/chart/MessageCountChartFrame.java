@@ -19,8 +19,6 @@ import org.knowm.xchart.style.Styler;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,6 +53,11 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
         initComponents();
         initChart(ChartMode.PIE);
         setTitle(String.format(LangUtil.getString("MessageCountStatisticsChartTitle"), mqttInstance.getProperties().getName()));
+    }
+
+    @Override
+    protected void bottomPanelResized(int width, int height) {
+        // do nothing
     }
 
     @Override

@@ -65,6 +65,13 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
         loadFavoriteSeries();
         applyLanguage();
         mqttInstance.registerChartFrame(this);
+
+        bottomPanel.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent evt) {
+                Component c = (Component) evt.getSource();
+                bottomPanelResized(c.getWidth(), c.getHeight());
+            }
+        });
     }
 
     /**
@@ -110,6 +117,8 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     protected abstract List<FavoriteSeries<T>> getFavoriteSeries();
 
     protected abstract void saveSeriesToFavorite(List<FavoriteSeries<T>> favoriteSeries);
+
+    protected abstract void bottomPanelResized(int width, int height);
 
     private void applyLanguage() {
         setTitle(String.format(LangUtil.getString("MessageCountStatisticsChartTitle"), mqttInstance.getProperties().getName()));
