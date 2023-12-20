@@ -441,6 +441,7 @@ public class MessageToolbar extends JToolBar {
 
     public void focusSearch() {
         searchField.requestFocus();
+        searchField.selectAll();
     }
 
     /**
