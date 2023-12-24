@@ -27,6 +27,9 @@ public class MainFrame extends JXFrame {
     private static final int MIN_WIDTH = 950;
     private static final int MIN_HEIGHT = 600;
 
+    private int windowState = 0;
+    private boolean loaded = false;
+
     public MainFrame() {
         super(Const.APP_NAME, true);
         this.setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
@@ -121,10 +124,11 @@ public class MainFrame extends JXFrame {
             this.setSize(size);
         }
 
-        Integer windowState = Configuration.instance().getInt(ConfKeys.WINDOW_STATE);
-        if (windowState != null && windowState == JFrame.MAXIMIZED_BOTH) {
+        windowState = Configuration.instance().getInt(ConfKeys.WINDOW_STATE, 0);
+        if (windowState == JFrame.MAXIMIZED_BOTH) {
             this.setExtendedState(windowState);
         }
+        loaded = true;
     }
 
     public void close() {
@@ -136,9 +140,11 @@ public class MainFrame extends JXFrame {
 
     private void initListeners() {
         this.addWindowStateListener(e -> {
+            windowState = e.getNewState();
             Configuration.instance().set(ConfKeys.WINDOW_STATE, e.getNewState());
             Configuration.instance().changed();
         });
+
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
@@ -151,22 +157,30 @@ public class MainFrame extends JXFrame {
                 MainFrame.this.close();
                 super.windowClosing(e);
             }
+
         });
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                Dimension size = e.getComponent().getSize();
-                Configuration.instance().set(ConfKeys.WINDOW_WIDTH, size.width);
-                Configuration.instance().set(ConfKeys.WINDOW_HEIGHT, size.height);
-                Configuration.instance().changed();
+                if (loaded && windowState != JFrame.MAXIMIZED_BOTH) {
+                    Dimension size = e.getComponent().getSize();
+                    Configuration.instance().set(ConfKeys.WINDOW_WIDTH, size.width);
+                    Configuration.instance().set(ConfKeys.WINDOW_HEIGHT, size.height);
+                    Configuration.instance().changed();
+                }
             }
 
             @Override
             public void componentMoved(ComponentEvent e) {
-                Point location = e.getComponent().getLocation();
-                Configuration.instance().set(ConfKeys.WINDOW_LEFT, location.x);
-                Configuration.instance().set(ConfKeys.WINDOW_TOP, location.y);
-                Configuration.instance().changed();
+                if (loaded && windowState != JFrame.MAXIMIZED_BOTH) {
+                    Point location = e.getComponent().getLocation();
+                    // 窗口最大化时, 坐标均会变成负数
+                    if (location.x >= 0 && location.y >= 0) {
+                        Configuration.instance().set(ConfKeys.WINDOW_LEFT, location.x);
+                        Configuration.instance().set(ConfKeys.WINDOW_TOP, location.y);
+                        Configuration.instance().changed();
+                    }
+                }
             }
         });
     }
