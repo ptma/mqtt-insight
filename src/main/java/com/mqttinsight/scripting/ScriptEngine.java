@@ -20,25 +20,34 @@ import java.util.function.Consumer;
 public class ScriptEngine {
 
     private final IJavetEngine<NodeRuntime> javetEngine;
+    private final IJavetConverter converter;
     private final Logger logger;
-    private final NodeRuntime nodeRuntime;
-    private boolean closing = false;
+    private NodeRuntime nodeRuntime;
 
-    public ScriptEngine(IJavetEngine<NodeRuntime> javetEngine, IJavetConverter converter, Logger logger) throws JavetException {
+    public ScriptEngine(IJavetEngine<NodeRuntime> javetEngine, IJavetConverter converter, Logger logger) {
         this.javetEngine = javetEngine;
+        this.converter = converter;
         this.logger = logger;
-        this.nodeRuntime = javetEngine.getV8Runtime();
-        nodeRuntime.setConverter(converter);
-        nodeRuntime.allowEval(true);
-        nodeRuntime.setLogger(logger);
-        nodeRuntime.setPurgeEventLoopBeforeClose(true);
+    }
 
-        Console console = new Console(nodeRuntime, logger);
-        console.register(nodeRuntime.getGlobalObject());
+    private void initRuntime() throws JavetException {
+        if (this.nodeRuntime == null) {
+            this.nodeRuntime = javetEngine.getV8Runtime();
+            nodeRuntime.setConverter(converter);
+            nodeRuntime.allowEval(true);
+            nodeRuntime.setLogger(logger);
+            nodeRuntime.setPurgeEventLoopBeforeClose(true);
+            nodeRuntime.lowMemoryNotification();
+
+            Console console = new Console(nodeRuntime, logger);
+            console.register(nodeRuntime.getGlobalObject());
+        }
     }
 
     public void execute(String scriptPath, String scriptContent, Map<String, Object> param, Consumer<ScriptResult> resultConsumer) {
         try {
+            initRuntime();
+
             for (Map.Entry<String, Object> entry : param.entrySet()) {
                 nodeRuntime.getGlobalObject().set(entry.getKey(), entry.getValue());
             }
@@ -48,15 +57,9 @@ public class ScriptEngine {
             if (resultConsumer != null) {
                 resultConsumer.accept(ScriptResult.success());
             }
-
-            while (!closing) {
+            while (true) {
                 nodeRuntime.await(V8AwaitMode.RunOnce);
             }
-
-            nodeRuntime.terminateExecution();
-            nodeRuntime.lowMemoryNotification();
-            nodeRuntime.close(true);
-            javetEngine.close();
         } catch (JavetException e) {
             if (resultConsumer != null) {
                 resultConsumer.accept(ScriptResult.error(e));
@@ -64,7 +67,22 @@ public class ScriptEngine {
         }
     }
 
-    public void close() {
-        closing = true;
+    public void closeRuntime() {
+        if (nodeRuntime != null) {
+            nodeRuntime.terminateExecution();
+            nodeRuntime = null;
+        }
+    }
+
+    public void dispose() {
+        try {
+            if (nodeRuntime != null) {
+                nodeRuntime.terminateExecution();
+                nodeRuntime = null;
+            }
+            javetEngine.close();
+        } catch (Throwable t) {
+            log.warn("Failed to close the Node.js runtime.", t);
+        }
     }
 }
