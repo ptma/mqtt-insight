@@ -51,6 +51,9 @@ public class MessageTable extends JXTable {
     private JMenuItem menuCopyTopic;
     private JMenuItem menuCopy;
     private JMenuItem menuDelete;
+    private JMenuItem menuClear;
+    private JMenuItem menuClearVisible;
+    private JMenuItem menuExport;
     private boolean autoScroll;
     private final VisibleFilter visibleFilter = new VisibleFilter();
 
@@ -99,6 +102,8 @@ public class MessageTable extends JXTable {
                     if (event.getKeyCode() == KeyEvent.VK_C) { // Copy
                         copyPayload();
                     }
+                } else if (event.getKeyCode() == KeyEvent.VK_DELETE) {
+                    deleteSelectedRow();
                 }
             }
         });
@@ -144,10 +149,13 @@ public class MessageTable extends JXTable {
 
         popupMenu.addSeparator();
 
-        JMenuItem menuClear = Utils.UI.createMenuItem(LangUtil.getString("ClearAllMessages"), (e) -> mqttInstance.applyEvent(InstanceEventListener::clearAllMessages));
+        menuClear = Utils.UI.createMenuItem(LangUtil.getString("ClearAllMessages"), (e) -> mqttInstance.applyEvent(InstanceEventListener::clearAllMessages));
         menuClear.setIcon(Icons.CLEAR);
         popupMenu.add(menuClear);
-        JMenuItem menuExport = Utils.UI.createMenuItem(LangUtil.getString("ExportAllMessages"), (e) -> mqttInstance.applyEvent(InstanceEventListener::exportAllMessages));
+        menuClearVisible = Utils.UI.createMenuItem(LangUtil.getString("ClearVisibleMessages"), (e) -> clearVisibleMessages());
+        menuClearVisible.setIcon(Icons.CLEAR);
+        popupMenu.add(menuClearVisible);
+        menuExport = Utils.UI.createMenuItem(LangUtil.getString("ExportAllMessages"), (e) -> mqttInstance.applyEvent(InstanceEventListener::exportAllMessages));
         menuExport.setIcon(Icons.EXPORT);
         popupMenu.add(menuExport);
 
@@ -163,7 +171,9 @@ public class MessageTable extends JXTable {
                     if (onRow) {
                         MessageTable.this.setRowSelectionInterval(rowIndex, rowIndex);
                     }
+                    menuClear.setEnabled(MessageTable.this.getRowCount() > 0);
                     menuExport.setEnabled(MessageTable.this.getRowCount() > 0);
+                    menuClearVisible.setEnabled(MessageTable.this.getRowCount() > 0);
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
@@ -289,8 +299,25 @@ public class MessageTable extends JXTable {
     }
 
     public void deleteSelectedRow() {
-        int modelIndex = convertRowIndexToModel(getSelectedRow());
-        tableModel.remove(modelIndex);
+        int selRow = getSelectedRow();
+        if (selRow >= 0 && selRow < getRowCount()) {
+            int modelIndex = convertRowIndexToModel(selRow);
+            MqttMessage message = tableModel.get(modelIndex);
+            tableModel.remove(modelIndex);
+            if (getRowCount() > selRow) {
+                setRowSelectionInterval(selRow, selRow);
+            } else if (selRow > 0) {
+                selRow--;
+                setRowSelectionInterval(selRow, selRow);
+            }
+        }
+    }
+
+    public void clearVisibleMessages() {
+        for (int row = getRowCount() - 1; row >= 0; row--) {
+            int modelIndex = convertRowIndexToModel(row);
+            tableModel.remove(modelIndex);
+        }
     }
 
     public void copyTopic() {

@@ -481,7 +481,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                     if (!isReload) {
                         applyEvent(l -> l.scriptLoaded(scriptFile));
                     }
-                    String message = LangUtil.format("ScriptSuccess", scriptFile.getAbsolutePath());
+                    String message = LangUtil.format("ScriptLoaded", scriptFile.getAbsolutePath());
                     log.info(message);
                     Utils.Toast.success(message);
                 } else if (result.getException() != null) {
@@ -502,6 +502,9 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     private void doScriptRemove(File scriptFile) {
         if (scriptLoader != null) {
             scriptLoader.removeScript(scriptFile.getAbsolutePath());
+            String message = LangUtil.format("ScriptRemoved", scriptFile.getAbsolutePath());
+            log.info(message);
+            Utils.Toast.success(message);
         }
     }
 
