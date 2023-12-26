@@ -74,23 +74,40 @@ mqtt.subscribe("test/sample", 1);
 
 ### 1. mqtt
 
-#### mqtt.subscribe(String topic, [int qos])
+#### mqtt.subscribe(topic[, qos])
 
-添加订阅
+订阅主题
 
-#### mqtt.publish(String topic, String payload, [int qos], [boolean retained])
+* `topic` string, 订阅的主题
+* `qos` integer, 可选, 消息的 QoS, 默认为 0
+
+```js
+mqtt.subscribe("test/#");
+
+mqtt.subscribe("test/#", 1);
+````
+
+#### mqtt.publish(String topic, payload[, qos][, retained])
 
 发布消息
 
-#### mqtt.publish(String topic, byte[] payload, [int qos], [boolean retained])
+* `topic` string, 发布的主题
+* `payload` string | Int8Array | Uint8Array | Buffer , 消息的载荷
+* `qos` integer, 可选, 消息的 QoS, 默认为 0
+* `retained` boolean, 可选, 是否为保留消息, 默认为 false
 
-发布消息
+```js
+let payload = new Uint8Array([0x49, 0x6e, 0x74, 0x3a]);
+mqtt.publish("test/binary", payload);
 
-#### mqtt.decode([String topic], callback)
+mqtt.publish("test/binary", Buffer.from("496E743A", "hex"), 1);
+```
+
+#### mqtt.decode([topic, ]callback)
 
 消息解码
 
-* `topic` - string, 匹配的主题，可选
+* `topic` - string, 可选, 匹配的主题
 * `callback` - function (message), 消息处理回调方法。
     - `message` - 收到的 MQTT 消息, 具有的方法如下:
         - `getTopic()` - string, 消息的主题
@@ -102,31 +119,94 @@ mqtt.subscribe("test/sample", 1);
     - `string` - 消息体的文本
     - `json` - 消息对象, 例如: ```{payload: "payload as json text ...", format: "json"}```, 消息对象支持的属性有:
         * `payload` - string|Object, 消息体
-        * `format` - string, 值可以是 `plain`|`json`|`hex`|`xml`
-        * `color` - string, Hex 颜色代码, 例如```#FF0000```
+        * `format` - string, 可选, 值可以是 `plain`|`json`|`hex`|`xml`
+        * `color` - string, 可选, Hex 颜色代码, 例如```#FF0000```
+
+```js
+mqtt.decode("test/sample", (message) => {
+    let buffer = Buffer.from(message.getPayload());
+    let obj = messages.SampleMessage.decode(buffer);
+    // 直接返回消息文本
+    return JSON.stringify(obj);
+});
+
+mqtt.decode("test/sample", (message) => {
+    let buffer = Buffer.from(message.getPayload());
+    let obj = messages.SampleMessage.decode(buffer);
+    // 返回消息 JSON 对象
+    return {
+        payload: JSON.stringify(obj),
+        format: "json",
+        color: "#00FF00"
+    };
+});
+```
 
 ### 2. toast
 
 toast 工具可以在 UI 上弹出各种提示消息, 格式化模板 `format` 中使用 `{}` 表示占位符
 
-#### toast.info(String format, [Object... arguments])
+```js
+toast.success("Hello {}", "MqttInsight!");
+// 显示 Toast: "Hello MqttInsight!"
 
-#### toast.success(String format, [Object... arguments])
+toast.info("{} {}", "Hello", "World!");
+// 显示 Toast: "Hello World!"
+```
 
-#### toast.warn(String format, [Object... arguments])
+#### toast.info(format[, ...args])
 
-#### toast.error(String format, [Object... arguments])
+* `format` string, 消息模板
+* `...args` any, 参数
+
+#### toast.success(format[, ...args])
+
+* `format` string, 消息模板
+* `...args` any, 参数
+
+#### toast.warn(format[, ...args])
+
+* `format` string, 消息模板
+* `...args` any, 参数
+
+#### toast.error(format[, ...args])
+
+* `format` string, 消息模板
+* `...args` any, 参数
 
 ### 3. logger
 
 日志工具, 格式化模板 `format` 中使用 `{}` 表示占位符
 
-#### logger.trace(String format, [Object... arguments])
+```js
+logger.debug("Hello {}", "MqttInsight!");
+// 输出: "Hello MqttInsight!"
 
-#### logger.debug(String format, [Object... arguments])
+logger.info("{} {}", "Hello", "World!");
+// 输出: "Hello World!"
+```
 
-#### logger.info(String format, [Object... arguments])
+#### logger.trace(format[, ...args])
 
-#### logger.warn(String format, [Object... arguments])
+* `format` string, 消息模板
+* `...args` any, 参数
 
-#### logger.error(String format, [Object... arguments])
+#### logger.debug(format[, ...args])
+
+* `format` string, 消息模板
+* `...args` any, 参数
+
+#### logger.info(format[, ...args])
+
+* `format` string, 消息模板
+* `...args` any, 参数
+
+#### logger.warn(format[, ...args])
+
+* `format` string, 消息模板
+* `...args` any, 参数
+
+#### logger.error(format[, ...args])
+
+* `format` string, 消息模板
+* `...args` any, 参数
