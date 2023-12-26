@@ -69,6 +69,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
                 String causeMessage = getCauseMessage(e);
                 onConnectionFailed(e.getReasonCode(), causeMessage);
                 log.error(e.getMessage(), e);
+                Utils.Toast.error(causeMessage);
             }
         });
     }
