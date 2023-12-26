@@ -77,7 +77,7 @@ public abstract class AbstractMqttMessage implements MqttMessage {
 
     @Override
     public byte[] payloadAsBytes() {
-        return this.payload;
+        return this.payload == null ? new byte[0] : payload;
     }
 
     @Override

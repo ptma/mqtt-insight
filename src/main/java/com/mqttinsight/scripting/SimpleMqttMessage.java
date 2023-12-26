@@ -34,11 +34,11 @@ public class SimpleMqttMessage {
     }
 
     public byte[] getPayload() {
-        return payload;
+        return this.payload == null ? new byte[0] : payload;
     }
 
     public String payloadAsString() {
-        return new String(payload, StandardCharsets.UTF_8);
+        return new String(getPayload(), StandardCharsets.UTF_8);
     }
 
     public boolean isDuplicate() {
