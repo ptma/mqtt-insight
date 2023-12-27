@@ -3,9 +3,7 @@ package com.mqttinsight.util;
 import cn.hutool.core.text.AntPathMatcher;
 import com.mqttinsight.exception.VerificationException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * MQTT 主题工具
@@ -34,6 +32,26 @@ public class TopicUtil {
      */
     public static boolean match(String subscriptionTopic, String messageTopic) {
         return PATH_MATCHER.match(convertTopicToPattern(subscriptionTopic), messageTopic);
+    }
+
+    /**
+     * 根据模版从 topic 上提取变量,如果提取出错则返回空Map
+     *
+     * <pre>
+     *   topicVariables("/device/{product}","/device/test123");
+     *   => {"product","test1234"}
+     * </pre>
+     *
+     * @param template Topic模版
+     * @param topic    要提取的 topic
+     * @return 变量提取结果集
+     */
+    public static Map<String, String> topicVariables(String template, String topic) {
+        try {
+            return PATH_MATCHER.extractUriTemplateVariables(template, topic);
+        } catch (Exception e) {
+            return Collections.emptyMap();
+        }
     }
 
     private static String convertTopicToPattern(String subscriptionTopic) {

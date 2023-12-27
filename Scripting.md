@@ -142,6 +142,24 @@ mqtt.decode("test/sample", (message) => {
 });
 ```
 
+#### mqtt.topicVariables(template, topic)
+
+从 Topic 提取变量集
+
+* `template` string , 变量模版, 使用 `{VariableName}` 表示变量
+* `topic` string, 要提取的主题
+* `return` Object, 提取到的变量集
+
+```js
+mqtt.topicVariables("/device/{product}", "/device/test123");
+/*
+返回
+{
+    "product", "test1234"
+}
+*/
+```
+
 ### 2. toast
 
 toast 工具可以在 UI 上弹出各种提示消息, 格式化模板 `format` 中使用 `{}` 表示占位符

@@ -11,9 +11,11 @@ import com.mqttinsight.scripting.ScriptCodec;
 import com.mqttinsight.scripting.ScriptPubMqttMessage;
 import com.mqttinsight.scripting.SimpleMqttMessage;
 import com.mqttinsight.ui.form.panel.MqttInstance;
+import com.mqttinsight.util.TopicUtil;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -95,6 +97,22 @@ public class MqttClientWrapper {
             retained,
             CodecSupport.PLAIN
         ));
+    }
+
+    /**
+     * 根据模版从 topic 上提取变量,如果提取出错则返回空Map
+     *
+     * <pre>
+     *   topicVariables("/device/{product}","/device/test123");
+     *   => {"product","test1234"}
+     * </pre>
+     *
+     * @param template Topic模版
+     * @param topic    要提取的 topic
+     * @return 变量提取结果集
+     */
+    public Map<String, String> topicVariables(String template, String topic) {
+        return TopicUtil.topicVariables(template, topic);
     }
 
     /**
