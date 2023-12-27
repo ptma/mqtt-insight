@@ -261,16 +261,15 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     }
 
     public void updateMessageCounter() {
-        if (subscription == null) {
-            if (counterLabel != null) {
-                counterLabel.setText("");
-            }
-        } else {
-            if (counterLabel != null) {
-                counterLabel.setText(String.valueOf(subscription.getMessageCount()));
-                exportMessageMenu.setEnabled(subscription.getMessageCount().get() > 0);
-            }
+        if (counterLabel != null) {
+            counterLabel.setText(String.valueOf(subscription.getMessageCount()));
+            exportMessageMenu.setEnabled(subscription.getMessageCount().get() > 0);
         }
+    }
+
+    public void decrementMessageCount() {
+        subscription.decrementMessageCount();
+        updateMessageCounter();
     }
 
     public boolean hasSubscription(Subscription subscription) {

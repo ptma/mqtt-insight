@@ -75,6 +75,10 @@ public class Subscription {
         this.messageCount.incrementAndGet();
     }
 
+    public void decrementMessageCount() {
+        this.messageCount.decrementAndGet();
+    }
+
     public void resetMessageCount() {
         this.messageCount.set(0);
     }
