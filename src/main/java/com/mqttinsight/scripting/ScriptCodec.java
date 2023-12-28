@@ -22,21 +22,14 @@ public class ScriptCodec {
     /**
      * Map<scriptPath, Map<topic, Function>>
      */
-    private final Map<String, Map<String, Function<SimpleMqttMessage, Object>>> decodersGroupMap = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, Function<MqttMessageWrapper, Object>>> decodersGroupMap = new ConcurrentHashMap<>();
 
     public ScriptCodec() {
     }
 
     public void decode(ReceivedMqttMessage receivedMessage, Consumer<MqttMessage> decodedConsumer) {
         if (!decodersGroupMap.isEmpty()) {
-            SimpleMqttMessage mqttMessage = new SimpleMqttMessage(
-                receivedMessage.getTopic(),
-                receivedMessage.payloadAsBytes(),
-                receivedMessage.getQos(),
-                receivedMessage.isRetained(),
-                receivedMessage.isDuplicate()
-            );
-            DecoderContext context = new DecoderContext(receivedMessage.getSubscription(), mqttMessage);
+            DecoderContext context = new DecoderContext(receivedMessage.getSubscription(), MqttMessageWrapper.of(receivedMessage));
             decodersGroupMap.values().forEach(decodersMap -> {
                 decodersMap.forEach((key, decoder) -> {
                     try {
@@ -62,15 +55,15 @@ public class ScriptCodec {
         }
     }
 
-    public void decode(String scriptPath, Function<SimpleMqttMessage, Object> scriptingDecoder) {
+    public void decode(String scriptPath, Function<MqttMessageWrapper, Object> scriptingDecoder) {
         decode(scriptPath, "*", scriptingDecoder);
     }
 
-    public void decode(String scriptPath, String topic, Function<SimpleMqttMessage, Object> scriptingDecoder) {
+    public void decode(String scriptPath, String topic, Function<MqttMessageWrapper, Object> scriptingDecoder) {
         if (decodersGroupMap.containsKey(scriptPath)) {
             decodersGroupMap.get(scriptPath).put(topic, scriptingDecoder);
         } else {
-            Map<String, Function<SimpleMqttMessage, Object>> decodersMap = new ConcurrentHashMap<>();
+            Map<String, Function<MqttMessageWrapper, Object>> decodersMap = new ConcurrentHashMap<>();
             decodersMap.put(topic, scriptingDecoder);
             decodersGroupMap.put(scriptPath, decodersMap);
         }

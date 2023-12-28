@@ -11,7 +11,7 @@ public class ReceivedMqttMessage extends AbstractMqttMessage implements MqttMess
 
     protected transient Subscription subscription;
 
-    private final MessageType messageType = MessageType.RECEIVED;
+    private MessageType messageType = MessageType.RECEIVED;
 
     protected String format;
 
@@ -49,5 +49,9 @@ public class ReceivedMqttMessage extends AbstractMqttMessage implements MqttMess
 
     public void setFormat(String format) {
         this.format = format;
+    }
+
+    public void setMessageType(MessageType messageType) {
+        this.messageType = messageType;
     }
 }

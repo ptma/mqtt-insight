@@ -13,11 +13,11 @@ import java.awt.*;
  */
 public class DecodedMqttMessage extends ReceivedMqttMessage {
 
-    private final MessageType messageType = MessageType.SCRIPT_DECODED;
+    private final MessageType messageType = MessageType.RECEIVED_SCRIPT;
 
     private String color;
 
-    public static DecodedMqttMessage of(Subscription subscription, SimpleMqttMessage message) {
+    public static DecodedMqttMessage of(Subscription subscription, MqttMessageWrapper message) {
         return new DecodedMqttMessage(
             subscription,
             message.getTopic(),

@@ -3,9 +3,9 @@ package com.mqttinsight.ui.component.renderer;
 import cn.hutool.core.date.DatePattern;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
+import com.mqttinsight.mqtt.MessageType;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.PublishedMqttMessage;
-import com.mqttinsight.scripting.ScriptingMqttMessage;
 import com.mqttinsight.ui.component.MessageTable;
 import com.mqttinsight.ui.component.model.MessageTableModel;
 import com.mqttinsight.util.Utils;
@@ -73,7 +73,7 @@ public class DialogueViewRendererProvider extends ComponentProvider<DialogueBubb
             } else {
                 itemComponent.setBodyAlignment("left");
             }
-            if (message instanceof ScriptingMqttMessage) {
+            if (MessageType.PUBLISHED_SCRIPT.equals(message.getMessageType()) || MessageType.RECEIVED_SCRIPT.equals(message.getMessageType())) {
                 itemComponent.setIcon(message.getMessageType().getIcon());
             } else {
                 itemComponent.setIcon(null);

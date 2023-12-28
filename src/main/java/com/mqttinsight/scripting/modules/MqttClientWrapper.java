@@ -7,9 +7,9 @@ import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.values.reference.V8ValueTypedArray;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.mqtt.Subscription;
+import com.mqttinsight.scripting.MqttMessageWrapper;
 import com.mqttinsight.scripting.ScriptCodec;
 import com.mqttinsight.scripting.ScriptPubMqttMessage;
-import com.mqttinsight.scripting.SimpleMqttMessage;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.TopicUtil;
 import com.mqttinsight.util.Utils;
@@ -130,7 +130,7 @@ public class MqttClientWrapper {
      * </code>
      * </pre>
      */
-    public void decode(Function<SimpleMqttMessage, Object> function) {
+    public void decode(Function<MqttMessageWrapper, Object> function) {
         scriptCodec.decode(scriptPath, function);
     }
 
@@ -149,7 +149,7 @@ public class MqttClientWrapper {
      * </code>
      * </pre>
      */
-    public void decode(String topic, Function<SimpleMqttMessage, Object> function) {
+    public void decode(String topic, Function<MqttMessageWrapper, Object> function) {
         scriptCodec.decode(scriptPath, topic, function);
     }
 }

@@ -63,10 +63,10 @@ public final class Icons {
     public static final Icon ARROW_BACK = new FlatSVGIcon("svg/icons/arrow_back.svg");
     public static final Icon ARROW_FORWARD = new FlatSVGIcon("svg/icons/arrow_forward.svg");
     public static final Icon ARROW_LAST = new FlatSVGIcon("svg/icons/arrow_last.svg");
-    public static final Icon ARROW_INCOMING = new FlatSVGIcon("svg/icons/arrow_incoming.svg");
-    public static final Icon ARROW_OUTGOING = new FlatSVGIcon("svg/icons/arrow_outgoing.svg");
-    public static final Icon JAVASCRIPT_GREEN = new FlatSVGIcon("svg/icons/javascript_green.svg");
-    public static final Icon JAVASCRIPT_ORANGE = new FlatSVGIcon("svg/icons/javascript_orange.svg");
+    public static final Icon INCOMING = new FlatSVGIcon("svg/icons/arrow_incoming.svg");
+    public static final Icon OUTGOING = new FlatSVGIcon("svg/icons/arrow_outgoing.svg");
+    public static final Icon INCOMING_SCRIPT = new FlatSVGIcon("svg/icons/arrow_incoming_script.svg");
+    public static final Icon OUTGOING_SCRIPT = new FlatSVGIcon("svg/icons/arrow_outgoing_script.svg");
     public static final Icon SEARCH_MATCHCASE = new FlatSVGIcon("svg/icons/matchCase.svg");
     public static final Icon SEARCH_MATCHCASE_HOVER = new FlatSVGIcon("svg/icons/matchCaseHovered.svg");
     public static final Icon SEARCH_MATCHCASE_SELECTED = new FlatSVGIcon("svg/icons/matchCaseSelected.svg");
