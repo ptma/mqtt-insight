@@ -18,10 +18,7 @@ public class FavoriteSubscription implements Textable {
 
     private int qos;
 
-    private String payloadFormat = CodecSupport.DEFAULT;
-
-    public FavoriteSubscription() {
-    }
+    private String payloadFormat;
 
     public FavoriteSubscription(final String topic, final int qos) {
         this(topic, qos, CodecSupport.DEFAULT);

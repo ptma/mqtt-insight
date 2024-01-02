@@ -230,13 +230,13 @@ public class ConnectionEditorForm extends JDialog {
         payloadField = new SyntaxTextEditor();
         payloadField.setEnabled(false);
         editorPanel.add(payloadField, BorderLayout.CENTER);
-        willPayloadFormatComboBox.setModel(new PayloadFormatComboBoxModel(false));
+        willPayloadFormatComboBox.setModel(new PayloadFormatComboBoxModel(false, false));
         willPayloadFormatComboBox.setSelectedItem(CodecSupport.PLAIN);
 
         // Other
         maxMessagesStoredField.setModel(new SpinnerNumberModel(Const.MESSAGES_STORED_MAX_SIZE, 1000, Integer.MAX_VALUE, 100));
         maxMessagesStoredField.setEditor(new JSpinner.NumberEditor(maxMessagesStoredField, "####"));
-        defaultPayloadFormatComboBox.setModel(new PayloadFormatComboBoxModel(false));
+        defaultPayloadFormatComboBox.setModel(new PayloadFormatComboBoxModel(false, false));
         defaultPayloadFormatComboBox.setSelectedItem(CodecSupport.PLAIN);
     }
 

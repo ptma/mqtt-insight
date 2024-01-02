@@ -1,7 +1,6 @@
 package com.mqttinsight.ui.component.model;
 
 
-import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 
 import javax.swing.*;
@@ -13,22 +12,15 @@ import java.util.List;
 /**
  * @author ptma
  */
-public class PayloadFormatComboBoxModel extends AbstractListModel<String> implements ComboBoxModel<String>, ActionListener {
+public class DynaminCodecComboModel extends AbstractListModel<String> implements ComboBoxModel<String>, ActionListener {
 
     public static final String UPDATE = "update";
     protected final List<String> data;
     protected String selected;
 
-    public PayloadFormatComboBoxModel(boolean withDefault, boolean filterByEncodable) {
+    public DynaminCodecComboModel() {
         data = new ArrayList<>();
-        if (withDefault) {
-            data.add(CodecSupport.DEFAULT);
-        }
-        CodecSupports.instance().getCodecs().forEach(codecSupport -> {
-            if (!filterByEncodable || codecSupport.encodable()) {
-                data.add(codecSupport.getName());
-            }
-        });
+        data.addAll(CodecSupports.instance().getDynamicCodecNames());
         if (data.size() > 0) {
             selected = data.get(0);
         }

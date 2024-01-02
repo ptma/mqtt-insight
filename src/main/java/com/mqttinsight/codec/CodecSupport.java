@@ -24,6 +24,10 @@ public interface CodecSupport {
      */
     String getSyntax();
 
+    default boolean encodable() {
+        return true;
+    }
+
     /**
      * Decode payload into text
      *

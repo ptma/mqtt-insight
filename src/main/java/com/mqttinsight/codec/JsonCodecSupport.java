@@ -25,7 +25,7 @@ public class JsonCodecSupport extends PlainCodecSupport implements CodecSupport 
         return super.toPayload(json);
     }
 
-    private String prettyPrint(String json) {
+    protected String prettyPrint(String json) {
         int indent = 0;
         boolean inString = false;
         boolean inEscape = false;

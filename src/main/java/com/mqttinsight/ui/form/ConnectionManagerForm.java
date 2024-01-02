@@ -58,9 +58,8 @@ public class ConnectionManagerForm extends JDialog {
 
     public static void open() {
         JDialog dialog = new ConnectionManagerForm(MqttInsightApplication.frame);
-        dialog.setMinimumSize(new Dimension(650, 400));
+        dialog.setMinimumSize(new Dimension(650, 450));
         dialog.setResizable(false);
-        dialog.pack();
         dialog.setLocationRelativeTo(MqttInsightApplication.frame);
         dialog.setVisible(true);
     }

@@ -4,6 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.formdev.flatlaf.util.SystemInfo;
+import com.mqttinsight.codec.DynamicCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +22,6 @@ public final class Configuration implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 
-    private static final int RECENT_ENTRIES = 10;
-
     private static class ConfigurationHolder {
         private final static Configuration INSTANCE = new Configuration();
     }
@@ -34,21 +33,21 @@ public final class Configuration implements Serializable {
     private final String userPath;
     private JSONObject conf = null;
     private boolean changed = false;
-    private List<String> recentConnections;
     private List<ConnectionNode> connections;
-
-    public List<String> getRecentConnections() {
-        if (recentConnections == null) {
-            recentConnections = new ArrayList<>();
-        }
-        return recentConnections;
-    }
+    private List<DynamicCodec> dynamicCodecs;
 
     public List<ConnectionNode> getConnections() {
         if (connections == null) {
             connections = new LinkedList<>();
         }
         return connections;
+    }
+
+    public List<DynamicCodec> getDynamicCodecs() {
+        if (dynamicCodecs == null) {
+            dynamicCodecs = new ArrayList<>();
+        }
+        return dynamicCodecs;
     }
 
     private Configuration() {
@@ -60,8 +59,8 @@ public final class Configuration implements Serializable {
         try {
             conf = JSONUtil.readJSONObject(new File(confFilePath()), StandardCharsets.UTF_8);
             connections = conf.getBeanList(ConfKeys.CONNECTIONS, ConnectionNode.class);
-            recentConnections = getRecentConnections();
-            recentConnections.addAll(conf.getBeanList(ConfKeys.RECENT_CONNECTIONS, String.class));
+            dynamicCodecs = conf.getBeanList(ConfKeys.DYNAMIC_CODECS, DynamicCodec.class);
+            ;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             if (conf == null) {
@@ -91,15 +90,6 @@ public final class Configuration implements Serializable {
         }
     }
 
-    public void appendRecentConnection(String id) {
-        recentConnections.remove(id);
-        recentConnections.add(0, id);
-        while (recentConnections.size() > RECENT_ENTRIES) {
-            recentConnections.remove(RECENT_ENTRIES);
-        }
-        changed();
-    }
-
     public void changed() {
         this.changed = true;
     }
@@ -111,7 +101,7 @@ public final class Configuration implements Serializable {
     public void save(boolean force) {
         if (changed || force) {
 
-            conf.set(ConfKeys.RECENT_CONNECTIONS, getRecentConnections());
+            conf.set(ConfKeys.DYNAMIC_CODECS, getDynamicCodecs());
             conf.set(ConfKeys.CONNECTIONS, getConnections());
             File configFile = new File(confFilePath());
             try {

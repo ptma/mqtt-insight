@@ -36,6 +36,9 @@ public class MainFrame extends JXFrame {
         setIconImages(Icons.WINDOW_ICON);
         setJMenuBar(new MainMenu());
         initGlobalComponentStyles();
+
+        CodecSupportLoader.loadCodecs();
+
         initMainWindowForm();
         initListeners();
 
@@ -43,8 +46,6 @@ public class MainFrame extends JXFrame {
             MainWindowForm.getInstance().close();
             response.performQuit();
         });
-
-        CodecSupportLoader.loadCodecs();
     }
 
     private void initMainWindowForm() {

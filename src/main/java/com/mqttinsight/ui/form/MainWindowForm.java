@@ -2,7 +2,6 @@ package com.mqttinsight.ui.form;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.components.FlatTabbedPane;
-import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttProperties;
 import com.mqttinsight.mqtt.Version;
 import com.mqttinsight.ui.component.ShortcutManager;
@@ -120,9 +119,6 @@ public class MainWindowForm {
                 }
                 afterConnected.run();
 
-                Configuration.instance().appendRecentConnection(mqttProperties.getId());
-                Configuration.instance().changed();
-
                 MqttInstanceTabPanel mqttInstance;
                 if (mqttProperties.getVersion().equals(Version.MQTT_5)) {
                     mqttInstance = Mqtt5InstanceTabPanel.newInstance(mqttProperties);
@@ -144,6 +140,15 @@ public class MainWindowForm {
                 }
             }
         });
+    }
+
+    public void fireCodecsChanged() {
+        for (int tabIndex = 0; tabIndex < tabPanel.getTabCount(); tabIndex++) {
+            if (isMqttInstanceAtTab(tabIndex)) {
+                MqttInstanceTabPanel mqttInstance = (MqttInstanceTabPanel) tabPanel.getComponentAt(tabIndex);
+                mqttInstance.fireCodecsChanged();
+            }
+        }
     }
 
     private void newSubscription() {

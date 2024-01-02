@@ -17,6 +17,8 @@ public class CodecSupports {
         return CodecSupportsHolder.INSTANCE;
     }
 
+    private final Map<String, DynamicCodecSupport> dynamicSupports = new LinkedHashMap<>();
+
     private final Map<String, CodecSupport> supports = new LinkedHashMap<>();
 
     private final PlainCodecSupport plainCodec = new PlainCodecSupport();
@@ -25,24 +27,43 @@ public class CodecSupports {
         register(plainCodec);
         register(new HexCodecSupport());
         register(new JsonCodecSupport());
+
+        register(new ProtobufCodecSupport());
     }
 
     public void register(CodecSupport support) {
-        supports.put(support.getName().toLowerCase(), support);
+        if (support instanceof DynamicCodecSupport) {
+            DynamicCodecSupport dynamicSupport = (DynamicCodecSupport) support;
+            if (dynamicSupport.isInstantiated()) {
+                supports.put(support.getName(), support);
+            } else {
+                dynamicSupports.put(support.getName(), dynamicSupport);
+            }
+        } else {
+            supports.put(support.getName(), support);
+        }
     }
 
-    public Collection<CodecSupport> getCodes() {
+    public void remove(String name) {
+        supports.remove(name);
+    }
+
+    public Collection<CodecSupport> getCodecs() {
         return supports.values();
+    }
+
+    public Collection<String> getDynamicCodecNames() {
+        return dynamicSupports.keySet();
     }
 
     public CodecSupport getByName(String name) {
         if (name == null) {
             return plainCodec;
         }
-        return supports.getOrDefault(name.toLowerCase(), plainCodec);
+        return supports.getOrDefault(name, plainCodec);
     }
 
-    public PlainCodecSupport getDefaultCodec() {
-        return plainCodec;
+    public DynamicCodecSupport getDynamicByName(String name) {
+        return dynamicSupports.get(name);
     }
 }

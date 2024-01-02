@@ -508,6 +508,10 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         }
     }
 
+    public void fireCodecsChanged() {
+        applyEvent(InstanceEventListener::onCodecsChanged);
+    }
+
     @Override
     public void registerChartFrame(BaseChartFrame<? extends SeriesProperties> chartFrame) {
         chartFrames.add(chartFrame);

@@ -1,10 +1,7 @@
 package com.mqttinsight.ui.frame;
 
 import com.mqttinsight.MqttInsightApplication;
-import com.mqttinsight.ui.form.AboutForm;
-import com.mqttinsight.ui.form.ConnectionManagerForm;
-import com.mqttinsight.ui.form.MainWindowForm;
-import com.mqttinsight.ui.form.OptionsForm;
+import com.mqttinsight.ui.form.*;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 
@@ -25,6 +22,10 @@ public class MainMenu extends JMenuBar {
 
         fileMenu.add(Utils.UI.createMenuItem(LangUtil.getString("&ConnectionManager"),
             e -> ConnectionManagerForm.open()
+        ));
+
+        fileMenu.add(Utils.UI.createMenuItem(LangUtil.getString("Co&decs"),
+            e -> DynamicCodecForm.open()
         ));
 
         fileMenu.add(Utils.UI.createMenuItem(LangUtil.getString("&Options"),

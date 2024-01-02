@@ -107,6 +107,8 @@ dependencies {
     implementation("org.knowm.xchart:xchart:3.8.6")
     implementation("com.jayway.jsonpath:json-path:2.8.0")
     implementation("net.minidev:json-smart:2.5.0")
+
+    implementation("com.google.protobuf:protobuf-java:3.25.1")
 }
 repositories {
     mavenCentral()

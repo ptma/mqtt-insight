@@ -11,6 +11,7 @@ import com.mqttinsight.ui.component.SyntaxTextEditor;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.component.model.PayloadFormatComboBoxModel;
 import com.mqttinsight.ui.component.renderer.TextableListRenderer;
+import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.util.*;
 import net.miginfocom.swing.MigLayout;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaDefaultInputMap;
@@ -99,7 +100,7 @@ public class MessagePublishPanel extends JPanel {
         formatLabel = new JLabel(LangUtil.getString("PayloadFormat"));
         topPanel.add(formatLabel, "right");
         formatComboBox = new JComboBox<>();
-        formatComboBox.setModel(new PayloadFormatComboBoxModel(false));
+        formatComboBox.setModel(new PayloadFormatComboBoxModel(false, true));
         formatComboBox.setSelectedItem(mqttInstance.getPayloadFormat());
         formatComboBox.addActionListener(e -> {
             if ("comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
@@ -133,6 +134,15 @@ public class MessagePublishPanel extends JPanel {
             KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK),
             JComponent.WHEN_IN_FOCUSED_WINDOW
         );
+
+        mqttInstance.addEventListener(new InstanceEventAdapter() {
+            @Override
+            public void onCodecsChanged() {
+                SwingUtilities.invokeLater(() -> {
+                    formatComboBox.setModel(new PayloadFormatComboBoxModel(false, true));
+                });
+            }
+        });
     }
 
     private void loadPublishedTopics() {

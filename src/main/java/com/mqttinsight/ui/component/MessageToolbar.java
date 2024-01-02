@@ -337,13 +337,18 @@ public class MessageToolbar extends JToolBar {
             public void scriptLoaded(File scriptFile) {
                 onScriptLoaded(scriptFile);
             }
+
+            @Override
+            public void onCodecsChanged() {
+                loadFormatMenus();
+            }
         });
     }
 
     private void loadFormatMenus() {
         formatMenu.removeAll();
         ButtonGroup formatGroup = new ButtonGroup();
-        for (CodecSupport codecSupport : CodecSupports.instance().getCodes()) {
+        for (CodecSupport codecSupport : CodecSupports.instance().getCodecs()) {
             JCheckBoxMenuItem formatMenuItem = new NormalCheckBoxMenuItem(codecSupport.getName());
             formatMenuItem.addActionListener(this::payloadFormatChangeAction);
             if (codecSupport.getName().equals(mqttInstance.getPayloadFormat())) {

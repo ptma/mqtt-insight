@@ -91,4 +91,9 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
     @Override
     public void fireScriptReload(File scriptFile) {
     }
+
+    @Override
+    public void onCodecsChanged() {
+
+    }
 }
