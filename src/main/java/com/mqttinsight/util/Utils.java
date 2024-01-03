@@ -2,11 +2,19 @@ package com.mqttinsight.util;
 
 import cn.hutool.core.img.ColorUtil;
 import cn.hutool.core.lang.PatternPool;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import com.jayway.jsonpath.spi.json.JsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import com.jayway.jsonpath.spi.mapper.MappingProvider;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.ui.component.NormalMenuItem;
 import com.mqttinsight.ui.form.InputDialog;
-import net.minidev.json.JSONArray;
 import org.jdesktop.swingx.graphics.ColorUtilities;
 import org.xml.sax.InputSource;
 import raven.toast.Notifications;
@@ -22,7 +30,10 @@ import java.io.StringReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -34,11 +45,35 @@ import java.util.regex.Pattern;
 public class Utils {
 
     private static final SecureRandom RANDOM = new SecureRandom();
+    public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
     private static final Color DARKER_TEXT_COLOR = Color.BLACK;
     private static final Color LIGHTER_TEXT_COLOR = ColorUtil.hexToColor("#ABB2BF");
 
     private static final Map<String, XPathExpression> XPATH_CACHE = new ConcurrentHashMap<>();
+
+    static {
+        // JsonPath default JsonProviders
+        Configuration.setDefaults(new Configuration.Defaults() {
+            private final JsonProvider jsonProvider = new JacksonJsonProvider();
+            private final MappingProvider mappingProvider = new JacksonMappingProvider();
+
+            @Override
+            public JsonProvider jsonProvider() {
+                return jsonProvider;
+            }
+
+            @Override
+            public MappingProvider mappingProvider() {
+                return mappingProvider;
+            }
+
+            @Override
+            public Set<Option> options() {
+                return EnumSet.noneOf(Option.class);
+            }
+        });
+    }
 
     public static class Toast {
 
@@ -237,6 +272,14 @@ public class Utils {
         }
     }
 
+    public static String toJsonString(Object object) throws JsonProcessingException {
+        return JSON_MAPPER.writeValueAsString(object);
+    }
+
+    public static ObjectNode toJsonObject(String jsonString) throws JsonProcessingException {
+        return JSON_MAPPER.readValue(jsonString, ObjectNode.class);
+    }
+
     public static Color brighter(Color color, float factor) {
         int r = color.getRed();
         int g = color.getGreen();
@@ -321,12 +364,12 @@ public class Utils {
         }
     }
 
-    public static String getByJsonPath(String jsonPath, String source) {
+    public static String getSingleValueByJsonPath(String jsonPath, String source) {
         try {
             Object value = JsonPath.read(source, jsonPath);
-            if (value instanceof net.minidev.json.JSONArray) {
-                JSONArray array = (JSONArray) value;
-                return array.isEmpty() ? "" : array.get(0).toString();
+            if (value instanceof List) {
+                java.util.List list = (java.util.List) value;
+                return list.isEmpty() ? "" : list.get(0).toString();
             } else {
                 return value.toString();
             }

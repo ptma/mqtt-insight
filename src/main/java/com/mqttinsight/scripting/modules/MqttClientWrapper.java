@@ -1,10 +1,9 @@
 package com.mqttinsight.scripting.modules;
 
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import com.caoccao.javet.enums.V8ValueReferenceType;
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.values.reference.V8ValueTypedArray;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.mqtt.Subscription;
 import com.mqttinsight.scripting.MqttMessageWrapper;
@@ -15,6 +14,7 @@ import com.mqttinsight.util.TopicUtil;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -47,7 +47,7 @@ public class MqttClientWrapper {
         publish(topic, payload.getBytes(), 0, false);
     }
 
-    public void publish(String topic, V8ValueTypedArray payload) throws JavetException {
+    public void publish(String topic, V8ValueTypedArray payload) throws JavetException, IOException {
         publish(topic, payload, 0, false);
     }
 
@@ -59,7 +59,7 @@ public class MqttClientWrapper {
         publish(topic, payload.getBytes(), qos, false);
     }
 
-    public void publish(String topic, V8ValueTypedArray payload, int qos) throws JavetException {
+    public void publish(String topic, V8ValueTypedArray payload, int qos) throws JavetException, IOException {
         publish(topic, payload, qos, false);
     }
 
@@ -71,12 +71,12 @@ public class MqttClientWrapper {
         publish(topic, payload.getBytes(), qos, retained);
     }
 
-    public void publish(String topic, V8ValueTypedArray payload, int qos, boolean retained) throws JavetException {
+    public void publish(String topic, V8ValueTypedArray payload, int qos, boolean retained) throws JavetException, IOException {
         byte[] bytes;
         if (payload.getType() == V8ValueReferenceType.Uint8Array) {
-            JSONObject json = JSONUtil.parseObj(payload.toJsonString());
-            if ("Buffer".equals(json.getStr("type"))) {
-                bytes = json.getBytes("data");
+            ObjectNode json = Utils.JSON_MAPPER.readValue(payload.toJsonString(), ObjectNode.class);
+            if ("Buffer".equals(json.get("type").asText())) {
+                bytes = json.get("data").binaryValue();
             } else {
                 bytes = payload.toBytes();
             }

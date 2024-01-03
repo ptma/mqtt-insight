@@ -1,6 +1,5 @@
 package com.mqttinsight.codec.proto;
 
-import cn.hutool.json.JSONObject;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
 import com.google.protobuf.DynamicMessage;
@@ -8,7 +7,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.mqttinsight.exception.SchemaLoadException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,7 +33,7 @@ public class DynamicProtoSchema {
         return proto.getFilename();
     }
 
-    public JSONObject parse(byte[] binary) throws ProtoParseException {
+    public Map<String, Object> parse(byte[] binary) throws ProtoParseException {
         DynamicMessage dynamicMessage = null;
         MessageElement messageElement = null;
         for (TypeElement type : proto.getTypes()) {
@@ -51,9 +52,9 @@ public class DynamicProtoSchema {
             throw new ProtoParseException("Cannot find proper schema for this protocol buffer message, maybe provide worng schema file");
         }
 
-        JSONObject json = new JSONObject();
+        Map<String, Object> objectMap = new HashMap<>();
         dynamicMessage.getAllFields().forEach((k, v) -> {
-            json.set(k.getName(), v);
+            objectMap.put(k.getName(), v);
         });
         if (dynamicMessage.getAllFields().size() != messageElement.getFields().size()) {
             Set<String> fieldSet = dynamicMessage.getAllFields()
@@ -65,10 +66,10 @@ public class DynamicProtoSchema {
             messageElement.getFields().stream()
                 .filter(field -> !fieldSet.contains(field.getName()) && field.hasDefault())
                 .forEach(field -> {
-                    json.set(field.getName(), field.getDefault().convertValue());
+                    objectMap.put(field.getName(), field.getDefault().convertValue());
                 });
         }
-        return json;
+        return objectMap;
     }
 
     private DynamicMessage tryBuildMessage(String testName, byte[] binary) {

@@ -1,24 +1,27 @@
 package com.mqttinsight.codec;
 
-import cn.hutool.json.JSONObject;
 import com.mqttinsight.codec.proto.DynamicProtoSchema;
 import com.mqttinsight.exception.SchemaLoadException;
+import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 /**
  * @author ptma
  */
 @Slf4j
 public class ProtobufCodecSupport extends JsonCodecSupport implements DynamicCodecSupport {
-    private final static String[] SCHEMA_FILE_EXTENSIONS = new String[]{ "proto"};
+
+    private final static String[] SCHEMA_FILE_EXTENSIONS = new String[]{"proto"};
+
     private final String name;
     private final boolean instantiated;
     private String protoFile = null;
     private DynamicProtoSchema dynamicProtoSchema;
 
-    protected ProtobufCodecSupport() {
+    public ProtobufCodecSupport() {
         this.name = "Protobuf";
         this.instantiated = false;
     }
@@ -31,7 +34,7 @@ public class ProtobufCodecSupport extends JsonCodecSupport implements DynamicCod
     }
 
     @Override
-    public DynamicCodecSupport newDynamicInstance(String name, String schemaFile) throws SchemaLoadException {
+    public ProtobufCodecSupport newDynamicInstance(String name, String schemaFile) throws SchemaLoadException {
         return new ProtobufCodecSupport(name, schemaFile);
     }
 
@@ -58,8 +61,8 @@ public class ProtobufCodecSupport extends JsonCodecSupport implements DynamicCod
     @Override
     public String toString(byte[] payload) {
         try {
-            JSONObject msg = dynamicProtoSchema.parse(payload);
-            return msg.toString();
+            Map<String, Object> msg = dynamicProtoSchema.parse(payload);
+            return Utils.toJsonString(msg);
         } catch (Exception e) {
             log.error(e.getMessage());
             return new String(payload, StandardCharsets.UTF_8);

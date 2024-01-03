@@ -1,18 +1,15 @@
 package com.mqttinsight.config;
 
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import com.formdev.flatlaf.util.SystemInfo;
 import com.mqttinsight.codec.DynamicCodec;
+import com.mqttinsight.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -31,23 +28,15 @@ public final class Configuration implements Serializable {
     }
 
     private final String userPath;
-    private JSONObject conf = null;
+    private Conf conf = null;
     private boolean changed = false;
-    private List<ConnectionNode> connections;
-    private List<DynamicCodec> dynamicCodecs;
 
     public List<ConnectionNode> getConnections() {
-        if (connections == null) {
-            connections = new LinkedList<>();
-        }
-        return connections;
+        return conf.getConnections();
     }
 
     public List<DynamicCodec> getDynamicCodecs() {
-        if (dynamicCodecs == null) {
-            dynamicCodecs = new ArrayList<>();
-        }
-        return dynamicCodecs;
+        return conf.getDynamicCodecs();
     }
 
     private Configuration() {
@@ -57,18 +46,13 @@ public final class Configuration implements Serializable {
             userPath = System.getProperty("user.home") + File.separator + "MqttInsight";
         }
         try {
-            conf = JSONUtil.readJSONObject(new File(confFilePath()), StandardCharsets.UTF_8);
-            connections = conf.getBeanList(ConfKeys.CONNECTIONS, ConnectionNode.class);
-            dynamicCodecs = conf.getBeanList(ConfKeys.DYNAMIC_CODECS, DynamicCodec.class);
-            ;
+            conf = Utils.JSON_MAPPER.readValue(new File(confFilePath()), Conf.class);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             if (conf == null) {
-                conf = new JSONObject();
+                conf = new Conf();
             }
-            connections = new LinkedList<>();
         }
-        conf.getConfig().setIgnoreNullValue(true);
     }
 
     private String confFilePath() {
@@ -100,12 +84,9 @@ public final class Configuration implements Serializable {
 
     public void save(boolean force) {
         if (changed || force) {
-
-            conf.set(ConfKeys.DYNAMIC_CODECS, getDynamicCodecs());
-            conf.set(ConfKeys.CONNECTIONS, getConnections());
             File configFile = new File(confFilePath());
             try {
-                FileUtil.writeString(conf.toString(), configFile, StandardCharsets.UTF_8);
+                FileUtil.writeString(Utils.toJsonString(conf), configFile, StandardCharsets.UTF_8);
             } catch (Exception e) {
                 log.error("Can not write configuration to file: {}", configFile.getAbsolutePath(), e);
             }
@@ -119,27 +100,27 @@ public final class Configuration implements Serializable {
     }
 
     public String getString(String key) {
-        return conf.getStr(key);
+        return (String) conf.get(key);
     }
 
     public String getString(String key, String defaultValue) {
-        return conf.getStr(key, defaultValue);
+        return (String) conf.getOrDefault(key, defaultValue);
     }
 
     public Integer getInt(String key, Integer defaultValue) {
-        return conf.getInt(key, defaultValue);
+        return (Integer) conf.getOrDefault(key, defaultValue);
     }
 
     public Integer getInt(String key) {
-        return conf.getInt(key);
+        return (Integer) conf.get(key);
     }
 
-    public Boolean getBoolean(String key, boolean defaultValue) {
-        return conf.getBool(key, defaultValue);
+    public Boolean getBoolean(String key, Boolean defaultValue) {
+        return (Boolean) conf.getOrDefault(key, defaultValue);
     }
 
     public Boolean getBoolean(String key) {
-        return conf.getBool(key);
+        return (Boolean) conf.get(key);
     }
 
 }

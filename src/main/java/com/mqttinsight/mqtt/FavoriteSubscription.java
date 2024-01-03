@@ -1,5 +1,6 @@
 package com.mqttinsight.mqtt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.ui.component.Textable;
 import lombok.EqualsAndHashCode;
@@ -20,6 +21,9 @@ public class FavoriteSubscription implements Textable {
 
     private String payloadFormat;
 
+    public FavoriteSubscription() {
+    }
+
     public FavoriteSubscription(final String topic, final int qos) {
         this(topic, qos, CodecSupport.DEFAULT);
     }
@@ -35,6 +39,7 @@ public class FavoriteSubscription implements Textable {
     }
 
     @Override
+    @JsonIgnore
     public String getText() {
         return topic;
     }

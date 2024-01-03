@@ -14,6 +14,9 @@ public class DynamicCodec {
     private String type;
     private String schemaFile;
 
+    public DynamicCodec() {
+    }
+
     public DynamicCodec(String name, String type, String schemaFile) {
         this.name = name;
         this.type = type;

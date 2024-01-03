@@ -87,7 +87,7 @@ dependencies {
     implementation("com.fifesoft:rsyntaxtextarea:3.3.4")
     implementation(files("libs/swing-toast-notifications-1.0.1.jar"))
 
-    implementation("cn.hutool:hutool-json:5.8.20")
+    implementation("cn.hutool:hutool-core:5.8.24")
 
     implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
@@ -104,11 +104,20 @@ dependencies {
     } else {
         implementation("com.caoccao.javet:javet:2.2.2") // Linux and Windows (x86_64)
     }
-    implementation("org.knowm.xchart:xchart:3.8.6")
-    implementation("com.jayway.jsonpath:json-path:2.8.0")
-    implementation("net.minidev:json-smart:2.5.0")
+    implementation("org.knowm.xchart:xchart:3.8.6") {
+        exclude("de.rototor.pdfbox", "graphics2d")
+        exclude("com.madgag", "animated-gif-lib")
+    }
+    implementation("com.jayway.jsonpath:json-path:2.8.0") {
+        exclude("net.minidev", "json-smart")
+    }
 
     implementation("com.google.protobuf:protobuf-java:3.25.1")
+    implementation("org.msgpack:jackson-dataformat-msgpack:0.9.6")
+    implementation("org.apache.avro:avro:1.11.3") {
+        exclude("org.apache.commons", "commons-compress")
+    }
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-avro:2.15.2")
 }
 repositories {
     mavenCentral()

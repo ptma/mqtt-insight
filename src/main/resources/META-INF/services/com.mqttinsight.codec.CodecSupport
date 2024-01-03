@@ -1,2 +1,5 @@
 com.mqttinsight.codec.Base64CodecSupport
 com.mqttinsight.codec.XmlCodecSupport
+com.mqttinsight.codec.ProtobufCodecSupport
+com.mqttinsight.codec.MsgpackCodecSupport
+com.mqttinsight.codec.AvroCodecSupport

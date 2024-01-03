@@ -1,6 +1,7 @@
 package com.mqttinsight.config;
 
 import cn.hutool.core.util.IdUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mqttinsight.mqtt.MqttProperties;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,6 +36,10 @@ public class ConnectionNode {
 
     private final Comparator<ConnectionNode> comparator = (o1, o2) -> Boolean.compare(o2.isGroup(), o1.isGroup());
 
+    public ConnectionNode() {
+
+    }
+
     public ConnectionNode(String name) {
         this.id = IdUtil.fastUUID();
         this.group = true;
@@ -56,17 +61,15 @@ public class ConnectionNode {
     }
 
     public void setName(String name) {
-        if (this.group) {
             this.name = name;
-        } else {
-            this.properties.setName(name);
-        }
     }
 
+    @JsonIgnore
     public String getHost() {
         return this.group ? "" : this.properties.getHost();
     }
 
+    @JsonIgnore
     public String getPort() {
         return this.group ? "" : String.valueOf(this.properties.getPort());
     }
@@ -124,6 +127,7 @@ public class ConnectionNode {
         addChildren(children);
     }
 
+    @JsonIgnore
     public int getChildCount() {
         if (this.children == null) {
             return 0;

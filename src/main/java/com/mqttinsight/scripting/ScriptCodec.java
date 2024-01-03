@@ -1,13 +1,14 @@
 package com.mqttinsight.scripting;
 
-import cn.hutool.json.JSONUtil;
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.exceptions.JavetExecutionException;
 import com.caoccao.javet.values.V8Value;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.ReceivedMqttMessage;
 import com.mqttinsight.util.TopicUtil;
+import com.mqttinsight.util.Utils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,7 +78,7 @@ public class ScriptCodec {
         decodersGroupMap.clear();
     }
 
-    private MqttMessage convert(DecoderContext context, Object data) {
+    private MqttMessage convert(DecoderContext context, Object data) throws JsonProcessingException {
         if (data == null) {
             return null;
         }
@@ -91,7 +92,7 @@ public class ScriptCodec {
                 if (payload instanceof String) {
                     msg.setPayload(((String) payload).getBytes());
                 } else {
-                    msg.setPayload(JSONUtil.toJsonStr(convertToJavaObject(payload)).getBytes());
+                    msg.setPayload(Utils.JSON_MAPPER.writeValueAsBytes(convertToJavaObject(payload)));
                     msg.setFormat(CodecSupport.JSON);
                 }
             }
@@ -105,7 +106,7 @@ public class ScriptCodec {
                 }
             }
         } else {
-            msg.setPayload(JSONUtil.toJsonStr(convertToJavaObject(data)).getBytes());
+            msg.setPayload(Utils.JSON_MAPPER.writeValueAsBytes(convertToJavaObject(data)));
             msg.setFormat(CodecSupport.JSON);
         }
         return msg;
