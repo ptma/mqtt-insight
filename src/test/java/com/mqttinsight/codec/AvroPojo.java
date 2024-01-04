@@ -54,37 +54,22 @@ public class AvroPojo extends SpecificRecordBase implements SpecificRecord {
 
     @Override
     public Object get(int field) {
-        switch (field) {
-            case 0:
-                return name;
-            case 1:
-                return favoriteNumber;
-            case 2:
-                return favoriteColor;
-            default:
-                throw new IndexOutOfBoundsException("Invalid index: " + field);
-        }
+        return switch (field) {
+            case 0 -> name;
+            case 1 -> favoriteNumber;
+            case 2 -> favoriteColor;
+            default -> throw new IndexOutOfBoundsException("Invalid index: " + field);
+        };
     }
 
     @Override
     public void put(int field, Object value) {
         switch (field) {
-            case 0:
-                name = (String) value;
-                break;
-            case 1:
-                favoriteNumber = (Integer) value;
-                break;
-            case 2:
-                favoriteColor = (String) value;
-                break;
-            default:
-                throw new IndexOutOfBoundsException("Invalid index: " + field);
+            case 0 -> name = (String) value;
+            case 1 -> favoriteNumber = (Integer) value;
+            case 2 -> favoriteColor = (String) value;
+            default -> throw new IndexOutOfBoundsException("Invalid index: " + field);
         }
     }
 
-    @Override
-    public boolean hasField(String key) {
-        return super.hasField(key);
-    }
 }

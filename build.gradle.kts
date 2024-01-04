@@ -42,6 +42,7 @@ val copyright: String = "Copyright 2023 ptma@163.com"
 val supportUrl: String = "https://github.com/ptma/mqtt-insight"
 
 val flatlafVersion = "3.2.1"
+val javetVersion = "2.2.2"
 val fatJar = false
 
 val requireModules = listOf(
@@ -80,7 +81,7 @@ dependencies {
 
     implementation("com.jgoodies:jgoodies-forms:1.9.0")
     implementation("com.intellij:forms_rt:7.0.3") {
-        exclude("asm")
+        exclude(group = "asm", module = "asm-commons")
     }
     implementation("com.miglayout:miglayout-swing:11.1")
 
@@ -100,24 +101,26 @@ dependencies {
     implementation("org.eclipse.paho:org.eclipse.paho.mqttv5.client:1.2.5")
 
     if (OperatingSystem.current().isMacOsX()) {
-        implementation("com.caoccao.javet:javet-macos:2.2.2") // Mac OS (x86_64 and arm64)
+        implementation("com.caoccao.javet:javet-macos:${javetVersion}") // Mac OS (x86_64 and arm64)
     } else {
-        implementation("com.caoccao.javet:javet:2.2.2") // Linux and Windows (x86_64)
+        implementation("com.caoccao.javet:javet:${javetVersion}") // Linux and Windows (x86_64)
     }
     implementation("org.knowm.xchart:xchart:3.8.6") {
-        exclude("de.rototor.pdfbox", "graphics2d")
-        exclude("com.madgag", "animated-gif-lib")
+        exclude(group = "de.rototor.pdfbox", module = "graphics2d")
+        exclude(group = "com.madgag", module = "animated-gif-lib")
     }
     implementation("com.jayway.jsonpath:json-path:2.8.0") {
-        exclude("net.minidev", "json-smart")
+        exclude(group = "net.minidev", module = "json-smart")
     }
 
     implementation("com.google.protobuf:protobuf-java:3.25.1")
     implementation("org.msgpack:jackson-dataformat-msgpack:0.9.6")
     implementation("org.apache.avro:avro:1.11.3") {
-        exclude("org.apache.commons", "commons-compress")
+        exclude(module = "commons-compress")
     }
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-avro:2.15.2")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-avro:2.15.2") {
+        exclude(module = "commons-compress")
+    }
 }
 repositories {
     mavenCentral()
