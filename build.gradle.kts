@@ -121,6 +121,7 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-avro:2.15.2") {
         exclude(module = "commons-compress")
     }
+    implementation("com.caucho:hessian:4.0.66")
 }
 repositories {
     mavenCentral()

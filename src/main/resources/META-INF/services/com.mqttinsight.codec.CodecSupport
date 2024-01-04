@@ -3,3 +3,5 @@ com.mqttinsight.codec.XmlCodecSupport
 com.mqttinsight.codec.ProtobufCodecSupport
 com.mqttinsight.codec.MsgpackCodecSupport
 com.mqttinsight.codec.AvroCodecSupport
+com.mqttinsight.codec.HessianCodecSupport
+com.mqttinsight.codec.Hessian2CodecSupport

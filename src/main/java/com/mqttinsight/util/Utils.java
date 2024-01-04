@@ -280,6 +280,10 @@ public class Utils {
         return JSON_MAPPER.readValue(jsonString, ObjectNode.class);
     }
 
+    public static <T> T toJsonObject(String jsonString, Class<T> valueType) throws JsonProcessingException {
+        return JSON_MAPPER.readValue(jsonString, valueType);
+    }
+
     public static Color brighter(Color color, float factor) {
         int r = color.getRed();
         int g = color.getGreen();

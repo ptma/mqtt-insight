@@ -68,4 +68,9 @@ public class ProtobufCodecSupport extends JsonCodecSupport implements DynamicCod
             return new String(payload, StandardCharsets.UTF_8);
         }
     }
+
+    @Override
+    public byte[] toPayload(String json) {
+        throw new UnsupportedOperationException("Protobuf encoding is not supported.");
+    }
 }
