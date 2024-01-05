@@ -74,7 +74,7 @@ public class MqttClientWrapper {
     public void publish(String topic, V8ValueTypedArray payload, int qos, boolean retained) throws JavetException, IOException {
         byte[] bytes;
         if (payload.getType() == V8ValueReferenceType.Uint8Array) {
-            ObjectNode json = Utils.JSON_MAPPER.readValue(payload.toJsonString(), ObjectNode.class);
+            ObjectNode json = Utils.JSON.toObject(payload.toJsonString(), ObjectNode.class);
             if ("Buffer".equals(json.get("type").asText())) {
                 bytes = json.get("data").binaryValue();
             } else {

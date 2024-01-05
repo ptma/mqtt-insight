@@ -123,7 +123,7 @@ public class DynamicCodecForm extends JDialog {
                     Configuration.instance().changed();
                     codecTableModel.addRow(newItem);
                     codecTableModel.fireTableDataChanged();
-                    MainWindowForm.getInstance().fireCodecsChanged();
+                    MainWindowForm.instance().fireCodecsChanged();
                     return true;
                 } catch (Exception ex) {
                     Utils.Toast.error(ex.getMessage());
@@ -156,7 +156,7 @@ public class DynamicCodecForm extends JDialog {
                         Configuration.instance().getDynamicCodecs().add(oldIndex, newItem);
                         Configuration.instance().changed();
                         codecTableModel.fireTableDataChanged();
-                        MainWindowForm.getInstance().fireCodecsChanged();
+                        MainWindowForm.instance().fireCodecsChanged();
                         return true;
                     } catch (Exception ex) {
                         Utils.Toast.error(ex.getMessage());
@@ -176,6 +176,7 @@ public class DynamicCodecForm extends JDialog {
             codecTableModel.removeRow(modelRowIndex);
             CodecSupports.instance().remove(selItem.getName());
             Configuration.instance().getDynamicCodecs().remove(selItem);
+            MainWindowForm.instance().fireCodecsChanged();
         }
     }
 

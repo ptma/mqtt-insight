@@ -45,7 +45,7 @@ public class MainMenu extends JMenuBar {
         JMenuItem viewMenu = Utils.UI.createMenu(LangUtil.getString("&View"));
         viewMenu.add(Utils.UI.createMenuItem(LangUtil.getString("Show&Log"),
             e -> {
-                MainWindowForm.getInstance().openLogTab();
+                MainWindowForm.instance().openLogTab();
             }
         ));
         this.add(viewMenu);

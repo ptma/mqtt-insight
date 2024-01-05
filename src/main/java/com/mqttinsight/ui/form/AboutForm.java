@@ -1,8 +1,6 @@
 package com.mqttinsight.ui.form;
 
 import cn.hutool.core.io.resource.ResourceUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -62,12 +60,8 @@ public class AboutForm extends JDialog {
         logoLabel.setText("");
         nameLabel.setText(Const.APP_NAME);
         nameLabel.putClientProperty("FlatLaf.styleClass", "h2");
-        try {
-            ObjectNode json = Utils.toJsonObject(ResourceUtil.readUtf8Str("version.json"));
-            versionLabel.setText("v" + json.get("version").asText());
-        } catch (JsonProcessingException e) {
-            versionLabel.setText("v?");
-        }
+        String version = Utils.getSingleValueByJsonPath("$.version", ResourceUtil.readUtf8Str("version.json"));
+        versionLabel.setText("v" + version);
         nameLabel.putClientProperty("FlatLaf.styleClass", "h3");
         String githubLink = "https://github.com/ptma/mqtt-insight";
         githubLinkLabel.setText("<html><a href=\"#\">" + githubLink + "</a></html>");

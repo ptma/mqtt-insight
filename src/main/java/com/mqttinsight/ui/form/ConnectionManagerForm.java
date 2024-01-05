@@ -174,7 +174,7 @@ public class ConnectionManagerForm extends JDialog {
         if (selectedPath != null) {
             final ConnectionNode selectedNode = (ConnectionNode) selectedPath.getLastPathComponent();
             if (selectedNode != null && !selectedNode.isGroup()) {
-                MainWindowForm.getInstance().addTabActionPerformed(selectedNode.getProperties(), this::closeWindow);
+                MainWindowForm.instance().addTabActionPerformed(selectedNode.getProperties(), this::closeWindow);
             }
         }
     }

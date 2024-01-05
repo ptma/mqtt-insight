@@ -1,6 +1,8 @@
 package com.mqttinsight.codec;
 
-public class MsgpackPojo {
+import java.io.Serializable;
+
+public class MsgpackPojo implements Serializable {
 
     private String name;
     private Integer favoriteNumber;

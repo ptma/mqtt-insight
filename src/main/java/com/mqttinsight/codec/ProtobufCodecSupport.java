@@ -62,7 +62,7 @@ public class ProtobufCodecSupport extends JsonCodecSupport implements DynamicCod
     public String toString(byte[] payload) {
         try {
             Map<String, Object> msg = dynamicProtoSchema.parse(payload);
-            return Utils.toJsonString(msg);
+            return Utils.JSON.toString(msg);
         } catch (Exception e) {
             log.error(e.getMessage());
             return new String(payload, StandardCharsets.UTF_8);

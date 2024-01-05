@@ -46,7 +46,7 @@ public final class Configuration implements Serializable {
             userPath = System.getProperty("user.home") + File.separator + "MqttInsight";
         }
         try {
-            conf = Utils.JSON_MAPPER.readValue(new File(confFilePath()), Conf.class);
+            conf = Utils.JSON.readObject(new File(confFilePath()), Conf.class);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             if (conf == null) {
@@ -86,7 +86,7 @@ public final class Configuration implements Serializable {
         if (changed || force) {
             File configFile = new File(confFilePath());
             try {
-                FileUtil.writeString(Utils.toJsonString(conf), configFile, StandardCharsets.UTF_8);
+                FileUtil.writeString(Utils.JSON.toString(conf), configFile, StandardCharsets.UTF_8);
             } catch (Exception e) {
                 log.error("Can not write configuration to file: {}", configFile.getAbsolutePath(), e);
             }

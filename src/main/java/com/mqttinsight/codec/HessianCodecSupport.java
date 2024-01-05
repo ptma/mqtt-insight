@@ -1,11 +1,8 @@
 package com.mqttinsight.codec;
 
 import com.caucho.hessian.io.HessianInput;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
-import org.msgpack.jackson.dataformat.MessagePackMapper;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -38,7 +35,7 @@ public class HessianCodecSupport extends JsonCodecSupport {
         }
         try (ByteArrayInputStream bis = new ByteArrayInputStream(payload)) {
             HessianInput hInput = new HessianInput(bis);
-            return Utils.toJsonString(hInput.readObject());
+            return Utils.JSON.toString(hInput.readObject());
         } catch (IOException e) {
             log.error(e.getMessage());
             return new String(payload, StandardCharsets.UTF_8);

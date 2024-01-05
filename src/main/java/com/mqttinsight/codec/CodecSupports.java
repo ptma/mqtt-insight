@@ -27,8 +27,6 @@ public class CodecSupports {
         register(plainCodec);
         register(new HexCodecSupport());
         register(new JsonCodecSupport());
-
-        register(new ProtobufCodecSupport());
     }
 
     public void register(CodecSupport support) {

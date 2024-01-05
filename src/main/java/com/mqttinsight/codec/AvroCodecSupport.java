@@ -18,7 +18,7 @@ import org.apache.avro.io.EncoderFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
+import java.util.HashMap;
 
 /**
  * @author ptma
@@ -98,7 +98,7 @@ public class AvroCodecSupport extends JsonCodecSupport implements DynamicCodecSu
     public byte[] toPayload(String json) {
         GenericRecord record = new GenericData.Record(schema);
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            Map<String, Object> objectMap = Utils.JSON_MAPPER.readValue(json, Map.class);
+            HashMap<String, Object> objectMap = Utils.JSON.toObject(json, HashMap.class);
             objectMap.entrySet()
                 .stream()
                 .filter(entry -> schema.getField(entry.getKey()) != null)

@@ -43,7 +43,7 @@ public class MainFrame extends JXFrame {
         initListeners();
 
         FlatDesktop.setQuitHandler(response -> {
-            MainWindowForm.getInstance().close();
+            MainWindowForm.instance().close();
             response.performQuit();
         });
     }
@@ -51,7 +51,7 @@ public class MainFrame extends JXFrame {
     private void initMainWindowForm() {
         Container container = getContentPane();
         container.setLayout(new BorderLayout());
-        container.add(MainWindowForm.getInstance().getContentPanel(), BorderLayout.CENTER);
+        container.add(MainWindowForm.instance().getContentPanel(), BorderLayout.CENTER);
     }
 
     private void initGlobalComponentStyles() {
@@ -134,7 +134,7 @@ public class MainFrame extends JXFrame {
 
     public void close() {
         Configuration.instance().save();
-        MainWindowForm.getInstance().close();
+        MainWindowForm.instance().close();
         Configuration.instance().clearTempPath();
         this.dispose();
     }

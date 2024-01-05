@@ -322,7 +322,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
             subscribeButton.setEnabled(status.equals(ConnectionStatus.CONNECTED));
             subscriptionListPanel.onConnectionChanged(status);
-            MainWindowForm.getInstance().onConnectionChanged(this);
+            MainWindowForm.instance().onConnectionChanged(this);
         });
     }
 

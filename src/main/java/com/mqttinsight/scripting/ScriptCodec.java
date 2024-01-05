@@ -10,6 +10,7 @@ import com.mqttinsight.mqtt.ReceivedMqttMessage;
 import com.mqttinsight.util.TopicUtil;
 import com.mqttinsight.util.Utils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -92,7 +93,7 @@ public class ScriptCodec {
                 if (payload instanceof String) {
                     msg.setPayload(((String) payload).getBytes());
                 } else {
-                    msg.setPayload(Utils.JSON_MAPPER.writeValueAsBytes(convertToJavaObject(payload)));
+                    msg.setPayload(Utils.JSON.toString(convertToJavaObject(payload)).getBytes(StandardCharsets.UTF_8));
                     msg.setFormat(CodecSupport.JSON);
                 }
             }
@@ -106,7 +107,7 @@ public class ScriptCodec {
                 }
             }
         } else {
-            msg.setPayload(Utils.JSON_MAPPER.writeValueAsBytes(convertToJavaObject(data)));
+            msg.setPayload(Utils.JSON.toString(convertToJavaObject(data)).getBytes(StandardCharsets.UTF_8));
             msg.setFormat(CodecSupport.JSON);
         }
         return msg;

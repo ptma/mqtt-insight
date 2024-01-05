@@ -26,6 +26,8 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -45,7 +47,7 @@ import java.util.regex.Pattern;
 public class Utils {
 
     private static final SecureRandom RANDOM = new SecureRandom();
-    public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
     private static final Color DARKER_TEXT_COLOR = Color.BLACK;
     private static final Color LIGHTER_TEXT_COLOR = ColorUtil.hexToColor("#ABB2BF");
@@ -272,16 +274,23 @@ public class Utils {
         }
     }
 
-    public static String toJsonString(Object object) throws JsonProcessingException {
-        return JSON_MAPPER.writeValueAsString(object);
-    }
+    public static class JSON {
+        
+        public static <T> T readObject(File jsonFile, Class<T> valueType) throws IOException {
+            return JSON_MAPPER.readValue(jsonFile, valueType);
+        }
 
-    public static ObjectNode toJsonObject(String jsonString) throws JsonProcessingException {
-        return JSON_MAPPER.readValue(jsonString, ObjectNode.class);
-    }
+        public static String toString(Object object) throws JsonProcessingException {
+            return JSON_MAPPER.writeValueAsString(object);
+        }
 
-    public static <T> T toJsonObject(String jsonString, Class<T> valueType) throws JsonProcessingException {
-        return JSON_MAPPER.readValue(jsonString, valueType);
+        public static ObjectNode toObject(String jsonString) throws JsonProcessingException {
+            return JSON_MAPPER.readValue(jsonString, ObjectNode.class);
+        }
+
+        public static <T> T toObject(String jsonString, Class<T> valueType) throws JsonProcessingException {
+            return JSON_MAPPER.readValue(jsonString, valueType);
+        }
     }
 
     public static Color brighter(Color color, float factor) {

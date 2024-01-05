@@ -37,7 +37,7 @@ public class MainWindowForm {
         final static MainWindowForm INSTANCE = new MainWindowForm();
     }
 
-    public static MainWindowForm getInstance() {
+    public static MainWindowForm instance() {
         return MainWindowFormHolder.INSTANCE;
     }
 

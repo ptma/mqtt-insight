@@ -259,7 +259,7 @@ public class MessageViewPanel {
                             .stream()
                             .map(m -> {
                                 try {
-                                    return Utils.toJsonString(m);
+                                    return Utils.JSON.toString(m);
                                 } catch (JsonProcessingException e) {
                                     log.error(e.getMessage(), e);
                                     Utils.Toast.error(e.getMessage());
@@ -276,7 +276,7 @@ public class MessageViewPanel {
                             .stream()
                             .map(m -> {
                                 try {
-                                    return Utils.toJsonString(m);
+                                    return Utils.JSON.toString(m);
                                 } catch (JsonProcessingException e) {
                                     log.error(e.getMessage(), e);
                                     Utils.Toast.error(e.getMessage());

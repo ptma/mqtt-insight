@@ -28,7 +28,7 @@ public class MsgpackCodecSupport extends JsonCodecSupport {
     public String toString(byte[] payload) {
         try {
             ObjectNode object = MSGPACK_MAPPER.readValue(payload, ObjectNode.class);
-            return Utils.toJsonString(object);
+            return Utils.JSON.toString(object);
         } catch (Exception e) {
             log.error(e.getMessage());
             return new String(payload, StandardCharsets.UTF_8);
@@ -38,7 +38,7 @@ public class MsgpackCodecSupport extends JsonCodecSupport {
     @Override
     public byte[] toPayload(String text) {
         try {
-            ObjectNode object = Utils.toJsonObject(text);
+            ObjectNode object = Utils.JSON.toObject(text);
             return MSGPACK_MAPPER.writeValueAsBytes(object);
         } catch (Exception e) {
             log.error(e.getMessage());
