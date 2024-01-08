@@ -1,5 +1,7 @@
 package com.mqttinsight.codec;
 
+import com.mqttinsight.exception.CodecException;
+
 /**
  * Encoder and decoder support
  *
@@ -52,5 +54,5 @@ public interface CodecSupport {
      * @param text Inputted text
      * @return Payload buffer bytes
      */
-    byte[] toPayload(String text);
+    byte[] toPayload(String text) throws CodecException;
 }

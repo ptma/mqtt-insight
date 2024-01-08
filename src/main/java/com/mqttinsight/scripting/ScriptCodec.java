@@ -29,7 +29,7 @@ public class ScriptCodec {
     public ScriptCodec() {
     }
 
-    public void decode(ReceivedMqttMessage receivedMessage, Consumer<MqttMessage> decodedConsumer) {
+    public void executeDecode(ReceivedMqttMessage receivedMessage, Consumer<MqttMessage> decodedConsumer) {
         if (!decodersGroupMap.isEmpty()) {
             DecoderContext context = new DecoderContext(receivedMessage.getSubscription(), MqttMessageWrapper.of(receivedMessage));
             decodersGroupMap.values().forEach(decodersMap -> {

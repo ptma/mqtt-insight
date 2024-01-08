@@ -117,6 +117,10 @@ public class DynamicCodecForm extends JDialog {
                 return false;
             } else {
                 try {
+                    if (CodecSupports.instance().nameExists(newItem.getName())) {
+                        Utils.Toast.warn(LangUtil.getString("CodecExists"));
+                        return false;
+                    }
                     DynamicCodecSupport dynamicInstance = codecSupport.newDynamicInstance(newItem.getName(), newItem.getSchemaFile());
                     CodecSupports.instance().register(dynamicInstance);
                     Configuration.instance().getDynamicCodecs().add(newItem);
@@ -148,6 +152,10 @@ public class DynamicCodecForm extends JDialog {
                     return false;
                 } else {
                     try {
+                        if (CodecSupports.instance().nameExists(newItem.getName())) {
+                            Utils.Toast.warn(LangUtil.getString("CodecExists"));
+                            return false;
+                        }
                         DynamicCodecSupport dynamicInstance = codecSupport.newDynamicInstance(newItem.getName(), newItem.getSchemaFile());
                         int oldIndex = Configuration.instance().getDynamicCodecs().indexOf(oldItem);
                         CodecSupports.instance().remove(oldItem.getName());

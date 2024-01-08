@@ -1,6 +1,7 @@
 package com.mqttinsight.codec;
 
 import com.mqttinsight.codec.proto.DynamicProtoSchema;
+import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.exception.SchemaLoadException;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +71,7 @@ public class ProtobufCodecSupport extends JsonCodecSupport implements DynamicCod
     }
 
     @Override
-    public byte[] toPayload(String json) {
-        throw new UnsupportedOperationException("Protobuf encoding is not supported.");
+    public byte[] toPayload(String json) throws CodecException {
+        throw new CodecException("Protobuf encoding is not supported.");
     }
 }

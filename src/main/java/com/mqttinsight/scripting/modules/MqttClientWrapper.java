@@ -75,7 +75,7 @@ public class MqttClientWrapper {
         byte[] bytes;
         if (payload.getType() == V8ValueReferenceType.Uint8Array) {
             ObjectNode json = Utils.JSON.toObject(payload.toJsonString(), ObjectNode.class);
-            if ("Buffer".equals(json.get("type").asText())) {
+            if (json.get("type") != null && "Buffer".equals(json.get("type").asText())) {
                 bytes = json.get("data").binaryValue();
             } else {
                 bytes = payload.toBytes();
@@ -116,7 +116,7 @@ public class MqttClientWrapper {
     }
 
     /**
-     * Script API
+     * 解码消息(所有主题)
      * <pre>
      * <code>
      * // Javascript
@@ -135,7 +135,7 @@ public class MqttClientWrapper {
     }
 
     /**
-     * Script API
+     * 解码特定主主题的消息
      * <pre>
      * <code>
      * // Javascript
@@ -152,4 +152,5 @@ public class MqttClientWrapper {
     public void decode(String topic, Function<MqttMessageWrapper, Object> function) {
         scriptCodec.decode(scriptPath, topic, function);
     }
+
 }

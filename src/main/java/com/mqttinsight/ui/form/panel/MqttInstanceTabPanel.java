@@ -358,7 +358,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             ReceivedMqttMessage receivedMessage = (ReceivedMqttMessage) message;
             SwingUtilities.invokeLater(() -> {
                 try {
-                    scriptLoader.decode(receivedMessage, decodedMessage -> {
+                    scriptLoader.executeDecode(receivedMessage, decodedMessage -> {
                         if (decodedMessage != null) {
                             applyEvent(l -> l.onMessage(decodedMessage, message));
                         }

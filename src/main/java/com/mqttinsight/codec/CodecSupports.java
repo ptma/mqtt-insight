@@ -3,6 +3,7 @@ package com.mqttinsight.codec;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author ptma
@@ -33,17 +34,17 @@ public class CodecSupports {
         if (support instanceof DynamicCodecSupport) {
             DynamicCodecSupport dynamicSupport = (DynamicCodecSupport) support;
             if (dynamicSupport.isInstantiated()) {
-                supports.put(support.getName(), support);
+                supports.put(support.getName().toLowerCase(), support);
             } else {
-                dynamicSupports.put(support.getName(), dynamicSupport);
+                dynamicSupports.put(support.getName().toLowerCase(), dynamicSupport);
             }
         } else {
-            supports.put(support.getName(), support);
+            supports.put(support.getName().toLowerCase(), support);
         }
     }
 
     public void remove(String name) {
-        supports.remove(name);
+        supports.remove(name.toLowerCase());
     }
 
     public Collection<CodecSupport> getCodecs() {
@@ -51,17 +52,24 @@ public class CodecSupports {
     }
 
     public Collection<String> getDynamicCodecNames() {
-        return dynamicSupports.keySet();
+        return dynamicSupports.values()
+            .stream()
+            .map(CodecSupport::getName)
+            .collect(Collectors.toList());
     }
 
     public CodecSupport getByName(String name) {
         if (name == null) {
             return plainCodec;
         }
-        return supports.getOrDefault(name, plainCodec);
+        return supports.getOrDefault(name.toLowerCase(), plainCodec);
+    }
+
+    public boolean nameExists(String name) {
+        return supports.containsKey(name.toLowerCase());
     }
 
     public DynamicCodecSupport getDynamicByName(String name) {
-        return dynamicSupports.get(name);
+        return dynamicSupports.get(name.toLowerCase());
     }
 }

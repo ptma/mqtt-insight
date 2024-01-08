@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.avro.AvroFactory;
 import com.fasterxml.jackson.dataformat.avro.AvroSchema;
+import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.exception.SchemaLoadException;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -95,7 +96,7 @@ public class AvroCodecSupport extends JsonCodecSupport implements DynamicCodecSu
     }
 
     @Override
-    public byte[] toPayload(String json) {
+    public byte[] toPayload(String json) throws CodecException {
         GenericRecord record = new GenericData.Record(schema);
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             HashMap<String, Object> objectMap = Utils.JSON.toObject(json, HashMap.class);
@@ -110,8 +111,7 @@ public class AvroCodecSupport extends JsonCodecSupport implements DynamicCodecSu
             encoder.flush();
             return outputStream.toByteArray();
         } catch (Exception e) {
-            log.error(e.getMessage());
-            return super.toPayload(json);
+            throw new CodecException("An error occurred while encoding the message.", e);
         }
     }
 }

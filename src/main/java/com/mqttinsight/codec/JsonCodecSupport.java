@@ -1,5 +1,7 @@
 package com.mqttinsight.codec;
 
+import com.mqttinsight.exception.CodecException;
+
 /**
  * @author ptma
  */
@@ -21,7 +23,7 @@ public class JsonCodecSupport extends PlainCodecSupport implements CodecSupport 
     }
 
     @Override
-    public byte[] toPayload(String json) {
+    public byte[] toPayload(String json) throws CodecException {
         return super.toPayload(json);
     }
 

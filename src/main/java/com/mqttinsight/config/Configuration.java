@@ -67,6 +67,10 @@ public final class Configuration implements Serializable {
         return userPath + File.separator + "temp";
     }
 
+    public String getCodecsPath() {
+        return userPath + File.separator + "codecs";
+    }
+
     public void clearTempPath() {
         try {
             FileUtil.clean(new File(getTempPath()));

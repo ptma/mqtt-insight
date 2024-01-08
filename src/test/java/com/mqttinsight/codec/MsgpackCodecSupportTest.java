@@ -2,6 +2,7 @@ package com.mqttinsight.codec;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mqttinsight.exception.CodecException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ class MsgpackCodecSupportTest {
     }
 
     @Test
-    void test() throws JsonProcessingException {
+    void test() throws JsonProcessingException, CodecException {
         MsgpackPojo pojo = new MsgpackPojo();
         pojo.setName("Ben");
         pojo.setFavoriteNumber(7);

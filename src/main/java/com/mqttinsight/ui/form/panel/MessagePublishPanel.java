@@ -4,6 +4,7 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 import com.mqttinsight.config.Configuration;
+import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.exception.VerificationException;
 import com.mqttinsight.mqtt.PublishedItem;
 import com.mqttinsight.mqtt.PublishedMqttMessage;
@@ -13,6 +14,7 @@ import com.mqttinsight.ui.component.model.PayloadFormatComboBoxModel;
 import com.mqttinsight.ui.component.renderer.TextableListRenderer;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.util.*;
+import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaDefaultInputMap;
 
@@ -27,6 +29,7 @@ import java.util.List;
 /**
  * @author ptma
  */
+@Slf4j
 public class MessagePublishPanel extends JPanel {
 
     private final MqttInstance mqttInstance;
@@ -195,20 +198,25 @@ public class MessagePublishPanel extends JPanel {
             return;
         }
         SwingUtilities.invokeLater(() -> {
-            String topic = topicComboBox.getSelectedItem().toString();
-            String payloadString = payloadEditor.getText();
-            int qos = qosComboBox.getSelectedIndex();
-            boolean retained = retainedCheckBox.isSelected();
-            String format = (String) formatComboBox.getSelectedItem();
-            byte[] payload = CodecSupports.instance().getByName(format).toPayload(payloadString);
-            mqttInstance.publishMessage(PublishedMqttMessage.of(
-                topic,
-                payload,
-                qos,
-                retained,
-                format
-            ));
-            addPublishedTopic(topic, payloadString, qos, retained, format);
+            try {
+                String topic = topicComboBox.getSelectedItem().toString();
+                String payloadString = payloadEditor.getText();
+                int qos = qosComboBox.getSelectedIndex();
+                boolean retained = retainedCheckBox.isSelected();
+                String format = (String) formatComboBox.getSelectedItem();
+                byte[] payload = CodecSupports.instance().getByName(format).toPayload(payloadString);
+                mqttInstance.publishMessage(PublishedMqttMessage.of(
+                    topic,
+                    payload,
+                    qos,
+                    retained,
+                    format
+                ));
+                addPublishedTopic(topic, payloadString, qos, retained, format);
+            } catch (CodecException e) {
+                Utils.Toast.error(e.getMessage());
+                log.error(e.getMessage(), e);
+            }
         });
     }
 

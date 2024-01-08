@@ -1,5 +1,6 @@
 package com.mqttinsight.codec;
 
+import com.mqttinsight.exception.CodecException;
 import org.bouncycastle.util.encoders.Hex;
 
 /**
@@ -23,7 +24,7 @@ public class HexCodecSupport implements CodecSupport {
     }
 
     @Override
-    public byte[] toPayload(String text) {
+    public byte[] toPayload(String text) throws CodecException {
         return text == null ? new byte[0] : Hex.decode(text.replaceAll(" ", ""));
     }
 

@@ -44,11 +44,11 @@ public class ScriptEngine {
         }
     }
 
-    public void execute(String scriptPath, String scriptContent, Map<String, Object> param, Consumer<ScriptResult> resultConsumer) {
+    public void execute(String scriptPath, String scriptContent, Map<String, Object> modules, Consumer<ScriptResult> resultConsumer) {
         try {
             initRuntime();
 
-            for (Map.Entry<String, Object> entry : param.entrySet()) {
+            for (Map.Entry<String, Object> entry : modules.entrySet()) {
                 nodeRuntime.getGlobalObject().set(entry.getKey(), entry.getValue());
             }
             String warpedScript = String.format("(function(){\n%s\n})();", scriptContent);
@@ -57,9 +57,7 @@ public class ScriptEngine {
             if (resultConsumer != null) {
                 resultConsumer.accept(ScriptResult.success());
             }
-            while (true) {
-                nodeRuntime.await(V8AwaitMode.RunOnce);
-            }
+            nodeRuntime.await(V8AwaitMode.RunTillNoMoreTasks);
         } catch (JavetException e) {
             if (resultConsumer != null) {
                 resultConsumer.accept(ScriptResult.error(e));

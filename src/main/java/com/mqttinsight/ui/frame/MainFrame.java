@@ -133,6 +133,7 @@ public class MainFrame extends JXFrame {
     }
 
     public void close() {
+        CodecSupportLoader.dispose();
         Configuration.instance().save();
         MainWindowForm.instance().close();
         Configuration.instance().clearTempPath();

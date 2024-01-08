@@ -51,15 +51,18 @@ mqtt.decode("test/sample", (message) => {
     let buffer = Buffer.from(message.getPayload());
     let obj = messages.SampleMessage.decode(buffer);
 
-    // 直接返回消息文本
+    // 方式 1：直接返回消息文本
     // return JSON.stringify(obj);
 
-    // 返回消息 JSON 对象
+    // 方式 2：返回消息 JSON 对象
     return {
         payload: JSON.stringify(obj),
         format: "json",
         color: "#00FF00"
     };
+
+    // 方式 3：直接设置消息的载荷
+    // message.setPayload(JSON.stringify(obj));
 });
 
 // 订阅相应的主题， 也可以通过 UI 手动添加订阅
@@ -113,8 +116,10 @@ mqtt.publish("test/binary", Buffer.from("496E743A", "hex"), 1);
         - `getTopic()` - string, 消息的主题
         - `getQos()` - int, 消息的 QoS
         - `isRetained()` - boolean, 是否为保留消息
+        - `isDuplicate` - boolean, 是否为副本消息
         - `getPayload()` - Int8Array, 消息的载荷
         - `payloadAsString()` - string, 消息的字符串形式的载荷
+        - `setPayload(payload)` - 直接设置消息的载荷，参数 payload 允许的类型有 string | Int8Array | Uint8Array | Buffer
 * `return` - string | json | 无返回值
     - `string` - 消息体的文本
     - `json` - 消息对象, 例如: ```{payload: "payload as json text ...", format: "json"}```, 消息对象支持的属性有:

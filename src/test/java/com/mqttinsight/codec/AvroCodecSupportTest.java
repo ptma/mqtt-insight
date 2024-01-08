@@ -1,5 +1,6 @@
 package com.mqttinsight.codec;
 
+import com.mqttinsight.exception.CodecException;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
@@ -22,7 +23,7 @@ class AvroCodecSupportTest {
     }
 
     @Test
-    void test() throws IOException {
+    void test() throws IOException, CodecException {
         AvroPojo pojo = new AvroPojo();
         pojo.setName("Ben");
         pojo.setFavoriteNumber(7);

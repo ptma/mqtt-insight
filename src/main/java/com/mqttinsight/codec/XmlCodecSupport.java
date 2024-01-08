@@ -1,6 +1,7 @@
 package com.mqttinsight.codec;
 
 import cn.hutool.core.util.XmlUtil;
+import com.mqttinsight.exception.CodecException;
 
 /**
  * @author ptma
@@ -23,7 +24,7 @@ public class XmlCodecSupport extends PlainCodecSupport implements CodecSupport {
     }
 
     @Override
-    public byte[] toPayload(String text) {
+    public byte[] toPayload(String text) throws CodecException {
         return super.toPayload(text);
     }
 

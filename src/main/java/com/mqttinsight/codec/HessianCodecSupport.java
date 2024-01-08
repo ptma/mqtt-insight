@@ -1,6 +1,7 @@
 package com.mqttinsight.codec;
 
 import com.caucho.hessian.io.HessianInput;
+import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +44,7 @@ public class HessianCodecSupport extends JsonCodecSupport {
     }
 
     @Override
-    public byte[] toPayload(String json) {
-        throw new UnsupportedOperationException("Hessian encoding is not supported.");
+    public byte[] toPayload(String json) throws CodecException {
+        throw new CodecException("Hessian encoding is not supported.");
     }
 }

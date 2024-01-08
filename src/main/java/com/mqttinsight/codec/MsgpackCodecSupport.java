@@ -2,6 +2,7 @@ package com.mqttinsight.codec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.msgpack.jackson.dataformat.MessagePackMapper;
@@ -36,13 +37,12 @@ public class MsgpackCodecSupport extends JsonCodecSupport {
     }
 
     @Override
-    public byte[] toPayload(String text) {
+    public byte[] toPayload(String text) throws CodecException {
         try {
             ObjectNode object = Utils.JSON.toObject(text);
             return MSGPACK_MAPPER.writeValueAsBytes(object);
         } catch (Exception e) {
-            log.error(e.getMessage());
-            return super.toPayload(text);
+            throw new CodecException("An error occurred while encoding the message.", e);
         }
     }
 }

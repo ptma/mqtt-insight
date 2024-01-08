@@ -1,5 +1,6 @@
 package com.mqttinsight.codec;
 
+import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.exception.SchemaLoadException;
 
 /**
@@ -13,7 +14,7 @@ public interface DynamicCodecSupport extends CodecSupport {
     /**
      * Instantiate the codec support based on the specified name and schema file.
      */
-    DynamicCodecSupport newDynamicInstance(String name, String schemaFile) throws SchemaLoadException;
+    DynamicCodecSupport newDynamicInstance(String name, String schemaFile) throws SchemaLoadException, CodecException;
 
     /**
      * Schema or IDL file required for serialization framework.

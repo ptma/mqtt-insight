@@ -58,8 +58,8 @@ public class ScriptLoader {
         scriptEngine.execute(scriptPath, scriptContent, modules, resultConsumer);
     }
 
-    public void decode(ReceivedMqttMessage receivedMessage, Consumer<MqttMessage> decodedConsumer) {
-        scriptCodec.decode(receivedMessage, decodedConsumer);
+    public void executeDecode(ReceivedMqttMessage receivedMessage, Consumer<MqttMessage> decodedConsumer) {
+        scriptCodec.executeDecode(receivedMessage, decodedConsumer);
     }
 
     public void removeScript(String scriptPath) {

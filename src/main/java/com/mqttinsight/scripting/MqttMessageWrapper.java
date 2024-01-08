@@ -66,7 +66,7 @@ public class MqttMessageWrapper {
     public void setPayload(V8ValueTypedArray payload) throws JavetException, IOException {
         if (payload.getType() == V8ValueReferenceType.Uint8Array) {
             ObjectNode json = Utils.JSON.toObject(payload.toJsonString());
-            if ("Buffer".equals(json.get("type").asText())) {
+            if (json.get("type") != null && "Buffer".equals(json.get("type").asText())) {
                 message.setPayload(json.get("data").binaryValue());
                 message.setMessageType(MessageType.RECEIVED_SCRIPT);
             } else {
