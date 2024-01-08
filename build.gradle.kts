@@ -19,7 +19,7 @@ plugins {
 
 buildscript {
     repositories {
-        maven("https://maven.aliyun.com/repository/public/")
+        maven(url = "https://maven.aliyun.com/repository/public/")
         mavenLocal()
         mavenCentral()
         dependencies {
@@ -122,8 +122,12 @@ dependencies {
         exclude(module = "commons-compress")
     }
     implementation("com.caucho:hessian:4.0.66")
+    implementation("com.esotericsoftware:kryo:5.5.0")
 }
+
 repositories {
+    maven(url = "https://maven.aliyun.com/repository/public/")
+    mavenLocal()
     mavenCentral()
 }
 
@@ -183,9 +187,86 @@ configure<PackagePluginExtension> {
     jreDirectoryName("jre")
 }
 
+var taskPlatform = Platform.windows
+var taskPlatform_M1 = false
+tasks.register<Copy>("extractJavet") {
+    delete(layout.buildDirectory.dir("javet"))
 
+    if (taskPlatform == Platform.mac) {
+        from({
+            configurations.runtimeClasspath.get()
+                .filter { it.name.equals("javet-macos-${javetVersion}.jar") }
+                .map {
+                    zipTree(it).matching {
+                        if (taskPlatform_M1) {
+                            exclude("**/*x86_64.v.${javetVersion}.dylib")
+                        } else {
+                            exclude("**/*arm64.v.${javetVersion}.dylib")
+                        }
+                    }
+                }
+        })
+    } else {
+        from({
+            configurations.runtimeClasspath.get()
+                .filter { it.name.equals("javet-${javetVersion}.jar") }
+                .map {
+                    zipTree(it).matching {
+                        if (taskPlatform == Platform.windows) {
+                            exclude("**/*.so")
+                        } else if (taskPlatform == Platform.linux) {
+                            exclude("**/*.dll")
+                        }
+                    }
+                }
+        })
+    }
+    into(layout.buildDirectory.dir("javet"))
+}
+
+tasks.register<Jar>("repackJavet") {
+    if (taskPlatform == Platform.mac) {
+        archiveBaseName.set("javet-macos-${javetVersion}")
+    } else {
+        archiveBaseName.set("javet-${javetVersion}")
+    }
+    from(layout.buildDirectory.dir("javet"))
+    manifest.attributes["Automatic-Module-Name"] = "com.caoccao.javet"
+
+    dependsOn("extractJavet")
+}
+
+tasks.register<Copy>("replaceJavet") {
+    if (taskPlatform == Platform.mac) {
+        from(layout.buildDirectory.file("libs/javet-macos-${javetVersion}.jar"))
+    } else {
+        from(layout.buildDirectory.file("libs/javet-${javetVersion}.jar"))
+    }
+
+    into(layout.buildDirectory.dir("MqttInsight/libs"))
+
+    dependsOn("repackJavet")
+}
+
+tasks.register<Copy>("copyLibs") {
+    doLast {
+        val taskExtract = tasks.findByPath("extractJavet")
+        taskExtract?.actions?.forEach { action ->
+            action.execute(taskExtract)
+        }
+        val taskRepack = tasks.findByPath("repackJavet")
+        taskRepack?.actions?.forEach { action ->
+            action.execute(taskRepack)
+        }
+        val taskReplace = tasks.findByPath("replaceJavet")
+        taskReplace?.actions?.forEach { action ->
+            action.execute(taskReplace)
+        }
+    }
+}
 
 tasks.register<PackageTask>("packageForWindows") {
+    taskPlatform = Platform.windows
 
     val innoSetupLanguageMap = LinkedHashMap<String, String>()
     innoSetupLanguageMap["Chinese"] = "compiler:Languages\\ChineseSimplified.isl"
@@ -221,6 +302,8 @@ tasks.register<PackageTask>("packageForWindows") {
 }
 
 tasks.register<PackageTask>("packageForLinux") {
+    taskPlatform = Platform.linux
+
     description = "package For Linux"
     platform = Platform.linux
 
@@ -242,7 +325,10 @@ tasks.register<PackageTask>("packageForLinux") {
 }
 
 tasks.register<PackageTask>("packageForMac_M1") {
-    description = "package For Mac"
+    taskPlatform = Platform.mac
+    taskPlatform_M1 = true
+
+    description = "package For Mac M1"
     platform = Platform.mac
 
     organizationName = organization
@@ -260,6 +346,9 @@ tasks.register<PackageTask>("packageForMac_M1") {
 }
 
 tasks.register<PackageTask>("packageForMac") {
+    taskPlatform = Platform.mac
+    taskPlatform_M1 = true
+
     description = "package For Mac"
     platform = Platform.mac
 

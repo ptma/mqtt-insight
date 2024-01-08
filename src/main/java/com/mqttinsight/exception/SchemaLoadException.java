@@ -9,6 +9,10 @@ public class SchemaLoadException extends RuntimeException {
         super(error);
     }
 
+    public SchemaLoadException(Throwable e) {
+        super(e);
+    }
+
     public SchemaLoadException(String error, Throwable e) {
         super(error, e);
     }
