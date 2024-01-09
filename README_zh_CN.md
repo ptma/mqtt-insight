@@ -12,7 +12,9 @@ MqttInsight 是开源跨平台的 MQTT 图形客户端.
 * 支持 Websocket；
 * 支持表格和对话两种消息视图；
 * 支持 Node.js 脚本 (由 Javet 提供支持)；
-* 支持 PlainText、JSON、XML、HEX 和 Base64 等常规消息编解码, 支持 SPI 扩展编解码器；
+* 内置 PlainText、JSON、XML、HEX、Base64、Protobuf、MessagePack、Avro、Hessian、Hessian2 和 Kryo 等消息编解码；
+* 支持通过 SPI 扩展编解码器；
+* 支持 Javascript 编解码器；
 * 支持消息数量、消息负载、消息内容等统计图表；
 
 ## 界面截图
@@ -25,5 +27,5 @@ MqttInsight 是开源跨平台的 MQTT 图形客户端.
 
 ## 文档
 
-* [脚本说明](Scripting.md)
-* [版本记录](Changelog.md)
+* [脚本说明](doc/Scripting.md)
+* [版本记录](doc/Changelog.md)

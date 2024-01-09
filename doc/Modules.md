@@ -1,83 +1,13 @@
-MqttInsight 脚本使用说明
+脚本内置模块
 --
-MqttInsight 仅提供了一些基本的 MQTT 功能，用户可以通过编写脚本来实现自己需要的扩展功能，
-例如：
-
-* 订阅消息并自定义解码
-* 订阅消息并发布回复
-* 定时发布消息
-* 转发消息到其它的目标地址或接口
-
-脚本功能通过 Javet 框架实现， 支持 Node.js(v18.17.1) 中的大多数 API (fs, events, crypto, ...)。
-
-## 脚本加载
-
-在打开的 MQTT 连接标签页右侧的工具栏选择 "更多... -> 脚本 -> 加载脚本..."。脚本成功加载后会在脚本菜单中附加脚本文件的菜单项，点击该菜单项可选择重新载入或移除脚本。
-
-加载的脚本的作用域为当前 MQTT 连接的标签页。
-
-脚本中如果使用了第三方的 npm 包, 需要在脚本所在目录执行 npm install xxx, 目前还**不支持 Node.js 的全局包(global)**
-
-### 示例脚本1
-
-将订阅的 testtopic/# 主题下的消息通过 mqtt.js 转发到 MQTT Broker:
-
-```javascript
-const mqttJS = require("mqtt");
-
-const mqttClient = mqttJS.connect("mqtt://127.0.0.1:1883");
-mqttClient.on("connect", () => {
-    logger.debug("已连接: mqtt://127.0.0.1:1883");
-});
-mqtt.decode("testtopic/#", (message) => {
-    // 将 testtopic/# 主题下的消息转发到 mqtt://127.0.0.1:1883
-    mqttClient.publish(message.getTopic(), Buffer.from(message.getPayload()));
-});
-
-// 订阅相应的主题， 也可以通过 UI 手动添加订阅
-mqtt.subscribe("testtopic/#");
-```
-
-### 示例脚本2
-
-将订阅的 test/sample 主题下的 ProtoBuf 消息转换为 json 字符串:
-
-```javascript
-const fs = require("fs");
-const protobuf = require("protocol-buffers");
-
-var messages = protobuf(fs.readFileSync("SampleMessages.proto"))
-mqtt.decode("test/sample", (message) => {
-    let buffer = Buffer.from(message.getPayload());
-    let obj = messages.SampleMessage.decode(buffer);
-
-    // 方式 1：直接返回消息文本
-    // return JSON.stringify(obj);
-
-    // 方式 2：返回消息 JSON 对象
-    return {
-        payload: JSON.stringify(obj),
-        format: "json",
-        color: "#00FF00"
-    };
-
-    // 方式 3：直接设置消息的载荷
-    // message.setPayload(JSON.stringify(obj));
-});
-
-// 订阅相应的主题， 也可以通过 UI 手动添加订阅
-mqtt.subscribe("test/sample", 1);
-```
-
-## 内置对象
-
-* mqtt - MqttInsight 中当前标签的实例，用于操作MQTT(订阅、发布、解码)
-* toast - 提示框工具
+* mqtt - MQTT 操作(订阅、发布、解码)工具
+* codec - 编解码器注册工具
+* toast - 消息提示工具
 * logger - 日志工具
 
-### 1. mqtt
+### 1. mqtt MQTT 操作(订阅、发布、解码)工具
 
-#### mqtt.subscribe(topic[, qos])
+#### 1.1 mqtt.subscribe(topic[, qos])
 
 订阅主题
 
@@ -90,7 +20,7 @@ mqtt.subscribe("test/#");
 mqtt.subscribe("test/#", 1);
 ````
 
-#### mqtt.publish(String topic, payload[, qos][, retained])
+#### 1.2 mqtt.publish(String topic, payload[, qos][, retained])
 
 发布消息
 
@@ -106,11 +36,11 @@ mqtt.publish("test/binary", payload);
 mqtt.publish("test/binary", Buffer.from("496E743A", "hex"), 1);
 ```
 
-#### mqtt.decode([topic, ]callback)
+#### 1.3 mqtt.decode([topic, ]callback)
 
 消息解码
 
-* `topic` - string, 可选, 匹配的主题
+* `topic` - string, 可选, 匹配的主题, 支持MQTT 主题通配符 `+` `#`, 无此参数时表示针对所有已订阅的主题
 * `callback` - function (message), 消息处理回调方法。
     - `message` - 收到的 MQTT 消息, 具有的方法如下:
         - `getTopic()` - string, 消息的主题
@@ -128,16 +58,16 @@ mqtt.publish("test/binary", Buffer.from("496E743A", "hex"), 1);
         * `color` - string, 可选, Hex 颜色代码, 例如```#FF0000```
 
 ```js
-mqtt.decode("test/sample", (message) => {
+mqtt.decode("test/sample1", (message) => {
     let buffer = Buffer.from(message.getPayload());
-    let obj = messages.SampleMessage.decode(buffer);
+    let obj = messages.SampleMessage1.decode(buffer);
     // 直接返回消息文本
     return JSON.stringify(obj);
 });
 
-mqtt.decode("test/sample", (message) => {
+mqtt.decode("test/sample2", (message) => {
     let buffer = Buffer.from(message.getPayload());
-    let obj = messages.SampleMessage.decode(buffer);
+    let obj = messages.SampleMessage2.decode(buffer);
     // 返回消息 JSON 对象
     return {
         payload: JSON.stringify(obj),
@@ -145,9 +75,16 @@ mqtt.decode("test/sample", (message) => {
         color: "#00FF00"
     };
 });
+
+mqtt.decode("test/sample3", (message) => {
+    let buffer = Buffer.from(message.getPayload());
+    let obj = messages.SampleMessage3.decode(buffer);
+    // 直接修改原始消息的载荷
+    message.setPayload(JSON.stringify(obj));
+});
 ```
 
-#### mqtt.topicVariables(template, topic)
+#### 1.4 mqtt.topicVariables(template, topic)
 
 从 Topic 提取变量集
 
@@ -165,7 +102,38 @@ mqtt.topicVariables("/device/{product}", "/device/test123");
 */
 ```
 
-### 2. toast
+### 2. codec 编解码器注册工具
+
+#### 2.1 codec.register(name, decoder, encoder, schemaLoader, options)
+注册编解码器, 全参数, 该方法的部分参数是可选的
+* `name` string, 编解码器的名称
+* `decoder` Function(payload), 解码的方法
+  - `payload` Uint8Array, 消息的载荷
+  - `retrun` string, 经过解码的文本
+* `encoder` Function(text), 编码的方法, 不支持编码的设置为 null
+  - `text` string, 发布消息时用户输入的文本
+  - `retrun` Int8Array | Uint8Array | Buffer, 经过编码的载荷
+* `schemaLoader` Function(file), **动态编解码器**传入模式文件的回调, 无返回值
+  - `file` string, 模式文件路径
+* `options` Object, 配置项
+  - `format` string, 可选, 消息的格式, 默认值为 `plain`, 可选值有: plain|json|hex|xml
+  - `dynamic` boolean, 是否为**动态编解码器**, 默认值为 false, 如果为 true, 则需要提供 `schemaExts` 参数, 并且需要实现 `schemaLoader` 方法
+  - `schemaExts` string, 可选, **动态编解码器**模式文件的扩展名, 使用 `,`分隔, 例如 `txt,xml`
+  
+> **动态编解码器**  
+> 有些序列化框架需要指定模式(Schema、IDL)文件才能正确进行序列化(编码)和反序列化(解码), 例如 Protobuf。这一类的编解码器注册以后不会立即出现在格式下拉框中， 需要用户在`文件->编解码设置`中设置具体的名称和模式文件。
+
+#### 2.2 codec.register(name, decoder)
+注册编解码器, 仅支持解码, 参数说明见 2.1 
+
+#### 2.3 codec.register(name, decoder, encoder)
+注册编解码器, 支持解码和编码, 参数说明见 2.1
+
+#### 2.4 codec.register(name, decoder, encoder, options)
+注册编解码器, 支持解码和编码, 并设置参数, 参数说明见 2.1
+
+
+### 3. toast 消息提示工具
 
 toast 工具可以在 UI 上弹出各种提示消息, 格式化模板 `format` 中使用 `{}` 表示占位符
 
@@ -177,27 +145,27 @@ toast.info("{} {}", "Hello", "World!");
 // 显示 Toast: "Hello World!"
 ```
 
-#### toast.info(format[, ...args])
+#### 3.1 toast.info(format[, ...args])
 
 * `format` string, 消息模板
 * `...args` any, 参数
 
-#### toast.success(format[, ...args])
+#### 3.2 toast.success(format[, ...args])
 
 * `format` string, 消息模板
 * `...args` any, 参数
 
-#### toast.warn(format[, ...args])
+#### 3.3 toast.warn(format[, ...args])
 
 * `format` string, 消息模板
 * `...args` any, 参数
 
-#### toast.error(format[, ...args])
+#### 3.4 toast.error(format[, ...args])
 
 * `format` string, 消息模板
 * `...args` any, 参数
 
-### 3. logger
+### 4. logger 日志工具
 
 日志工具, 格式化模板 `format` 中使用 `{}` 表示占位符
 
@@ -209,27 +177,27 @@ logger.info("{} {}", "Hello", "World!");
 // 输出: "Hello World!"
 ```
 
-#### logger.trace(format[, ...args])
+#### 4.1 logger.trace(format[, ...args])
 
 * `format` string, 消息模板
 * `...args` any, 参数
 
-#### logger.debug(format[, ...args])
+#### 4.2 logger.debug(format[, ...args])
 
 * `format` string, 消息模板
 * `...args` any, 参数
 
-#### logger.info(format[, ...args])
+#### 4.3 logger.info(format[, ...args])
 
 * `format` string, 消息模板
 * `...args` any, 参数
 
-#### logger.warn(format[, ...args])
+#### 4.4 logger.warn(format[, ...args])
 
 * `format` string, 消息模板
 * `...args` any, 参数
 
-#### logger.error(format[, ...args])
+#### 4.5 logger.error(format[, ...args])
 
 * `format` string, 消息模板
 * `...args` any, 参数
