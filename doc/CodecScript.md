@@ -1,9 +1,12 @@
 编解码器脚本
 --
-MqttInsight 现已允许使用 JavaScript 来编写编解码器。  
+MqttInsight 允许使用 JavaScript 来编写编解码器。
 
 ## 脚本加载  
-MqttInsight 会在启动时扫描**用户目录** `codecs` 文件夹下的 .js 文件，并自动加载到脚本引擎。在编解码器脚本中注册的编解码器的是全局可用的（在所有连接标签页中均可用），因此解码方法仅传入的 Mqtt 消息的 payload 参数。
+
+MqttInsight 会在启动时扫描**用户目录** `codecs` 文件夹下的 .js
+文件，并自动加载到脚本引擎。在编解码器脚本中注册的编解码器的是全局可用的（在所有连接标签页中均可用），因此解码方法仅传入
+payload 参数。
 > **用户目录**:  
 > * Windows：MqttInsight.exe 所在目录；  
 > * Linux 和 MacOS：${user.home}/MqttInsight
