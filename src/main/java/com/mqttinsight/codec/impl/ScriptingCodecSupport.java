@@ -1,8 +1,10 @@
-package com.mqttinsight.codec;
+package com.mqttinsight.codec.impl;
 
 import com.caoccao.javet.enums.V8ValueReferenceType;
 import com.caoccao.javet.values.reference.V8ValueTypedArray;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mqttinsight.codec.DynamicCodecSupport;
+import com.mqttinsight.codec.ScriptingCodecOption;
 import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.exception.SchemaLoadException;
 import com.mqttinsight.util.Utils;

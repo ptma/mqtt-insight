@@ -1,9 +1,10 @@
-package com.mqttinsight.codec;
+package com.mqttinsight.codec.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.avro.AvroFactory;
 import com.fasterxml.jackson.dataformat.avro.AvroSchema;
+import com.mqttinsight.codec.DynamicCodecSupport;
 import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.exception.SchemaLoadException;
 import com.mqttinsight.util.Utils;

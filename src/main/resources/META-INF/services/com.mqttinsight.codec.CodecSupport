@@ -1,8 +1,8 @@
-com.mqttinsight.codec.Base64CodecSupport
-com.mqttinsight.codec.XmlCodecSupport
-com.mqttinsight.codec.ProtobufCodecSupport
-com.mqttinsight.codec.MsgpackCodecSupport
-com.mqttinsight.codec.AvroCodecSupport
-com.mqttinsight.codec.HessianCodecSupport
-com.mqttinsight.codec.Hessian2CodecSupport
-com.mqttinsight.codec.KryoCodecSupport
+com.mqttinsight.codec.impl.Base64CodecSupport
+com.mqttinsight.codec.impl.XmlCodecSupport
+com.mqttinsight.codec.impl.ProtobufCodecSupport
+com.mqttinsight.codec.impl.MsgpackCodecSupport
+com.mqttinsight.codec.impl.AvroCodecSupport
+com.mqttinsight.codec.impl.HessianCodecSupport
+com.mqttinsight.codec.impl.Hessian2CodecSupport
+com.mqttinsight.codec.impl.KryoCodecSupport

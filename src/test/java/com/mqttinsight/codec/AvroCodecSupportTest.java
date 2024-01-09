@@ -1,5 +1,6 @@
 package com.mqttinsight.codec;
 
+import com.mqttinsight.codec.impl.AvroCodecSupport;
 import com.mqttinsight.exception.CodecException;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;

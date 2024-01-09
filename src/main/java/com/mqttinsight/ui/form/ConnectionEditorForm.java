@@ -230,7 +230,7 @@ public class ConnectionEditorForm extends JDialog {
         payloadField = new SyntaxTextEditor();
         payloadField.setEnabled(false);
         editorPanel.add(payloadField, BorderLayout.CENTER);
-        willPayloadFormatComboBox.setModel(new PayloadFormatComboBoxModel(false, false));
+        willPayloadFormatComboBox.setModel(new PayloadFormatComboBoxModel(false, true));
         willPayloadFormatComboBox.setSelectedItem(CodecSupport.PLAIN);
 
         // Other

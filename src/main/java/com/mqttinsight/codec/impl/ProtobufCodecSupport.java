@@ -1,5 +1,6 @@
-package com.mqttinsight.codec;
+package com.mqttinsight.codec.impl;
 
+import com.mqttinsight.codec.DynamicCodecSupport;
 import com.mqttinsight.codec.proto.DynamicProtoSchema;
 import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.exception.SchemaLoadException;

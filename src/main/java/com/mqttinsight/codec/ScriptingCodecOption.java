@@ -7,6 +7,9 @@ import lombok.Setter;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * @author ptma
+ */
 @Getter
 @Setter
 public class ScriptingCodecOption {
@@ -31,7 +34,7 @@ public class ScriptingCodecOption {
         option.encoder = encoder;
         option.loadSchema = loadSchema;
 
-        option.format = (String) optionMap.getOrDefault("format", "plain");
+        option.format = ((String) optionMap.getOrDefault("format", "plain")).toLowerCase();
         option.dynamic = (Boolean) optionMap.getOrDefault("dynamic", false);
         option.schemaExts = ((String) optionMap.getOrDefault("schemaExts", "*")).split(",");
         return option;

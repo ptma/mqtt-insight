@@ -1,6 +1,6 @@
-package com.mqttinsight.codec;
+package com.mqttinsight.codec.impl;
 
-import com.caucho.hessian.io.Hessian2Input;
+import com.caucho.hessian.io.HessianInput;
 import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -13,9 +13,9 @@ import java.nio.charset.StandardCharsets;
  * @author ptma
  */
 @Slf4j
-public class Hessian2CodecSupport extends JsonCodecSupport {
+public class HessianCodecSupport extends JsonCodecSupport {
 
-    public Hessian2CodecSupport() {
+    public HessianCodecSupport() {
     }
 
 
@@ -26,7 +26,7 @@ public class Hessian2CodecSupport extends JsonCodecSupport {
 
     @Override
     public String getName() {
-        return "Hessian2";
+        return "Hessian";
     }
 
     @Override
@@ -35,8 +35,8 @@ public class Hessian2CodecSupport extends JsonCodecSupport {
             return "";
         }
         try (ByteArrayInputStream bis = new ByteArrayInputStream(payload)) {
-            Hessian2Input h2Input = new Hessian2Input(bis);
-            return Utils.JSON.toString(h2Input.readObject());
+            HessianInput hInput = new HessianInput(bis);
+            return Utils.JSON.toString(hInput.readObject());
         } catch (IOException e) {
             log.error(e.getMessage());
             return new String(payload, StandardCharsets.UTF_8);
@@ -45,6 +45,6 @@ public class Hessian2CodecSupport extends JsonCodecSupport {
 
     @Override
     public byte[] toPayload(String json) throws CodecException {
-        throw new CodecException("Hessian2 encoding is not supported.");
+        throw new CodecException("Hessian encoding is not supported.");
     }
 }

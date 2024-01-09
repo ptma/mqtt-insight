@@ -1,5 +1,6 @@
 package com.mqttinsight.codec;
 
+import com.mqttinsight.codec.impl.HessianCodecSupport;
 import com.mqttinsight.util.Utils;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Assertions;

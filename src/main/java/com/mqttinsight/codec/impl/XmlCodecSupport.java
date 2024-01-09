@@ -1,6 +1,7 @@
-package com.mqttinsight.codec;
+package com.mqttinsight.codec.impl;
 
 import cn.hutool.core.util.XmlUtil;
+import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.exception.CodecException;
 
 /**

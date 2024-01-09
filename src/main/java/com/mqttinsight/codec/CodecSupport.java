@@ -20,9 +20,9 @@ public interface CodecSupport {
 
     /**
      * SyntaxEditingStyle for RSyntaxTextArea
-     *
-     * @link <a href="https://javadoc.fifesoft.com/rsyntaxtextarea/org/fife/ui/rsyntaxtextarea/RSyntaxTextArea.html#setSyntaxEditingStyle(java.lang.String)">RSyntaxTextArea.setSyntaxEditingStyle</a>
-     * @see org.fife.ui.rsyntaxtextarea.RSyntaxTextArea#setSyntaxEditingStyle(String)
+     * <p>
+     * {@link org.fife.ui.rsyntaxtextarea.RSyntaxTextArea#getSyntaxEditingStyle()}
+     * {@link org.fife.ui.rsyntaxtextarea.SyntaxConstants}
      */
     String getSyntax();
 

@@ -7,7 +7,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 /**
- * @author jinjq
+ * @author ptma
  */
 public class CodecClassLoader extends URLClassLoader {
 

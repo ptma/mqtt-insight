@@ -1,4 +1,4 @@
-package com.mqttinsight.codec;
+package com.mqttinsight.codec.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

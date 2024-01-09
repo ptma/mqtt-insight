@@ -1,5 +1,6 @@
-package com.mqttinsight.codec;
+package com.mqttinsight.codec.impl;
 
+import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.exception.CodecException;
 
 /**

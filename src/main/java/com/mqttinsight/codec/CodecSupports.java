@@ -1,5 +1,9 @@
 package com.mqttinsight.codec;
 
+import com.mqttinsight.codec.impl.HexCodecSupport;
+import com.mqttinsight.codec.impl.JsonCodecSupport;
+import com.mqttinsight.codec.impl.PlainCodecSupport;
+
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;

@@ -22,7 +22,7 @@ import java.net.URI;
 import java.util.Hashtable;
 
 /**
- * @author jinjq
+ * @author ptma
  */
 public class AboutForm extends JDialog {
     private JPanel contentPane;

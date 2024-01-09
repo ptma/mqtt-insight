@@ -1,17 +1,18 @@
-package com.mqttinsight.codec;
+package com.mqttinsight.codec.impl;
 
-import cn.hutool.core.codec.Base64;
+import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.exception.CodecException;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author ptma
  */
-public class Base64CodecSupport implements CodecSupport {
-
+public class PlainCodecSupport implements CodecSupport {
 
     @Override
     public String getName() {
-        return "Base64";
+        return CodecSupport.PLAIN;
     }
 
     @Override
@@ -21,11 +22,11 @@ public class Base64CodecSupport implements CodecSupport {
 
     @Override
     public String toString(byte[] payload) {
-        return Base64.encode(payload);
+        return new String(payload, StandardCharsets.UTF_8);
     }
 
     @Override
     public byte[] toPayload(String text) throws CodecException {
-        return text == null ? new byte[0] : Base64.decode(text);
+        return text == null ? new byte[0] : text.getBytes(StandardCharsets.UTF_8);
     }
 }

@@ -1,7 +1,9 @@
-package com.mqttinsight.codec;
+package com.mqttinsight.codec.impl;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
+import com.mqttinsight.codec.CodecClassLoader;
+import com.mqttinsight.codec.DynamicCodecSupport;
 import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.exception.SchemaLoadException;
 import com.mqttinsight.util.Utils;

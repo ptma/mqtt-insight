@@ -2,6 +2,7 @@ package com.mqttinsight.codec;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mqttinsight.codec.impl.MsgpackCodecSupport;
 import com.mqttinsight.exception.CodecException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
