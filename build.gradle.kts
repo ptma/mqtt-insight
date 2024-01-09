@@ -239,11 +239,11 @@ tasks.register<Jar>("repackJavet") {
 tasks.register<Copy>("replaceJavet") {
     if (taskPlatform == Platform.mac) {
         from(layout.buildDirectory.file("libs/javet-macos-${javetVersion}.jar"))
+        into(layout.buildDirectory.dir("MqttInsight.app/Contents/Resources/Java/libs"))
     } else {
         from(layout.buildDirectory.file("libs/javet-${javetVersion}.jar"))
+        into(layout.buildDirectory.dir("MqttInsight/libs"))
     }
-
-    into(layout.buildDirectory.dir("MqttInsight/libs"))
 
     dependsOn("repackJavet")
 }
