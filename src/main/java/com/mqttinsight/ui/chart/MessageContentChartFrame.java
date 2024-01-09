@@ -280,7 +280,7 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         String value = switch (series.getExtractingMode()) {
             case PAYLOAD -> payload;
             case REGEXP -> Utils.findRegexMatchGroup(series.getExtractingExpression(), payload);
-            case JSON_PATH -> Utils.getByJsonPath(series.getExtractingExpression(), payload);
+            case JSON_PATH -> Utils.getSingleValueByJsonPath(series.getExtractingExpression(), payload);
             case XPATH -> Utils.getByXPath(series.getExtractingExpression(), payload);
         };
         return NumberUtil.isNumber(value) ? NumberUtil.parseNumber(value).doubleValue() : null;

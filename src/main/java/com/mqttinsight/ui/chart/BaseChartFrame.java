@@ -303,7 +303,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
                         MatchExpression expression = series.getMatchExpression();
                         ValueComparator comparator = expression.getComparator();
                         String expectedValue = expression.getValue();
-                        String readValue = Utils.getByJsonPath(expression.getExpression(), payloadStr);
+                        String readValue = Utils.getSingleValueByJsonPath(expression.getExpression(), payloadStr);
                         return ValueComparator.match(comparator, expectedValue, readValue);
                     }
                     case XPATH -> {

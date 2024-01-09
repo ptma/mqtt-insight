@@ -322,7 +322,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
             subscribeButton.setEnabled(status.equals(ConnectionStatus.CONNECTED));
             subscriptionListPanel.onConnectionChanged(status);
-            MainWindowForm.getInstance().onConnectionChanged(this);
+            MainWindowForm.instance().onConnectionChanged(this);
         });
     }
 
@@ -358,7 +358,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             ReceivedMqttMessage receivedMessage = (ReceivedMqttMessage) message;
             SwingUtilities.invokeLater(() -> {
                 try {
-                    scriptLoader.decode(receivedMessage, decodedMessage -> {
+                    scriptLoader.executeDecode(receivedMessage, decodedMessage -> {
                         if (decodedMessage != null) {
                             applyEvent(l -> l.onMessage(decodedMessage, message));
                         }
@@ -506,6 +506,10 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             log.info(message);
             Utils.Toast.success(message);
         }
+    }
+
+    public void fireCodecsChanged() {
+        applyEvent(InstanceEventListener::onCodecsChanged);
     }
 
     @Override

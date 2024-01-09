@@ -1,0 +1,3 @@
+Some of the codes in this package comes from:
+https://github.com/square/protoparser
+https://github.com/os72/protobuf-dynamic

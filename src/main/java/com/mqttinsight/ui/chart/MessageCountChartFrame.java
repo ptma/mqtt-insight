@@ -277,7 +277,7 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
                     case JSON_PATH -> {
                         String payloadStr = message.payloadAsString(false);
                         MatchExpression expression = series.getMatchExpression();
-                        String seriesName = Utils.getByJsonPath(expression.getExpression(), payloadStr);
+                        String seriesName = Utils.getSingleValueByJsonPath(expression.getExpression(), payloadStr);
                         saveOrUpdateSeriesData(seriesName);
                     }
                     case XPATH -> {

@@ -47,4 +47,6 @@ public interface InstanceEventListener {
     void fireScriptRemove(File scriptFile);
 
     void fireScriptReload(File scriptFile);
+
+    void onCodecsChanged();
 }

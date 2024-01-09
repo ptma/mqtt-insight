@@ -36,21 +36,22 @@ public class MainFrame extends JXFrame {
         setIconImages(Icons.WINDOW_ICON);
         setJMenuBar(new MainMenu());
         initGlobalComponentStyles();
+
+        CodecSupportLoader.loadCodecs();
+
         initMainWindowForm();
         initListeners();
 
         FlatDesktop.setQuitHandler(response -> {
-            MainWindowForm.getInstance().close();
+            MainWindowForm.instance().close();
             response.performQuit();
         });
-
-        CodecSupportLoader.loadCodecs();
     }
 
     private void initMainWindowForm() {
         Container container = getContentPane();
         container.setLayout(new BorderLayout());
-        container.add(MainWindowForm.getInstance().getContentPanel(), BorderLayout.CENTER);
+        container.add(MainWindowForm.instance().getContentPanel(), BorderLayout.CENTER);
     }
 
     private void initGlobalComponentStyles() {
@@ -132,8 +133,9 @@ public class MainFrame extends JXFrame {
     }
 
     public void close() {
+        CodecSupportLoader.dispose();
         Configuration.instance().save();
-        MainWindowForm.getInstance().close();
+        MainWindowForm.instance().close();
         Configuration.instance().clearTempPath();
         this.dispose();
     }

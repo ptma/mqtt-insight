@@ -94,7 +94,7 @@ public class NewSubscriptionForm extends JDialog {
         qosComboBox.setModel(new EnumComboBoxModel(MqttQos.class));
         qosComboBox.setSelectedItem(MqttQos.QOS_0);
         qosComboBox.setRenderer(new TextableListRenderer());
-        formatComboBox.setModel(new PayloadFormatComboBoxModel(true));
+        formatComboBox.setModel(new PayloadFormatComboBoxModel(true, false));
         formatComboBox.setSelectedItem(CodecSupport.DEFAULT);
 
         buttonOK.addActionListener(e -> onOK());

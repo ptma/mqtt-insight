@@ -1,8 +1,6 @@
 package com.mqttinsight.ui.form;
 
 import cn.hutool.core.io.resource.ResourceUtil;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -12,6 +10,7 @@ import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.util.Const;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
+import com.mqttinsight.util.Utils;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -23,7 +22,7 @@ import java.net.URI;
 import java.util.Hashtable;
 
 /**
- * @author jinjq
+ * @author ptma
  */
 public class AboutForm extends JDialog {
     private JPanel contentPane;
@@ -61,8 +60,8 @@ public class AboutForm extends JDialog {
         logoLabel.setText("");
         nameLabel.setText(Const.APP_NAME);
         nameLabel.putClientProperty("FlatLaf.styleClass", "h2");
-        JSONObject json = JSONUtil.parseObj(ResourceUtil.readUtf8Str("version.json"));
-        versionLabel.setText("v" + json.getStr("version"));
+        String version = Utils.getSingleValueByJsonPath("$.version", ResourceUtil.readUtf8Str("version.json"));
+        versionLabel.setText("v" + version);
         nameLabel.putClientProperty("FlatLaf.styleClass", "h3");
         String githubLink = "https://github.com/ptma/mqtt-insight";
         githubLinkLabel.setText("<html><a href=\"#\">" + githubLink + "</a></html>");

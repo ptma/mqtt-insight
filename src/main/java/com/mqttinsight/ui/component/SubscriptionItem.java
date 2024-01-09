@@ -4,6 +4,7 @@ import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.Subscription;
+import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.ui.event.InstanceEventListener;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Icons;
@@ -195,9 +196,16 @@ public class SubscriptionItem extends JPanel implements MouseListener {
                 }
             }
         });
+        mqttInstance.addEventListener(new InstanceEventAdapter() {
+            @Override
+            public void onCodecsChanged() {
+                loadFormatMenus();
+            }
+        });
     }
 
     private void loadFormatMenus() {
+        formatMenu.removeAll();
         ButtonGroup formatGroup = new ButtonGroup();
 
         JCheckBoxMenuItem formatMenuItem = new NormalCheckBoxMenuItem(CodecSupport.DEFAULT);
@@ -208,7 +216,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         formatMenu.add(formatMenuItem);
         formatGroup.add(formatMenuItem);
 
-        for (CodecSupport codecSupport : CodecSupports.instance().getCodes()) {
+        for (CodecSupport codecSupport : CodecSupports.instance().getCodecs()) {
             formatMenuItem = new NormalCheckBoxMenuItem(codecSupport.getName());
             formatMenuItem.addActionListener(this::payloadFormatChangeAction);
             if (codecSupport.getName().equals(subscription.getSelfPayloadFormat())) {

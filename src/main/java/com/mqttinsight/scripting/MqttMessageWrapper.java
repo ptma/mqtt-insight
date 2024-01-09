@@ -1,14 +1,15 @@
 package com.mqttinsight.scripting;
 
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import com.caoccao.javet.enums.V8ValueReferenceType;
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.values.reference.V8ValueTypedArray;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mqttinsight.mqtt.MessageType;
 import com.mqttinsight.mqtt.ReceivedMqttMessage;
+import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -62,11 +63,11 @@ public class MqttMessageWrapper {
         }
     }
 
-    public void setPayload(V8ValueTypedArray payload) throws JavetException {
+    public void setPayload(V8ValueTypedArray payload) throws JavetException, IOException {
         if (payload.getType() == V8ValueReferenceType.Uint8Array) {
-            JSONObject json = JSONUtil.parseObj(payload.toJsonString());
-            if ("Buffer".equals(json.getStr("type"))) {
-                message.setPayload(json.getBytes("data"));
+            ObjectNode json = Utils.JSON.toObject(payload.toJsonString());
+            if (json.get("type") != null && "Buffer".equals(json.get("type").asText())) {
+                message.setPayload(json.get("data").binaryValue());
                 message.setMessageType(MessageType.RECEIVED_SCRIPT);
             } else {
                 message.setPayload(payload.toBytes());

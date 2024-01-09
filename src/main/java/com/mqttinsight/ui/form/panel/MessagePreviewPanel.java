@@ -115,7 +115,7 @@ public class MessagePreviewPanel extends JPanel {
         formatLabel = new JLabel(LangUtil.getString("PayloadFormat"));
         topPanel.add(formatLabel, "right");
         formatComboBox = new JComboBox<>();
-        formatComboBox.setModel(new PayloadFormatComboBoxModel(true));
+        formatComboBox.setModel(new PayloadFormatComboBoxModel(true, false));
         formatComboBox.setSelectedItem(CodecSupport.DEFAULT);
         formatComboBox.addActionListener(e -> this.updatePreviewMessage());
         topPanel.add(formatComboBox, "");
@@ -164,6 +164,11 @@ public class MessagePreviewPanel extends JPanel {
             @Override
             public void tableSelectionChanged(MqttMessage message) {
                 previewMessage(message);
+            }
+
+            @Override
+            public void onCodecsChanged() {
+                reloadFormatCombo();
             }
         });
     }
@@ -234,6 +239,12 @@ public class MessagePreviewPanel extends JPanel {
             }
         });
 
+    }
+
+    private void reloadFormatCombo() {
+        SwingUtilities.invokeLater(() -> {
+            formatComboBox.setModel(new PayloadFormatComboBoxModel(true, false));
+        });
     }
 
     public void activeFindToolbar() {
