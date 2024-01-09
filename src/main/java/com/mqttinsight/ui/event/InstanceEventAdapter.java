@@ -48,6 +48,10 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
     }
 
     @Override
+    public void onMessageRemoved(MqttMessage message) {
+    }
+
+    @Override
     public void exportAllMessages() {
     }
 
@@ -86,5 +90,10 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
 
     @Override
     public void fireScriptReload(File scriptFile) {
+    }
+
+    @Override
+    public void onCodecsChanged() {
+
     }
 }

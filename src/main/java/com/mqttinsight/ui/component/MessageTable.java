@@ -3,6 +3,8 @@ package com.mqttinsight.ui.component;
 import com.formdev.flatlaf.extras.components.FlatPopupMenu;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
+import com.mqttinsight.mqtt.ReceivedMqttMessage;
+import com.mqttinsight.mqtt.Subscription;
 import com.mqttinsight.ui.chart.MessageContentChartFrame;
 import com.mqttinsight.ui.chart.MessageCountChartFrame;
 import com.mqttinsight.ui.chart.MessageLoadChartFrame;
@@ -25,6 +27,7 @@ import org.jdesktop.swingx.table.TableColumnExt;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -32,6 +35,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -47,7 +51,11 @@ public class MessageTable extends JXTable {
     private JMenuItem menuCopyTopic;
     private JMenuItem menuCopy;
     private JMenuItem menuDelete;
+    private JMenuItem menuClear;
+    private JMenuItem menuClearVisible;
+    private JMenuItem menuExport;
     private boolean autoScroll;
+    private final VisibleFilter visibleFilter = new VisibleFilter();
 
     public MessageTable(MqttInstance mqttInstance, MessageTableModel tableModel) {
         super(tableModel);
@@ -68,9 +76,7 @@ public class MessageTable extends JXTable {
             setRowHeight(28);
             initTableViewColumns();
             setColumnControlVisible(true);
-            if (UIManager.getBoolean("laf.dark")) {
-                setShowHorizontalLines(true);
-            }
+            setShowHorizontalLines(UIManager.getBoolean("laf.dark"));
         } else {
             tableRenderer = new DefaultTableRenderer(new DialogueViewRendererProvider(tableModel));
             initDialogueViewColumns();
@@ -96,10 +102,13 @@ public class MessageTable extends JXTable {
                     if (event.getKeyCode() == KeyEvent.VK_C) { // Copy
                         copyPayload();
                     }
+                } else if (event.getKeyCode() == KeyEvent.VK_DELETE) {
+                    deleteSelectedRow();
                 }
             }
         });
         initPopupMenu();
+        setRowFilter(null);
     }
 
     private void initPopupMenu() {
@@ -114,30 +123,39 @@ public class MessageTable extends JXTable {
 
         popupMenu.addSeparator();
 
-        JMenu chartMenu = new JMenu(LangUtil.getString("Chart"));
-        JMenuItem countChartMenu = new JMenuItem(LangUtil.getString("MessageCountStatisticsChart"));
-        countChartMenu.addActionListener(e -> {
-            MessageCountChartFrame.open(mqttInstance);
-        });
-        chartMenu.add(countChartMenu);
-        JMenuItem loadChartMenu = new JMenuItem(LangUtil.getString("MessageLoadStatisticsChart"));
-        loadChartMenu.addActionListener(e -> {
-            MessageLoadChartFrame.open(mqttInstance);
-        });
-        chartMenu.add(loadChartMenu);
-        JMenuItem contentChartMenu = new JMenuItem(LangUtil.getString("MessageContentStatisticsChart"));
-        contentChartMenu.addActionListener(e -> {
-            MessageContentChartFrame.open(mqttInstance);
-        });
-        chartMenu.add(contentChartMenu);
-        popupMenu.add(chartMenu);
+        {
+            JMenu chartMenu = new JMenu(LangUtil.getString("Chart"));
+            chartMenu.setIcon(Icons.CHART_BAR);
+            JMenuItem countChartMenu = Utils.UI.createMenuItem(LangUtil.getString("MessageCountStatisticsChart"), e -> {
+                MessageCountChartFrame.open(mqttInstance);
+            });
+            countChartMenu.setIcon(Icons.CHART_PIE);
+            chartMenu.add(countChartMenu);
+
+            JMenuItem loadChartMenu = Utils.UI.createMenuItem(LangUtil.getString("MessageLoadStatisticsChart"), e -> {
+                MessageLoadChartFrame.open(mqttInstance);
+            });
+            loadChartMenu.setIcon(Icons.CHART_LINE);
+            chartMenu.add(loadChartMenu);
+
+            JMenuItem contentChartMenu = Utils.UI.createMenuItem(LangUtil.getString("MessageContentStatisticsChart"), e -> {
+                MessageContentChartFrame.open(mqttInstance);
+            });
+            contentChartMenu.setIcon(Icons.CHART_LINE);
+            chartMenu.add(contentChartMenu);
+
+            popupMenu.add(chartMenu);
+        }
 
         popupMenu.addSeparator();
 
-        JMenuItem menuClear = Utils.UI.createMenuItem(LangUtil.getString("ClearAllMessages"), (e) -> mqttInstance.applyEvent(InstanceEventListener::clearAllMessages));
+        menuClear = Utils.UI.createMenuItem(LangUtil.getString("ClearAllMessages"), (e) -> mqttInstance.applyEvent(InstanceEventListener::clearAllMessages));
         menuClear.setIcon(Icons.CLEAR);
         popupMenu.add(menuClear);
-        JMenuItem menuExport = Utils.UI.createMenuItem(LangUtil.getString("ExportAllMessages"), (e) -> mqttInstance.applyEvent(InstanceEventListener::exportAllMessages));
+        menuClearVisible = Utils.UI.createMenuItem(LangUtil.getString("ClearVisibleMessages"), (e) -> clearVisibleMessages());
+        menuClearVisible.setIcon(Icons.CLEAR);
+        popupMenu.add(menuClearVisible);
+        menuExport = Utils.UI.createMenuItem(LangUtil.getString("ExportAllMessages"), (e) -> mqttInstance.applyEvent(InstanceEventListener::exportAllMessages));
         menuExport.setIcon(Icons.EXPORT);
         popupMenu.add(menuExport);
 
@@ -153,6 +171,9 @@ public class MessageTable extends JXTable {
                     if (onRow) {
                         MessageTable.this.setRowSelectionInterval(rowIndex, rowIndex);
                     }
+                    menuClear.setEnabled(MessageTable.this.getRowCount() > 0);
+                    menuExport.setEnabled(MessageTable.this.getRowCount() > 0);
+                    menuClearVisible.setEnabled(MessageTable.this.getRowCount() > 0);
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
@@ -278,8 +299,28 @@ public class MessageTable extends JXTable {
     }
 
     public void deleteSelectedRow() {
-        int modelIndex = convertRowIndexToModel(getSelectedRow());
-        tableModel.remove(modelIndex);
+        int selRow = getSelectedRow();
+        if (selRow >= 0 && selRow < getRowCount()) {
+            int modelIndex = convertRowIndexToModel(selRow);
+            MqttMessage message = tableModel.get(modelIndex);
+            tableModel.remove(modelIndex);
+            mqttInstance.applyEvent(listener -> listener.onMessageRemoved(message));
+            if (getRowCount() > selRow) {
+                setRowSelectionInterval(selRow, selRow);
+            } else if (selRow > 0) {
+                selRow--;
+                setRowSelectionInterval(selRow, selRow);
+            }
+        }
+    }
+
+    public void clearVisibleMessages() {
+        for (int row = getRowCount() - 1; row >= 0; row--) {
+            int modelIndex = convertRowIndexToModel(row);
+            MqttMessage message = tableModel.get(modelIndex);
+            tableModel.remove(modelIndex);
+            mqttInstance.applyEvent(listener -> listener.onMessageRemoved(message));
+        }
     }
 
     public void copyTopic() {
@@ -324,5 +365,44 @@ public class MessageTable extends JXTable {
 
     public void setAutoScroll(boolean autoScroll) {
         this.autoScroll = autoScroll;
+    }
+
+    public MessageTableModel getTableModel() {
+        return tableModel;
+    }
+
+    @Override
+    public <R extends TableModel> void setRowFilter(RowFilter<? super R, ? super Integer> filter) {
+        if (filter == null) {
+            super.setRowFilter(visibleFilter);
+        } else {
+            List filters = Arrays.asList(visibleFilter, filter);
+            super.setRowFilter(RowFilter.andFilter(filters));
+        }
+    }
+
+    static class VisibleFilter extends RowFilter<MessageTableModel, Integer> {
+
+        protected VisibleFilter() {
+        }
+
+        @Override
+        public boolean include(Entry<? extends MessageTableModel, ? extends Integer> entry) {
+            MessageTableModel tableModel = entry.getModel();
+            MqttMessage message = tableModel.get(entry.getIdentifier());
+            if (message instanceof ReceivedMqttMessage) {
+                return isVisible(((ReceivedMqttMessage) message).getSubscription());
+            } else {
+                return true;
+            }
+        }
+
+        boolean isVisible(Subscription subscription) {
+            if (subscription == null) {
+                return true;
+            } else {
+                return subscription.isVisible();
+            }
+        }
     }
 }

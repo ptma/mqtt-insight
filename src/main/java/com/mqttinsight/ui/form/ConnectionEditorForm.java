@@ -27,16 +27,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.mqttv5.client.MqttConnectionOptions;
 import org.jdesktop.swingx.combobox.EnumComboBoxModel;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -231,13 +230,13 @@ public class ConnectionEditorForm extends JDialog {
         payloadField = new SyntaxTextEditor();
         payloadField.setEnabled(false);
         editorPanel.add(payloadField, BorderLayout.CENTER);
-        willPayloadFormatComboBox.setModel(new PayloadFormatComboBoxModel(false));
+        willPayloadFormatComboBox.setModel(new PayloadFormatComboBoxModel(false, true));
         willPayloadFormatComboBox.setSelectedItem(CodecSupport.PLAIN);
 
         // Other
         maxMessagesStoredField.setModel(new SpinnerNumberModel(Const.MESSAGES_STORED_MAX_SIZE, 1000, Integer.MAX_VALUE, 100));
         maxMessagesStoredField.setEditor(new JSpinner.NumberEditor(maxMessagesStoredField, "####"));
-        defaultPayloadFormatComboBox.setModel(new PayloadFormatComboBoxModel(false));
+        defaultPayloadFormatComboBox.setModel(new PayloadFormatComboBoxModel(false, false));
         defaultPayloadFormatComboBox.setSelectedItem(CodecSupport.PLAIN);
     }
 
@@ -271,7 +270,7 @@ public class ConnectionEditorForm extends JDialog {
         buttonTest.addActionListener(e -> onTest());
         buttonOk.addActionListener(e -> onOk());
         buttonCancel.addActionListener(e -> onCancel());
-        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -279,28 +278,24 @@ public class ConnectionEditorForm extends JDialog {
             }
         });
         contentPanel.registerKeyboardAction(e -> onCancel(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
         generateClientIdButton.addActionListener(e -> {
             clientIdField.setText("MqttInsight_" + RandomUtil.randomString(8));
         });
 
-        versionComboBox.addActionListener(e -> {
-            if ("comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
-                boolean isMqtt5 = Version.MQTT_5.equals(versionComboBox.getSelectedItem());
-                cleanSessionCheckBox.setVisible(!isMqtt5);
-                if (isMqtt5) {
-                    mainTabPanel.insertTab(LangUtil.getString("MQTT5Options"), null, mqtt5Panel, null, 1);
-                } else if (mainTabPanel.getComponentAt(1) == mqtt5Panel) {
-                    mainTabPanel.removeTabAt(1);
-                }
-            }
-        });
+        versionComboBox.addActionListener(this::versionChanged);
         cleanStartCheckBox.addChangeListener(e -> {
             sessionExpiryIntervalField.setEnabled(cleanStartCheckBox.isSelected());
         });
         // SSL Mode
-        sslEnableCheckBox.addChangeListener(e -> {
-            sslModeComboBox.setEnabled(sslEnableCheckBox.isSelected());
-            sslProtocolComboBox.setEnabled(sslEnableCheckBox.isSelected());
+        sslEnableCheckBox.addChangeListener(this::sslStatusChanged);
+        sslModeComboBox.addActionListener(this::sslModeChanged);
+
+        willEnableCheckBox.addChangeListener(this::willCheckboxChanged);
+    }
+
+    private void sslModeChanged(ActionEvent e) {
+        if ("comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
             executeWithCurrentSecureMode(securePanel -> {
                 if (securePanel != null) {
                     securePanel.resetFields();
@@ -309,39 +304,52 @@ public class ConnectionEditorForm extends JDialog {
                         securePanel.applySetting(editingNode.getProperties().getSecure());
                     }
                     securePanel.changeFieldsEnable(sslEnableCheckBox.isSelected());
+                    sslFieldsPanel.removeAll();
+                    sslFieldsPanel.add(securePanel.getRootPanel(), BorderLayout.CENTER);
                     securePanel.refresh();
+                    sslFieldsPanel.invalidate();
+                    sslFieldsPanel.repaint();
                 }
                 return true;
             });
-        });
-        sslModeComboBox.addActionListener(e -> {
-            if ("comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
-                executeWithCurrentSecureMode(securePanel -> {
-                    if (securePanel != null) {
-                        securePanel.resetFields();
-                        securePanel.applyLanguage();
-                        if (editingNode != null) {
-                            securePanel.applySetting(editingNode.getProperties().getSecure());
-                        }
-                        securePanel.changeFieldsEnable(sslEnableCheckBox.isSelected());
-                        sslFieldsPanel.removeAll();
-                        sslFieldsPanel.add(securePanel.getRootPanel(), BorderLayout.CENTER);
-                        securePanel.refresh();
-                        sslFieldsPanel.invalidate();
-                        sslFieldsPanel.repaint();
-                    }
-                    return true;
-                });
-            }
-        });
+        }
+    }
 
-        willEnableCheckBox.addChangeListener(e -> {
-            topicField.setEnabled(willEnableCheckBox.isSelected());
-            qosComboBox.setEnabled(willEnableCheckBox.isSelected());
-            retainedCheckBox.setEnabled(willEnableCheckBox.isSelected());
-            payloadField.setEnabled(willEnableCheckBox.isSelected());
-            willPayloadFormatComboBox.setEnabled(willEnableCheckBox.isSelected());
+    private void sslStatusChanged(ChangeEvent e) {
+        sslModeComboBox.setEnabled(sslEnableCheckBox.isSelected());
+        sslProtocolComboBox.setEnabled(sslEnableCheckBox.isSelected());
+        executeWithCurrentSecureMode(securePanel -> {
+            if (securePanel != null) {
+                securePanel.resetFields();
+                securePanel.applyLanguage();
+                if (editingNode != null) {
+                    securePanel.applySetting(editingNode.getProperties().getSecure());
+                }
+                securePanel.changeFieldsEnable(sslEnableCheckBox.isSelected());
+                securePanel.refresh();
+            }
+            return true;
         });
+    }
+
+    private void versionChanged(ActionEvent e) {
+        if ("comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
+            boolean isMqtt5 = Version.MQTT_5.equals(versionComboBox.getSelectedItem());
+            cleanSessionCheckBox.setVisible(!isMqtt5);
+            if (isMqtt5) {
+                mainTabPanel.insertTab(LangUtil.getString("MQTT5Options"), null, mqtt5Panel, null, 1);
+            } else if (mainTabPanel.getComponentAt(1) == mqtt5Panel) {
+                mainTabPanel.removeTabAt(1);
+            }
+        }
+    }
+
+    private void willCheckboxChanged(ChangeEvent e) {
+        topicField.setEnabled(willEnableCheckBox.isSelected());
+        qosComboBox.setEnabled(willEnableCheckBox.isSelected());
+        retainedCheckBox.setEnabled(willEnableCheckBox.isSelected());
+        payloadField.setEnabled(willEnableCheckBox.isSelected());
+        willPayloadFormatComboBox.setEnabled(willEnableCheckBox.isSelected());
     }
 
     @SneakyThrows
@@ -616,51 +624,9 @@ public class ConnectionEditorForm extends JDialog {
                 buttonTest.setEnabled(false);
                 try {
                     if (properties.getVersion().equals(Version.MQTT_5)) {
-                        org.eclipse.paho.mqttv5.client.MqttClient mqttClient = new org.eclipse.paho.mqttv5.client.MqttClient(
-                            properties.completeServerURI(),
-                            properties.getClientId()
-                        );
-                        mqttClient.setTimeToWait(5000L);
-                        MqttConnectionOptions options = Mqtt5Options.fromProperties(properties);
-                        options.setConnectionTimeout(10);
-                        org.eclipse.paho.mqttv5.client.IMqttToken token = mqttClient.connectWithResult(options);
-                        token.waitForCompletion();
-                        if (token.getException() != null) {
-                            String causeMessage = token.getException().getMessage();
-                            if (token.getException().getCause() != null) {
-                                causeMessage = token.getException().getCause().getMessage();
-                            }
-                            Utils.Toast.warn(String.format(LangUtil.getString("TestConnectionFailed"), token.getException().getReasonCode(), causeMessage));
-                        } else {
-                            Utils.Toast.success(LangUtil.getString("TestConnectionSuccessful"));
-                        }
-                        if (mqttClient.isConnected()) {
-                            mqttClient.disconnect();
-                            mqttClient.close();
-                        }
+                        testMqttV5(properties);
                     } else {
-                        MqttClient mqttClient = new MqttClient(
-                            properties.completeServerURI(),
-                            properties.getClientId()
-                        );
-                        mqttClient.setTimeToWait(5000L);
-                        MqttConnectOptions options = Mqtt3Options.fromProperties(properties);
-                        options.setConnectionTimeout(10);
-                        IMqttToken token = mqttClient.connectWithResult(options);
-                        token.waitForCompletion();
-                        if (token.getException() != null) {
-                            String causeMessage = token.getException().getMessage();
-                            if (token.getException().getCause() != null) {
-                                causeMessage = token.getException().getCause().getMessage();
-                            }
-                            Utils.Toast.warn(String.format(LangUtil.getString("TestConnectionFailed"), token.getException().getReasonCode(), causeMessage));
-                        } else {
-                            Utils.Toast.success(LangUtil.getString("TestConnectionSuccessful"));
-                        }
-                        if (mqttClient.isConnected()) {
-                            mqttClient.disconnect();
-                            mqttClient.close(true);
-                        }
+                        testMqttV3(properties);
                     }
                 } catch (Exception e) {
                     Utils.Toast.warn(String.format(LangUtil.getString("TestConnectionError"), e.getMessage()));
@@ -668,6 +634,56 @@ public class ConnectionEditorForm extends JDialog {
                 buttonTest.setEnabled(true);
             });
         });
+    }
+
+    private void testMqttV5(MqttProperties properties) throws org.eclipse.paho.mqttv5.common.MqttException {
+        org.eclipse.paho.mqttv5.client.MqttClient mqttClient = new org.eclipse.paho.mqttv5.client.MqttClient(
+            properties.completeServerURI(),
+            properties.getClientId()
+        );
+        mqttClient.setTimeToWait(5000L);
+        MqttConnectionOptions options = Mqtt5Options.fromProperties(properties);
+        options.setConnectionTimeout(10);
+        org.eclipse.paho.mqttv5.client.IMqttToken token = mqttClient.connectWithResult(options);
+        token.waitForCompletion();
+        if (token.getException() != null) {
+            String causeMessage = token.getException().getMessage();
+            if (token.getException().getCause() != null) {
+                causeMessage = token.getException().getCause().getMessage();
+            }
+            Utils.Toast.warn(String.format(LangUtil.getString("TestConnectionFailed"), token.getException().getReasonCode(), causeMessage));
+        } else {
+            Utils.Toast.success(LangUtil.getString("TestConnectionSuccessful"));
+        }
+        if (mqttClient.isConnected()) {
+            mqttClient.disconnect();
+            mqttClient.close();
+        }
+    }
+
+    private void testMqttV3(MqttProperties properties) throws MqttException {
+        MqttClient mqttClient = new MqttClient(
+            properties.completeServerURI(),
+            properties.getClientId()
+        );
+        mqttClient.setTimeToWait(5000L);
+        MqttConnectOptions options = Mqtt3Options.fromProperties(properties);
+        options.setConnectionTimeout(10);
+        IMqttToken token = mqttClient.connectWithResult(options);
+        token.waitForCompletion();
+        if (token.getException() != null) {
+            String causeMessage = token.getException().getMessage();
+            if (token.getException().getCause() != null) {
+                causeMessage = token.getException().getCause().getMessage();
+            }
+            Utils.Toast.warn(String.format(LangUtil.getString("TestConnectionFailed"), token.getException().getReasonCode(), causeMessage));
+        } else {
+            Utils.Toast.success(LangUtil.getString("TestConnectionSuccessful"));
+        }
+        if (mqttClient.isConnected()) {
+            mqttClient.disconnect();
+            mqttClient.close(true);
+        }
     }
 
     private void onOk() {

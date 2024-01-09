@@ -2,7 +2,6 @@ package com.mqttinsight.ui.form;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.components.FlatTabbedPane;
-import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttProperties;
 import com.mqttinsight.mqtt.Version;
 import com.mqttinsight.ui.component.ShortcutManager;
@@ -38,7 +37,7 @@ public class MainWindowForm {
         final static MainWindowForm INSTANCE = new MainWindowForm();
     }
 
-    public static MainWindowForm getInstance() {
+    public static MainWindowForm instance() {
         return MainWindowFormHolder.INSTANCE;
     }
 
@@ -120,9 +119,6 @@ public class MainWindowForm {
                 }
                 afterConnected.run();
 
-                Configuration.instance().appendRecentConnection(mqttProperties.getId());
-                Configuration.instance().changed();
-
                 MqttInstanceTabPanel mqttInstance;
                 if (mqttProperties.getVersion().equals(Version.MQTT_5)) {
                     mqttInstance = Mqtt5InstanceTabPanel.newInstance(mqttProperties);
@@ -144,6 +140,15 @@ public class MainWindowForm {
                 }
             }
         });
+    }
+
+    public void fireCodecsChanged() {
+        for (int tabIndex = 0; tabIndex < tabPanel.getTabCount(); tabIndex++) {
+            if (isMqttInstanceAtTab(tabIndex)) {
+                MqttInstanceTabPanel mqttInstance = (MqttInstanceTabPanel) tabPanel.getComponentAt(tabIndex);
+                mqttInstance.fireCodecsChanged();
+            }
+        }
     }
 
     private void newSubscription() {
@@ -181,10 +186,13 @@ public class MainWindowForm {
         tabPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_TOOLTIPTEXT, LangUtil.getString("Close"));
         tabPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK, (BiConsumer<JTabbedPane, Integer>) (tabbedPane, tabIndex) -> {
             if (isMqttInstanceAtTab(tabIndex)) {
-                getMqttInstanceAtTab(tabIndex).close();
+                if (getMqttInstanceAtTab(tabIndex).close()) {
+                    tabPanel.removeTabAt(tabIndex);
+                    System.gc();
+                }
+            } else {
+                tabPanel.removeTabAt(tabIndex);
             }
-            tabPanel.removeTabAt(tabIndex);
-            System.gc();
         });
         contentPanel.add(tabPanel, BorderLayout.CENTER, 0);
     }

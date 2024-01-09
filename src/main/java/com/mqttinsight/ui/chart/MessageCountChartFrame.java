@@ -1,7 +1,6 @@
 package com.mqttinsight.ui.chart;
 
 import cn.hutool.core.img.ColorUtil;
-import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.mqtt.MqttMessage;
@@ -20,12 +19,9 @@ import org.knowm.xchart.style.Styler;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -36,7 +32,6 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     private JToggleButton pieChartButton;
     private JToggleButton barChartButton;
 
-    private ExecutorService executorService;
     private Map<String, AtomicInteger> seriesCache = new ConcurrentHashMap<>();
 
     private Chart chart;
@@ -57,8 +52,12 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
         createUIComponents();
         initComponents();
         initChart(ChartMode.PIE);
-        initMessageEvent();
         setTitle(String.format(LangUtil.getString("MessageCountStatisticsChartTitle"), mqttInstance.getProperties().getName()));
+    }
+
+    @Override
+    protected void bottomPanelResized(int width, int height) {
+        // do nothing
     }
 
     @Override
@@ -107,18 +106,21 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     }
 
     @Override
+    protected void beforeSeriesLoad(CountSeriesProperties series) {
+
+    }
+
+    @Override
     protected void onMessage(MqttMessage message) {
-        executorService.execute(() -> {
-            for (CountSeriesProperties series : seriesTableModel.getSeries()) {
-                if (series.isDynamic()) {
-                    dynamicSeries(series, message);
-                } else {
-                    if (messageMatchesSeries(series, message)) {
-                        saveOrUpdateSeriesData(series.getSeriesName());
-                    }
+        for (CountSeriesProperties series : seriesTableModel.getSeries()) {
+            if (series.isDynamic()) {
+                dynamicSeries(series, message);
+            } else {
+                if (messageMatchesSeries(series, message)) {
+                    saveOrUpdateSeriesData(series.getSeriesName());
                 }
             }
-        });
+        }
     }
 
     @Override
@@ -178,8 +180,9 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
                 .height(bottomPanel.getPreferredSize().height)
                 .build();
             pieChart.getStyler().setLabelType(PieStyler.LabelType.NameAndPercentage);
-            pieChart.getStyler().setLabelsDistance(1.1);
+            pieChart.getStyler().setLabelsDistance(1.15);
             pieChart.getStyler().setSliceBorderWidth(2);
+            pieChart.getStyler().setPlotContentSize(0.8);
             if (UIManager.getBoolean("laf.dark")) {
                 pieChart.getStyler().setLabelsFontColor(UIManager.getColor("Label.foreground"));
                 pieChart.getStyler().setLabelsFontColorAutomaticEnabled(false);
@@ -250,17 +253,6 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
         chartPanel.repaint();
     }
 
-    private void initMessageEvent() {
-        executorService = ThreadUtil.newFixedExecutor(1, "Count Chart ", false);
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                executorService.shutdown();
-                super.windowClosing(e);
-            }
-        });
-    }
-
     private void chartChanged(ActionEvent e) {
         ChartMode chartMode = pieChartButton.isSelected() ? ChartMode.PIE : ChartMode.BAR;
         initChart(chartMode);
@@ -285,7 +277,7 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
                     case JSON_PATH -> {
                         String payloadStr = message.payloadAsString(false);
                         MatchExpression expression = series.getMatchExpression();
-                        String seriesName = Utils.getByJsonPath(expression.getExpression(), payloadStr);
+                        String seriesName = Utils.getSingleValueByJsonPath(expression.getExpression(), payloadStr);
                         saveOrUpdateSeriesData(seriesName);
                     }
                     case XPATH -> {
@@ -355,8 +347,8 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     }
 
     private void createUIComponents() {
-        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
-        toolbar.add(toolBar$Separator3);
+        toolbar.addSeparator();
+
         pieChartButton = new JToggleButton(Icons.CHART_PIE);
         pieChartButton.setToolTipText(ChartMode.PIE.getText());
         barChartButton = new JToggleButton(Icons.CHART_BAR);

@@ -9,9 +9,9 @@ public class DecoderContext {
 
     private final Subscription subscription;
 
-    private final SimpleMqttMessage message;
+    private final MqttMessageWrapper message;
 
-    public DecoderContext(Subscription subscription, SimpleMqttMessage message) {
+    public DecoderContext(Subscription subscription, MqttMessageWrapper message) {
         this.subscription = subscription;
         this.message = message;
     }
@@ -20,7 +20,7 @@ public class DecoderContext {
         return subscription;
     }
 
-    public SimpleMqttMessage getMessage() {
+    public MqttMessageWrapper getMessage() {
         return message;
     }
 

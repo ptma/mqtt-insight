@@ -42,7 +42,7 @@ public class Subscription {
     private String payloadFormat;
 
     @Setter
-    private boolean muted;
+    private boolean visible = true;
 
     /**
      * 开始订阅的时间
@@ -73,6 +73,10 @@ public class Subscription {
 
     public void incrementMessageCount() {
         this.messageCount.incrementAndGet();
+    }
+
+    public void decrementMessageCount() {
+        this.messageCount.decrementAndGet();
     }
 
     public void resetMessageCount() {

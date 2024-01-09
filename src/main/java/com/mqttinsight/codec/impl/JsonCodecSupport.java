@@ -1,4 +1,7 @@
-package com.mqttinsight.codec;
+package com.mqttinsight.codec.impl;
+
+import com.mqttinsight.codec.CodecSupport;
+import com.mqttinsight.exception.CodecException;
 
 /**
  * @author ptma
@@ -21,11 +24,11 @@ public class JsonCodecSupport extends PlainCodecSupport implements CodecSupport 
     }
 
     @Override
-    public byte[] toPayload(String json) {
+    public byte[] toPayload(String json) throws CodecException {
         return super.toPayload(json);
     }
 
-    private String prettyPrint(String json) {
+    protected String prettyPrint(String json) {
         int indent = 0;
         boolean inString = false;
         boolean inEscape = false;

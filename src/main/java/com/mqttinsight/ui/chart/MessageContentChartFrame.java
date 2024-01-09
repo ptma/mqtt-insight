@@ -1,7 +1,6 @@
 package com.mqttinsight.ui.chart;
 
 import cn.hutool.core.img.ColorUtil;
-import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mqttinsight.MqttInsightApplication;
@@ -23,12 +22,9 @@ import org.knowm.xchart.style.Styler;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 /**
  * @author ptma
@@ -38,22 +34,23 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
 
     private PopupMenuButton seriesLimitButton;
 
-    private ExecutorService executorService;
     private XYChart chart;
     private XChartPanel chartPanel;
 
     private final static List<Limit> seriesLimitList = Arrays.asList(
+        Limit.of(0, 0, LangUtil.getString("Unlimited")),
         Limit.of(100, 0, "100 " + LangUtil.getString("DataPoints")),
         Limit.of(200, 0, "200 " + LangUtil.getString("DataPoints")),
         Limit.of(500, 0, "500 " + LangUtil.getString("DataPoints")),
         Limit.of(1000, 0, "1K " + LangUtil.getString("DataPoints")),
         Limit.of(0, 1000 * 60, "1 " + LangUtil.getString("Minutes")),
+        Limit.of(0, 1000 * 60 * 2, "2 " + LangUtil.getString("Minutes")),
         Limit.of(0, 1000 * 60 * 5, "5 " + LangUtil.getString("Minutes")),
         Limit.of(0, 1000 * 60 * 10, "10 " + LangUtil.getString("Minutes")),
         Limit.of(0, 1000 * 60 * 30, "30 " + LangUtil.getString("Minutes")),
         Limit.of(0, 1000 * 60 * 60, "1 " + LangUtil.getString("Hours"))
     );
-    private Limit defaultSeriesLimit = seriesLimitList.get(0);
+    private Limit defaultSeriesLimit = seriesLimitList.get(1);
 
 
     public static void open(MqttInstance mqttInstance) {
@@ -70,8 +67,12 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         createUIComponents();
         initComponents();
         initChart();
-        initMessageEvent();
         setTitle(String.format(LangUtil.getString("MessageContentStatisticsChartTitle"), mqttInstance.getProperties().getName()));
+    }
+
+    @Override
+    protected void bottomPanelResized(int width, int height) {
+        chart.getStyler().setPlotContentSize((width - 40d) / width);
     }
 
     @Override
@@ -117,27 +118,25 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
 
     @Override
     protected void onMessage(MqttMessage message) {
-        executorService.execute(() -> {
-            for (ValueSeriesProperties series : seriesTableModel.getSeries()) {
-                if (messageMatchesSeries(series, message)) {
-                    Number value = extractValue(series, message);
-                    if (value != null) {
-                        series.addXyData(new Date(message.getTimestamp()), value);
-                        if (!isPaused()) {
-                            if (chart.getSeriesMap().containsKey(series.getSeriesName())) {
-                                chart.updateXYSeries(series.getSeriesName(), series.xDataList(), series.yDataList(), null);
-                            } else {
-                                chart.addSeries(series.getSeriesName(), series.xDataList(), series.yDataList());
-                                XYSeries xySeries = chart.getSeriesMap().get(series.getSeriesName());
-                                xySeries.setSmooth(true);
-                            }
-                            chartPanel.revalidate();
-                            chartPanel.repaint();
+        for (ValueSeriesProperties series : seriesTableModel.getSeries()) {
+            if (messageMatchesSeries(series, message)) {
+                Number value = extractValue(series, message);
+                if (value != null) {
+                    series.addXyData(new Date(message.getTimestamp()), value);
+                    if (!isPaused()) {
+                        if (chart.getSeriesMap().containsKey(series.getSeriesName())) {
+                            chart.updateXYSeries(series.getSeriesName(), series.xDataList(), series.yDataList(), null);
+                        } else {
+                            chart.addSeries(series.getSeriesName(), series.xDataList(), series.yDataList());
+                            XYSeries xySeries = chart.getSeriesMap().get(series.getSeriesName());
+                            xySeries.setSmooth(true);
                         }
+                        chartPanel.revalidate();
+                        chartPanel.repaint();
                     }
                 }
             }
-        });
+        }
     }
 
     @Override
@@ -153,6 +152,11 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
     @Override
     protected AbstractSeriesTableModel<ValueSeriesProperties> createSeriesTableModel() {
         return new ValueSeriesTableModel();
+    }
+
+    @Override
+    protected void beforeSeriesLoad(ValueSeriesProperties series) {
+        series.setXYDataLimit(defaultSeriesLimit);
     }
 
     private void initComponents() {
@@ -177,17 +181,6 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
             }
         });
         seriesLimitButton.setText(defaultSeriesLimit.getName());
-    }
-
-    private void initMessageEvent() {
-        executorService = ThreadUtil.newFixedExecutor(1, "Value Chart ", false);
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                executorService.shutdown();
-                super.windowClosing(e);
-            }
-        });
     }
 
     private void initTableColumns() {
@@ -239,6 +232,8 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         chart.getStyler().setChartPadding(10);
         chart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideS);
         chart.getStyler().setLegendLayout(Styler.LegendLayout.Horizontal);
+        chart.getStyler().setLegendSeriesLineLength(12);
+        chart.getStyler().setMarkerSize(6);
         chart.getStyler().setToolTipsEnabled(true);
         chart.getStyler().setToolTipType(Styler.ToolTipType.xAndYLabels);
         chart.getStyler().setBaseFont(UIManager.getFont("Label.font"));
@@ -248,7 +243,6 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
 
             chart.getStyler().setPlotBackgroundColor(ColorUtil.hexToColor("#282c34"));
             chart.getStyler().setPlotBorderColor(UIManager.getColor("Component.borderColor"));
-            chart.getStyler().setPlotContentSize(0.8);
 
             chart.getStyler().setLegendBackgroundColor(ColorUtil.hexToColor("#282c34"));
             chart.getStyler().setLegendBorderColor(UIManager.getColor("Component.borderColor"));
@@ -260,6 +254,10 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
             chart.getStyler().setToolTipBackgroundColor(UIManager.getColor("ToolTip.background"));
             chart.getStyler().setToolTipFont(UIManager.getFont("ToolTip.font"));
             chart.getStyler().setToolTipBorderColor(UIManager.getColor("Component.borderColor"));
+
+            chart.getStyler().setCursorColor(Utils.brighter(UIManager.getColor("Component.borderColor"), 0.7f));
+        } else {
+            chart.getStyler().setCursorColor(Utils.darker(UIManager.getColor("Component.borderColor"), 0.7f));
         }
         chartPanel = new XChartPanel(chart);
         chartPanel.setSaveAsString(LangUtil.getString("SaveAs"));
@@ -282,7 +280,7 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         String value = switch (series.getExtractingMode()) {
             case PAYLOAD -> payload;
             case REGEXP -> Utils.findRegexMatchGroup(series.getExtractingExpression(), payload);
-            case JSON_PATH -> Utils.getByJsonPath(series.getExtractingExpression(), payload);
+            case JSON_PATH -> Utils.getSingleValueByJsonPath(series.getExtractingExpression(), payload);
             case XPATH -> Utils.getByXPath(series.getExtractingExpression(), payload);
         };
         return NumberUtil.isNumber(value) ? NumberUtil.parseNumber(value).doubleValue() : null;
@@ -297,8 +295,10 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
     }
 
     private void createUIComponents() {
-        toolbar.add(new JToolBar.Separator());
+        toolbar.addSeparator();
+
         seriesLimitButton = new PopupMenuButton("", Icons.CHART_LINE, true);
+        seriesLimitButton.setToolTipText(LangUtil.getString("XAxisDataQuantity"));
         toolbar.add(seriesLimitButton);
     }
 

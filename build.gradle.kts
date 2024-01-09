@@ -19,7 +19,7 @@ plugins {
 
 buildscript {
     repositories {
-        maven("https://maven.aliyun.com/repository/public/")
+        maven(url = "https://maven.aliyun.com/repository/public/")
         mavenLocal()
         mavenCentral()
         dependencies {
@@ -42,6 +42,7 @@ val copyright: String = "Copyright 2023 ptma@163.com"
 val supportUrl: String = "https://github.com/ptma/mqtt-insight"
 
 val flatlafVersion = "3.2.1"
+val javetVersion = "2.2.2"
 val fatJar = false
 
 val requireModules = listOf(
@@ -80,14 +81,14 @@ dependencies {
 
     implementation("com.jgoodies:jgoodies-forms:1.9.0")
     implementation("com.intellij:forms_rt:7.0.3") {
-        exclude("asm")
+        exclude(group = "asm", module = "asm-commons")
     }
     implementation("com.miglayout:miglayout-swing:11.1")
 
     implementation("com.fifesoft:rsyntaxtextarea:3.3.4")
     implementation(files("libs/swing-toast-notifications-1.0.1.jar"))
 
-    implementation("cn.hutool:hutool-json:5.8.20")
+    implementation("cn.hutool:hutool-core:5.8.24")
 
     implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
@@ -100,14 +101,33 @@ dependencies {
     implementation("org.eclipse.paho:org.eclipse.paho.mqttv5.client:1.2.5")
 
     if (OperatingSystem.current().isMacOsX()) {
-        implementation("com.caoccao.javet:javet-macos:2.2.2") // Mac OS (x86_64 and arm64)
+        implementation("com.caoccao.javet:javet-macos:${javetVersion}") // Mac OS (x86_64 and arm64)
     } else {
-        implementation("com.caoccao.javet:javet:2.2.2") // Linux and Windows (x86_64)
+        implementation("com.caoccao.javet:javet:${javetVersion}") // Linux and Windows (x86_64)
     }
-    implementation("org.knowm.xchart:xchart:3.8.5")
-    implementation("com.jayway.jsonpath:json-path:2.8.0")
+    implementation("org.knowm.xchart:xchart:3.8.6") {
+        exclude(group = "de.rototor.pdfbox", module = "graphics2d")
+        exclude(group = "com.madgag", module = "animated-gif-lib")
+    }
+    implementation("com.jayway.jsonpath:json-path:2.8.0") {
+        exclude(group = "net.minidev", module = "json-smart")
+    }
+
+    implementation("com.google.protobuf:protobuf-java:3.25.1")
+    implementation("org.msgpack:jackson-dataformat-msgpack:0.9.6")
+    implementation("org.apache.avro:avro:1.11.3") {
+        exclude(module = "commons-compress")
+    }
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-avro:2.15.2") {
+        exclude(module = "commons-compress")
+    }
+    implementation("com.caucho:hessian:4.0.66")
+    implementation("com.esotericsoftware:kryo:5.5.0")
 }
+
 repositories {
+    maven(url = "https://maven.aliyun.com/repository/public/")
+    mavenLocal()
     mavenCentral()
 }
 
@@ -167,9 +187,86 @@ configure<PackagePluginExtension> {
     jreDirectoryName("jre")
 }
 
+var taskPlatform = Platform.windows
+var taskPlatform_M1 = false
+tasks.register<Copy>("extractJavet") {
+    delete(layout.buildDirectory.dir("javet"))
 
+    if (taskPlatform == Platform.mac) {
+        from({
+            configurations.runtimeClasspath.get()
+                .filter { it.name.equals("javet-macos-${javetVersion}.jar") }
+                .map {
+                    zipTree(it).matching {
+                        if (taskPlatform_M1) {
+                            exclude("**/*x86_64.v.${javetVersion}.dylib")
+                        } else {
+                            exclude("**/*arm64.v.${javetVersion}.dylib")
+                        }
+                    }
+                }
+        })
+    } else {
+        from({
+            configurations.runtimeClasspath.get()
+                .filter { it.name.equals("javet-${javetVersion}.jar") }
+                .map {
+                    zipTree(it).matching {
+                        if (taskPlatform == Platform.windows) {
+                            exclude("**/*.so")
+                        } else if (taskPlatform == Platform.linux) {
+                            exclude("**/*.dll")
+                        }
+                    }
+                }
+        })
+    }
+    into(layout.buildDirectory.dir("javet"))
+}
+
+tasks.register<Jar>("repackJavet") {
+    if (taskPlatform == Platform.mac) {
+        archiveBaseName.set("javet-macos-${javetVersion}")
+    } else {
+        archiveBaseName.set("javet-${javetVersion}")
+    }
+    from(layout.buildDirectory.dir("javet"))
+    manifest.attributes["Automatic-Module-Name"] = "com.caoccao.javet"
+
+    dependsOn("extractJavet")
+}
+
+tasks.register<Copy>("replaceJavet") {
+    if (taskPlatform == Platform.mac) {
+        from(layout.buildDirectory.file("libs/javet-macos-${javetVersion}.jar"))
+    } else {
+        from(layout.buildDirectory.file("libs/javet-${javetVersion}.jar"))
+    }
+
+    into(layout.buildDirectory.dir("MqttInsight/libs"))
+
+    dependsOn("repackJavet")
+}
+
+tasks.register<Copy>("copyLibs") {
+    doLast {
+        val taskExtract = tasks.findByPath("extractJavet")
+        taskExtract?.actions?.forEach { action ->
+            action.execute(taskExtract)
+        }
+        val taskRepack = tasks.findByPath("repackJavet")
+        taskRepack?.actions?.forEach { action ->
+            action.execute(taskRepack)
+        }
+        val taskReplace = tasks.findByPath("replaceJavet")
+        taskReplace?.actions?.forEach { action ->
+            action.execute(taskReplace)
+        }
+    }
+}
 
 tasks.register<PackageTask>("packageForWindows") {
+    taskPlatform = Platform.windows
 
     val innoSetupLanguageMap = LinkedHashMap<String, String>()
     innoSetupLanguageMap["Chinese"] = "compiler:Languages\\ChineseSimplified.isl"
@@ -205,6 +302,8 @@ tasks.register<PackageTask>("packageForWindows") {
 }
 
 tasks.register<PackageTask>("packageForLinux") {
+    taskPlatform = Platform.linux
+
     description = "package For Linux"
     platform = Platform.linux
 
@@ -226,7 +325,10 @@ tasks.register<PackageTask>("packageForLinux") {
 }
 
 tasks.register<PackageTask>("packageForMac_M1") {
-    description = "package For Mac"
+    taskPlatform = Platform.mac
+    taskPlatform_M1 = true
+
+    description = "package For Mac M1"
     platform = Platform.mac
 
     organizationName = organization
@@ -244,6 +346,9 @@ tasks.register<PackageTask>("packageForMac_M1") {
 }
 
 tasks.register<PackageTask>("packageForMac") {
+    taskPlatform = Platform.mac
+    taskPlatform_M1 = true
+
     description = "package For Mac"
     platform = Platform.mac
 

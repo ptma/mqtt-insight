@@ -11,10 +11,10 @@ import javax.swing.*;
 @Getter
 public enum MessageType {
 
-    RECEIVED(Icons.ARROW_INCOMING),
-    PUBLISHED(Icons.ARROW_OUTGOING),
-    SCRIPT_DECODED(Icons.JAVASCRIPT_GREEN),
-    SCRIPT_PUBLISHED(Icons.JAVASCRIPT_ORANGE);
+    RECEIVED(Icons.INCOMING),
+    PUBLISHED(Icons.OUTGOING),
+    RECEIVED_SCRIPT(Icons.INCOMING_SCRIPT),
+    PUBLISHED_SCRIPT(Icons.OUTGOING_SCRIPT);
 
     private final Icon icon;
 

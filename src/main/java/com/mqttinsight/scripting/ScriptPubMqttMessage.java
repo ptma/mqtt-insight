@@ -8,7 +8,7 @@ import com.mqttinsight.mqtt.PublishedMqttMessage;
  */
 public class ScriptPubMqttMessage extends PublishedMqttMessage implements ScriptingMqttMessage {
 
-    private final MessageType messageType = MessageType.SCRIPT_PUBLISHED;
+    private final MessageType messageType = MessageType.PUBLISHED_SCRIPT;
 
     protected ScriptPubMqttMessage(String topic, byte[] payload, int qos, boolean retained, boolean duplicate, String format) {
         super(topic, payload, qos, retained, duplicate, format);

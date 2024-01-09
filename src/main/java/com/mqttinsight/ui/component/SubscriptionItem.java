@@ -4,6 +4,7 @@ import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.Subscription;
+import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.ui.event.InstanceEventListener;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Icons;
@@ -43,11 +44,12 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     private JToolBar toolBar;
     private JXLabel counterLabel;
     private JButton favoriteButton;
-    private JButton muteButton;
+    private JButton visibleButton;
     private PopupColorButton paletteButton;
     private PopupMenuButton moreButton;
     private JMenuItem unsubscribeMenu;
     private JMenuItem resubscribeMenu;
+    private JMenuItem exportMessageMenu;
     private JMenu formatMenu;
 
     public SubscriptionItem(MqttInstance mqttInstance, Subscription subscription) {
@@ -84,10 +86,10 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         favoriteButton.putClientProperty("FlatLaf.styleClass", "small");
         toolBar.add(favoriteButton);
 
-        muteButton = new JButton(Icons.EYE);
-        muteButton.setToolTipText(LangUtil.getString("Mute"));
-        muteButton.putClientProperty("FlatLaf.styleClass", "small");
-        toolBar.add(muteButton);
+        visibleButton = new JButton(Icons.EYE);
+        visibleButton.setToolTipText(LangUtil.getString("ShowOrHideMessages"));
+        visibleButton.putClientProperty("FlatLaf.styleClass", "small");
+        toolBar.add(visibleButton);
 
         paletteButton = new PopupColorButton(Icons.PALETTE, false);
         paletteButton.setMoreText(LangUtil.getString("MoreColor"));
@@ -121,8 +123,9 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         LangUtil.buttonText(clearMessageMenu, "ClearMessages");
         moreButton.addMenuItem(clearMessageMenu).addActionListener(this::clearMessages);
 
-        JMenuItem exportMessageMenu = new NormalMenuItem(Icons.EXPORT);
+        exportMessageMenu = new NormalMenuItem(Icons.EXPORT);
         LangUtil.buttonText(exportMessageMenu, "ExportMessages");
+        exportMessageMenu.setEnabled(false);
         moreButton.addMenuItem(exportMessageMenu).addActionListener(this::exportMessages);
 
         moreButton.addSeparator();
@@ -161,14 +164,15 @@ public class SubscriptionItem extends JPanel implements MouseListener {
             Configuration.instance().changed();
         });
 
-        muteButton.addActionListener(e -> {
-            if (subscription.isMuted()) {
-                subscription.setMuted(false);
-                muteButton.setIcon(Icons.EYE);
+        visibleButton.addActionListener(e -> {
+            if (subscription.isVisible()) {
+                subscription.setVisible(false);
+                visibleButton.setIcon(Icons.EYE_CLOSE);
             } else {
-                subscription.setMuted(true);
-                muteButton.setIcon(Icons.EYE_CLOSE);
+                subscription.setVisible(true);
+                visibleButton.setIcon(Icons.EYE);
             }
+            mqttInstance.getMessageTable().getTableModel().fireTableDataChanged();
         });
 
         paletteButton.addColorSelectionListener(color -> {
@@ -192,9 +196,16 @@ public class SubscriptionItem extends JPanel implements MouseListener {
                 }
             }
         });
+        mqttInstance.addEventListener(new InstanceEventAdapter() {
+            @Override
+            public void onCodecsChanged() {
+                loadFormatMenus();
+            }
+        });
     }
 
     private void loadFormatMenus() {
+        formatMenu.removeAll();
         ButtonGroup formatGroup = new ButtonGroup();
 
         JCheckBoxMenuItem formatMenuItem = new NormalCheckBoxMenuItem(CodecSupport.DEFAULT);
@@ -205,7 +216,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         formatMenu.add(formatMenuItem);
         formatGroup.add(formatMenuItem);
 
-        for (CodecSupport codecSupport : CodecSupports.instance().getCodes()) {
+        for (CodecSupport codecSupport : CodecSupports.instance().getCodecs()) {
             formatMenuItem = new NormalCheckBoxMenuItem(codecSupport.getName());
             formatMenuItem.addActionListener(this::payloadFormatChangeAction);
             if (codecSupport.getName().equals(subscription.getSelfPayloadFormat())) {
@@ -258,15 +269,15 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     }
 
     public void updateMessageCounter() {
-        if (subscription == null) {
-            if (counterLabel != null) {
-                counterLabel.setText("");
-            }
-        } else {
-            if (counterLabel != null) {
-                counterLabel.setText(String.valueOf(subscription.getMessageCount()));
-            }
+        if (counterLabel != null) {
+            counterLabel.setText(String.valueOf(subscription.getMessageCount()));
+            exportMessageMenu.setEnabled(subscription.getMessageCount().get() > 0);
         }
+    }
+
+    public void decrementMessageCount() {
+        subscription.decrementMessageCount();
+        updateMessageCounter();
     }
 
     public boolean hasSubscription(Subscription subscription) {
@@ -320,7 +331,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
 
         this.setBackground(bgColor);
         favoriteButton.setIcon(isFavorite() ? Icons.FAVORITE_FILL : Icons.FAVORITE);
-        muteButton.setIcon(subscription.isMuted() ? Icons.EYE_CLOSE : Icons.EYE);
+        visibleButton.setIcon(subscription.isVisible() ? Icons.EYE : Icons.EYE_CLOSE);
     }
 
     @Override

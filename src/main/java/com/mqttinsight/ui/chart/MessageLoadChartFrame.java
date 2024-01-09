@@ -9,6 +9,7 @@ import com.mqttinsight.ui.component.PopupMenuButton;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
+import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.jdesktop.swingx.table.TableColumnExt;
 import org.knowm.xchart.XChartPanel;
@@ -20,13 +21,10 @@ import org.knowm.xchart.style.Styler;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
@@ -38,7 +36,6 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
     private PopupMenuButton seriesIntervalButton;
     private PopupMenuButton seriesLimitButton;
 
-    private ExecutorService executorService;
     private ScheduledThreadPoolExecutor scheduledExecutor;
     private XYChart chart;
     private XChartPanel chartPanel;
@@ -48,6 +45,7 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
 
     private final static List<Duration> seriesIntervalList = Arrays.asList(
         Duration.of(1, TimeUnit.SECONDS),
+        Duration.of(2, TimeUnit.SECONDS),
         Duration.of(5, TimeUnit.SECONDS),
         Duration.of(10, TimeUnit.SECONDS),
         Duration.of(30, TimeUnit.SECONDS),
@@ -56,17 +54,19 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
     private Duration defaultSeriesInterval = seriesIntervalList.get(0);
 
     private final static List<Limit> seriesLimitList = Arrays.asList(
+        Limit.of(0, 0, LangUtil.getString("Unlimited")),
         Limit.of(100, 0, "100 " + LangUtil.getString("DataPoints")),
         Limit.of(200, 0, "200 " + LangUtil.getString("DataPoints")),
         Limit.of(500, 0, "500 " + LangUtil.getString("DataPoints")),
         Limit.of(1000, 0, "1K " + LangUtil.getString("DataPoints")),
         Limit.of(0, 1000 * 60, "1 " + LangUtil.getString("Minutes")),
+        Limit.of(0, 1000 * 60 * 2, "2 " + LangUtil.getString("Minutes")),
         Limit.of(0, 1000 * 60 * 5, "5 " + LangUtil.getString("Minutes")),
         Limit.of(0, 1000 * 60 * 10, "10 " + LangUtil.getString("Minutes")),
         Limit.of(0, 1000 * 60 * 30, "30 " + LangUtil.getString("Minutes")),
         Limit.of(0, 1000 * 60 * 60, "1 " + LangUtil.getString("Hours"))
     );
-    private Limit defaultSeriesLimit = seriesLimitList.get(0);
+    private Limit defaultSeriesLimit = seriesLimitList.get(1);
 
 
     public static void open(MqttInstance mqttInstance) {
@@ -83,8 +83,12 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         createUIComponents();
         initComponents();
         initChart();
-        initMessageEvent();
         setTitle(String.format(LangUtil.getString("MessageLoadStatisticsChartTitle"), mqttInstance.getProperties().getName()));
+    }
+
+    @Override
+    protected void bottomPanelResized(int width, int height) {
+        chart.getStyler().setPlotContentSize((width - 40d) / width);
     }
 
     @Override
@@ -130,13 +134,11 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
 
     @Override
     protected void onMessage(MqttMessage message) {
-        executorService.execute(() -> {
-            for (LoadSeriesProperties series : seriesTableModel.getSeries()) {
-                if (messageMatchesSeries(series, message)) {
-                    series.addMessageData(message.getTimestamp(), message.payloadSize());
-                }
+        for (LoadSeriesProperties series : seriesTableModel.getSeries()) {
+            if (messageMatchesSeries(series, message)) {
+                series.addMessageData(message.getTimestamp(), message.payloadSize());
             }
-        });
+        }
     }
 
     @Override
@@ -152,6 +154,11 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
     @Override
     protected AbstractSeriesTableModel<LoadSeriesProperties> createSeriesTableModel() {
         return new LoadSeriesTableModel();
+    }
+
+    @Override
+    protected void beforeSeriesLoad(LoadSeriesProperties series) {
+        series.setXYDataLimit(defaultSeriesLimit);
     }
 
     private void initComponents() {
@@ -203,18 +210,12 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         seriesLimitButton.setText(defaultSeriesLimit.getName());
     }
 
-    private void initMessageEvent() {
-        executorService = ThreadUtil.newFixedExecutor(1, "Load Chart ", false);
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                executorService.shutdown();
-                if (scheduledExecutor != null) {
-                    scheduledExecutor.shutdownNow();
-                }
-                super.windowClosing(e);
-            }
-        });
+    @Override
+    public void dispose() {
+        if (scheduledExecutor != null) {
+            scheduledExecutor.shutdownNow();
+        }
+        super.dispose();
     }
 
     private void initScheduledSeriesDataTasks(boolean reSchedule) {
@@ -289,6 +290,8 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         chart.getStyler().setChartPadding(10);
         chart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideS);
         chart.getStyler().setLegendLayout(Styler.LegendLayout.Horizontal);
+        chart.getStyler().setLegendSeriesLineLength(12);
+        chart.getStyler().setMarkerSize(6);
         chart.getStyler().setToolTipsEnabled(true);
         chart.getStyler().setToolTipType(Styler.ToolTipType.xAndYLabels);
         chart.getStyler().setBaseFont(UIManager.getFont("Label.font"));
@@ -298,7 +301,6 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
 
             chart.getStyler().setPlotBackgroundColor(ColorUtil.hexToColor("#282c34"));
             chart.getStyler().setPlotBorderColor(UIManager.getColor("Component.borderColor"));
-            chart.getStyler().setPlotContentSize(0.8);
 
             chart.getStyler().setLegendBackgroundColor(ColorUtil.hexToColor("#282c34"));
             chart.getStyler().setLegendBorderColor(UIManager.getColor("Component.borderColor"));
@@ -310,6 +312,10 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
             chart.getStyler().setToolTipBackgroundColor(UIManager.getColor("ToolTip.background"));
             chart.getStyler().setToolTipFont(UIManager.getFont("ToolTip.font"));
             chart.getStyler().setToolTipBorderColor(UIManager.getColor("Component.borderColor"));
+
+            chart.getStyler().setCursorColor(Utils.brighter(UIManager.getColor("Component.borderColor"), 0.7f));
+        } else {
+            chart.getStyler().setCursorColor(Utils.darker(UIManager.getColor("Component.borderColor"), 0.7f));
         }
         chartPanel = new XChartPanel(chart);
         chartPanel.setSaveAsString(LangUtil.getString("SaveAs"));
@@ -388,12 +394,14 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
     }
 
     private void createUIComponents() {
-        seriesIntervalButton = new PopupMenuButton("", Icons.CLOCK, true);
-        seriesLimitButton = new PopupMenuButton("", Icons.CHART_LINE, true);
+        toolbar.addSeparator();
 
-        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
-        toolbar.add(toolBar$Separator3);
+        seriesIntervalButton = new PopupMenuButton("", Icons.CLOCK, true);
+        seriesIntervalButton.setToolTipText(LangUtil.getString("RefreshFrequency"));
         toolbar.add(seriesIntervalButton);
+
+        seriesLimitButton = new PopupMenuButton("", Icons.CHART_LINE, true);
+        seriesLimitButton.setToolTipText(LangUtil.getString("XAxisDataQuantity"));
         toolbar.add(seriesLimitButton);
     }
 

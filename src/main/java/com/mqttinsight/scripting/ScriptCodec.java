@@ -1,14 +1,16 @@
 package com.mqttinsight.scripting;
 
-import cn.hutool.json.JSONUtil;
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.exceptions.JavetExecutionException;
 import com.caoccao.javet.values.V8Value;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.ReceivedMqttMessage;
 import com.mqttinsight.util.TopicUtil;
+import com.mqttinsight.util.Utils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -22,21 +24,14 @@ public class ScriptCodec {
     /**
      * Map<scriptPath, Map<topic, Function>>
      */
-    private final Map<String, Map<String, Function<SimpleMqttMessage, Object>>> decodersGroupMap = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, Function<MqttMessageWrapper, Object>>> decodersGroupMap = new ConcurrentHashMap<>();
 
     public ScriptCodec() {
     }
 
-    public void decode(ReceivedMqttMessage receivedMessage, Consumer<MqttMessage> decodedConsumer) {
+    public void executeDecode(ReceivedMqttMessage receivedMessage, Consumer<MqttMessage> decodedConsumer) {
         if (!decodersGroupMap.isEmpty()) {
-            SimpleMqttMessage mqttMessage = new SimpleMqttMessage(
-                receivedMessage.getTopic(),
-                receivedMessage.payloadAsBytes(),
-                receivedMessage.getQos(),
-                receivedMessage.isRetained(),
-                receivedMessage.isDuplicate()
-            );
-            DecoderContext context = new DecoderContext(receivedMessage.getSubscription(), mqttMessage);
+            DecoderContext context = new DecoderContext(receivedMessage.getSubscription(), MqttMessageWrapper.of(receivedMessage));
             decodersGroupMap.values().forEach(decodersMap -> {
                 decodersMap.forEach((key, decoder) -> {
                     try {
@@ -62,15 +57,15 @@ public class ScriptCodec {
         }
     }
 
-    public void decode(String scriptPath, Function<SimpleMqttMessage, Object> scriptingDecoder) {
+    public void decode(String scriptPath, Function<MqttMessageWrapper, Object> scriptingDecoder) {
         decode(scriptPath, "*", scriptingDecoder);
     }
 
-    public void decode(String scriptPath, String topic, Function<SimpleMqttMessage, Object> scriptingDecoder) {
+    public void decode(String scriptPath, String topic, Function<MqttMessageWrapper, Object> scriptingDecoder) {
         if (decodersGroupMap.containsKey(scriptPath)) {
             decodersGroupMap.get(scriptPath).put(topic, scriptingDecoder);
         } else {
-            Map<String, Function<SimpleMqttMessage, Object>> decodersMap = new ConcurrentHashMap<>();
+            Map<String, Function<MqttMessageWrapper, Object>> decodersMap = new ConcurrentHashMap<>();
             decodersMap.put(topic, scriptingDecoder);
             decodersGroupMap.put(scriptPath, decodersMap);
         }
@@ -84,23 +79,21 @@ public class ScriptCodec {
         decodersGroupMap.clear();
     }
 
-    private MqttMessage convert(DecoderContext context, Object data) {
+    private MqttMessage convert(DecoderContext context, Object data) throws JsonProcessingException {
         if (data == null) {
             return null;
         }
-        DecodedMqttMessage msg = DecodedMqttMessage.copyFrom(context.getMessage());
+        DecodedMqttMessage msg = DecodedMqttMessage.of(context.getSubscription(), context.getMessage());
         if (data instanceof String) {
-            msg.setSubscription(context.getSubscription());
             msg.setPayload(((String) data).getBytes());
         } else if (data instanceof Map) {
             Map<String, Object> map = (Map<String, Object>) data;
-            msg.setSubscription(context.getSubscription());
             if (map.containsKey("payload")) {
                 Object payload = map.get("payload");
                 if (payload instanceof String) {
                     msg.setPayload(((String) payload).getBytes());
                 } else {
-                    msg.setPayload(JSONUtil.toJsonStr(convertToJavaObject(payload)).getBytes());
+                    msg.setPayload(Utils.JSON.toString(convertToJavaObject(payload)).getBytes(StandardCharsets.UTF_8));
                     msg.setFormat(CodecSupport.JSON);
                 }
             }
@@ -114,7 +107,7 @@ public class ScriptCodec {
                 }
             }
         } else {
-            msg.setPayload(JSONUtil.toJsonStr(convertToJavaObject(data)).getBytes());
+            msg.setPayload(Utils.JSON.toString(convertToJavaObject(data)).getBytes(StandardCharsets.UTF_8));
             msg.setFormat(CodecSupport.JSON);
         }
         return msg;

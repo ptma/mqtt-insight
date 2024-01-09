@@ -7,6 +7,8 @@ import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.*;
 import com.mqttinsight.scripting.ScriptLoader;
+import com.mqttinsight.ui.chart.BaseChartFrame;
+import com.mqttinsight.ui.chart.series.SeriesProperties;
 import com.mqttinsight.ui.component.*;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
@@ -71,12 +73,15 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     private final List<InstanceEventListener> eventListeners;
 
+    private final List<BaseChartFrame> chartFrames;
+
     private ScriptLoader scriptLoader;
 
     public MqttInstanceTabPanel(MqttProperties properties) {
         super();
         this.properties = properties;
         eventListeners = new ArrayList<>();
+        chartFrames = new ArrayList<>();
         setLayout(new BorderLayout());
         $$$setupUI$$$();
         add(rootPanel, BorderLayout.CENTER);
@@ -230,7 +235,16 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     @Override
-    public void close() {
+    public boolean close() {
+        if (!chartFrames.isEmpty()) {
+            int opt = Utils.Message.confirm(LangUtil.getString("CloseTabConfirm"));
+            if (JOptionPane.NO_OPTION == opt) {
+                return false;
+            } else {
+                // 复制 list , 避免 ConcurrentModificationException
+                chartFrames.stream().toList().forEach(BaseChartFrame::dispose);
+            }
+        }
         if (scriptLoader != null) {
             scriptLoader.closeAll();
         }
@@ -238,6 +252,8 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             onConnectionChanged(ConnectionStatus.DISCONNECTING);
             disconnect(false);
         }
+        doClose();
+        return true;
     }
 
     @Override
@@ -257,7 +273,11 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     @Override
     public void applyEvent(Consumer<InstanceEventListener> action) {
-        eventListeners.forEach(action);
+        try {
+            eventListeners.forEach(action);
+        } catch (Exception e) {
+            log.warn(e.getMessage(), e);
+        }
     }
 
     protected int getReasonCode() {
@@ -302,7 +322,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
             subscribeButton.setEnabled(status.equals(ConnectionStatus.CONNECTED));
             subscriptionListPanel.onConnectionChanged(status);
-            MainWindowForm.getInstance().onConnectionChanged(this);
+            MainWindowForm.instance().onConnectionChanged(this);
         });
     }
 
@@ -336,12 +356,9 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         applyEvent(l -> l.onMessage(message));
         if (scriptLoader != null && message instanceof ReceivedMqttMessage) {
             ReceivedMqttMessage receivedMessage = (ReceivedMqttMessage) message;
-            if (receivedMessage.getSubscription() != null && receivedMessage.getSubscription().isMuted()) {
-                return;
-            }
             SwingUtilities.invokeLater(() -> {
                 try {
-                    scriptLoader.decode(receivedMessage, decodedMessage -> {
+                    scriptLoader.executeDecode(receivedMessage, decodedMessage -> {
                         if (decodedMessage != null) {
                             applyEvent(l -> l.onMessage(decodedMessage, message));
                         }
@@ -356,6 +373,8 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     public abstract boolean doPublishMessage(final PublishedMqttMessage message);
 
     public abstract boolean doSubscribe(final Subscription subscription);
+
+    public abstract void doClose();
 
     @Override
     public boolean subscribe(Subscription subscription) {
@@ -462,7 +481,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                     if (!isReload) {
                         applyEvent(l -> l.scriptLoaded(scriptFile));
                     }
-                    String message = LangUtil.format("ScriptSuccess", scriptFile.getAbsolutePath());
+                    String message = LangUtil.format("ScriptLoaded", scriptFile.getAbsolutePath());
                     log.info(message);
                     Utils.Toast.success(message);
                 } else if (result.getException() != null) {
@@ -483,7 +502,24 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     private void doScriptRemove(File scriptFile) {
         if (scriptLoader != null) {
             scriptLoader.removeScript(scriptFile.getAbsolutePath());
+            String message = LangUtil.format("ScriptRemoved", scriptFile.getAbsolutePath());
+            log.info(message);
+            Utils.Toast.success(message);
         }
+    }
+
+    public void fireCodecsChanged() {
+        applyEvent(InstanceEventListener::onCodecsChanged);
+    }
+
+    @Override
+    public void registerChartFrame(BaseChartFrame<? extends SeriesProperties> chartFrame) {
+        chartFrames.add(chartFrame);
+    }
+
+    @Override
+    public void unregisterChartFrame(BaseChartFrame<? extends SeriesProperties> chartFrame) {
+        chartFrames.remove(chartFrame);
     }
 
     /**

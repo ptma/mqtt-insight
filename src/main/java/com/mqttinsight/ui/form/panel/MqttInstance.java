@@ -1,6 +1,8 @@
 package com.mqttinsight.ui.form.panel;
 
 import com.mqttinsight.mqtt.*;
+import com.mqttinsight.ui.chart.BaseChartFrame;
+import com.mqttinsight.ui.chart.series.SeriesProperties;
 import com.mqttinsight.ui.component.MessageTable;
 import com.mqttinsight.ui.event.InstanceEventListener;
 
@@ -48,5 +50,9 @@ public interface MqttInstance {
 
     void publishMessage(PublishedMqttMessage message);
 
-    void close();
+    void registerChartFrame(BaseChartFrame<? extends SeriesProperties> chartFrame);
+
+    void unregisterChartFrame(BaseChartFrame<? extends SeriesProperties> chartFrame);
+
+    boolean close();
 }

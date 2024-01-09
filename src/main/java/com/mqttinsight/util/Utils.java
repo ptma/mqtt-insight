@@ -1,7 +1,17 @@
 package com.mqttinsight.util;
 
+import cn.hutool.core.img.ColorUtil;
 import cn.hutool.core.lang.PatternPool;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import com.jayway.jsonpath.spi.json.JsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import com.jayway.jsonpath.spi.mapper.MappingProvider;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.ui.component.NormalMenuItem;
 import com.mqttinsight.ui.form.InputDialog;
@@ -16,11 +26,16 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -31,9 +46,36 @@ import java.util.regex.Pattern;
  */
 public class Utils {
 
-    private static final Random RANDOM = new Random(System.currentTimeMillis());
+    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+
+    private static final Color DARKER_TEXT_COLOR = Color.BLACK;
+    private static final Color LIGHTER_TEXT_COLOR = ColorUtil.hexToColor("#ABB2BF");
 
     private static final Map<String, XPathExpression> XPATH_CACHE = new ConcurrentHashMap<>();
+
+    static {
+        // JsonPath default JsonProviders
+        Configuration.setDefaults(new Configuration.Defaults() {
+            private final JsonProvider jsonProvider = new JacksonJsonProvider();
+            private final MappingProvider mappingProvider = new JacksonMappingProvider();
+
+            @Override
+            public JsonProvider jsonProvider() {
+                return jsonProvider;
+            }
+
+            @Override
+            public MappingProvider mappingProvider() {
+                return mappingProvider;
+            }
+
+            @Override
+            public Set<Option> options() {
+                return EnumSet.noneOf(Option.class);
+            }
+        });
+    }
 
     public static class Toast {
 
@@ -221,6 +263,34 @@ public class Utils {
             }
             return menuItem;
         }
+
+        public static JMenuItem createMenuItem(String menuText, Action action) {
+            JMenuItem menuItem = new NormalMenuItem();
+            if (action != null) {
+                menuItem.setAction(action);
+            }
+            Utils.UI.buttonText(menuItem, menuText);
+            return menuItem;
+        }
+    }
+
+    public static class JSON {
+        
+        public static <T> T readObject(File jsonFile, Class<T> valueType) throws IOException {
+            return JSON_MAPPER.readValue(jsonFile, valueType);
+        }
+
+        public static String toString(Object object) throws JsonProcessingException {
+            return JSON_MAPPER.writeValueAsString(object);
+        }
+
+        public static ObjectNode toObject(String jsonString) throws JsonProcessingException {
+            return JSON_MAPPER.readValue(jsonString, ObjectNode.class);
+        }
+
+        public static <T> T toObject(String jsonString, Class<T> valueType) throws JsonProcessingException {
+            return JSON_MAPPER.readValue(jsonString, valueType);
+        }
     }
 
     public static Color brighter(Color color, float factor) {
@@ -259,7 +329,7 @@ public class Utils {
         float lightness = (RANDOM.nextInt(40) + 30) / 100f;//0.3--0.7
         float randomHue = RANDOM.nextInt(360) / 360f;
         Color color = ColorUtilities.HSLtoRGB(randomHue, 1.0f, lightness);
-        int randomAlpha = RANDOM.nextInt(20) + 20; // 20--40
+        int randomAlpha = RANDOM.nextInt(30) + 10; // 10--40
         return Utils.mixColorsWithAlpha(UIManager.getColor("Table.background"), color, randomAlpha);
     }
 
@@ -273,7 +343,7 @@ public class Utils {
 
     public static Color getReverseForegroundColor(Color color) {
         float grayLevel = (color.getRed() * 299 + color.getGreen() * 587 + color.getBlue() * 114) / 1000f / 255;
-        return grayLevel >= 0.45 ? Color.BLACK : Color.WHITE;
+        return grayLevel >= 0.45 ? DARKER_TEXT_COLOR : LIGHTER_TEXT_COLOR;
     }
 
     public static String md5(String content) throws NoSuchAlgorithmException {
@@ -307,9 +377,15 @@ public class Utils {
         }
     }
 
-    public static String getByJsonPath(String jsonPath, String source) {
+    public static String getSingleValueByJsonPath(String jsonPath, String source) {
         try {
-            return JsonPath.read(source, jsonPath).toString();
+            Object value = JsonPath.read(source, jsonPath);
+            if (value instanceof List) {
+                java.util.List list = (java.util.List) value;
+                return list.isEmpty() ? "" : list.get(0).toString();
+            } else {
+                return value.toString();
+            }
         } catch (Exception ignore) {
             return null;
         }

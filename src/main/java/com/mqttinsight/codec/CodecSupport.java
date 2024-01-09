@@ -1,5 +1,7 @@
 package com.mqttinsight.codec;
 
+import com.mqttinsight.exception.CodecException;
+
 /**
  * Encoder and decoder support
  *
@@ -18,11 +20,15 @@ public interface CodecSupport {
 
     /**
      * SyntaxEditingStyle for RSyntaxTextArea
-     *
-     * @link <a href="https://javadoc.fifesoft.com/rsyntaxtextarea/org/fife/ui/rsyntaxtextarea/RSyntaxTextArea.html#setSyntaxEditingStyle(java.lang.String)">RSyntaxTextArea.setSyntaxEditingStyle</a>
-     * @see org.fife.ui.rsyntaxtextarea.RSyntaxTextArea#setSyntaxEditingStyle(String)
+     * <p>
+     * {@link org.fife.ui.rsyntaxtextarea.RSyntaxTextArea#getSyntaxEditingStyle()}
+     * {@link org.fife.ui.rsyntaxtextarea.SyntaxConstants}
      */
     String getSyntax();
+
+    default boolean encodable() {
+        return true;
+    }
 
     /**
      * Decode payload into text
@@ -48,5 +54,5 @@ public interface CodecSupport {
      * @param text Inputted text
      * @return Payload buffer bytes
      */
-    byte[] toPayload(String text);
+    byte[] toPayload(String text) throws CodecException;
 }

@@ -10,6 +10,7 @@ import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.Subscription;
+import com.mqttinsight.ui.component.model.MessageTableModel;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.ui.event.InstanceEventListener;
@@ -18,6 +19,7 @@ import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import org.jdesktop.swingx.search.PatternModel;
+import org.jdesktop.swingx.sort.RowFilters;
 
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
@@ -335,13 +337,18 @@ public class MessageToolbar extends JToolBar {
             public void scriptLoaded(File scriptFile) {
                 onScriptLoaded(scriptFile);
             }
+
+            @Override
+            public void onCodecsChanged() {
+                loadFormatMenus();
+            }
         });
     }
 
     private void loadFormatMenus() {
         formatMenu.removeAll();
         ButtonGroup formatGroup = new ButtonGroup();
-        for (CodecSupport codecSupport : CodecSupports.instance().getCodes()) {
+        for (CodecSupport codecSupport : CodecSupports.instance().getCodecs()) {
             JCheckBoxMenuItem formatMenuItem = new NormalCheckBoxMenuItem(codecSupport.getName());
             formatMenuItem.addActionListener(this::payloadFormatChangeAction);
             if (codecSupport.getName().equals(mqttInstance.getPayloadFormat())) {
@@ -439,6 +446,7 @@ public class MessageToolbar extends JToolBar {
 
     public void focusSearch() {
         searchField.requestFocus();
+        searchField.selectAll();
     }
 
     /**
@@ -512,7 +520,10 @@ public class MessageToolbar extends JToolBar {
     }
 
     public void doFilter() {
-        RowFilter rowFilter = RowFilter.regexFilter(searchPatternModel.getPattern().pattern());
+        RowFilter rowFilter = RowFilters.regexFilter(searchPatternModel.getPattern(),
+            MessageTableModel.COLUMN_TOPIC,
+            MessageTableModel.COLUMN_PAYLOAD
+        );
         mqttInstance.getMessageTable().setRowFilter(rowFilter);
     }
 

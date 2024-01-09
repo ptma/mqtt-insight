@@ -63,6 +63,9 @@ public class TableViewRendererProvider extends ComponentProvider<JLabel> {
         JXTable table = (JXTable) context.getComponent();
         int modelIndex = table.convertRowIndexToModel(context.getRow());
         MqttMessage message = tableModel.get(modelIndex);
+        if (message == null) {
+            return;
+        }
         if (context.isSelected()) {
             rendererComponent.setForeground(table.getSelectionForeground());
             rendererComponent.setBackground(table.getSelectionBackground());

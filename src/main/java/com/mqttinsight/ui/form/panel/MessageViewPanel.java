@@ -2,7 +2,7 @@ package com.mqttinsight.ui.form.panel;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
@@ -18,6 +18,7 @@ import com.mqttinsight.ui.event.InstanceEventListener;
 import com.mqttinsight.util.Const;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 /**
  * @author ptma
  */
+@Slf4j
 public class MessageViewPanel {
 
     private final MqttInstance mqttInstance;
@@ -255,7 +257,15 @@ public class MessageViewPanel {
                     lines.append(
                         exportingMessages
                             .stream()
-                            .map(m -> JSONUtil.parse(m).toJSONString(0))
+                            .map(m -> {
+                                try {
+                                    return Utils.JSON.toString(m);
+                                } catch (JsonProcessingException e) {
+                                    log.error(e.getMessage(), e);
+                                    Utils.Toast.error(e.getMessage());
+                                    throw new RuntimeException(e);
+                                }
+                            })
                             .collect(Collectors.joining(",\n"))
                     );
                     lines.append("\n]");
@@ -264,7 +274,15 @@ public class MessageViewPanel {
                     lines.append(
                         exportingMessages
                             .stream()
-                            .map(m -> JSONUtil.parse(m).toJSONString(0))
+                            .map(m -> {
+                                try {
+                                    return Utils.JSON.toString(m);
+                                } catch (JsonProcessingException e) {
+                                    log.error(e.getMessage(), e);
+                                    Utils.Toast.error(e.getMessage());
+                                    throw new RuntimeException(e);
+                                }
+                            })
                             .collect(Collectors.joining("\n"))
                     );
             }
@@ -277,12 +295,6 @@ public class MessageViewPanel {
      */
     private void messageReceived(MqttMessage message, MqttMessage parent) {
         SwingUtilities.invokeLater(() -> {
-            if (message instanceof ReceivedMqttMessage) {
-                ReceivedMqttMessage receivedMessage = (ReceivedMqttMessage) message;
-                if (receivedMessage.getSubscription() != null && receivedMessage.getSubscription().isMuted()) {
-                    return;
-                }
-            }
             if (parent != null) {
                 int parentIndex = messageTableModel.lastIndexOf(parent);
                 if (parentIndex >= 0) {

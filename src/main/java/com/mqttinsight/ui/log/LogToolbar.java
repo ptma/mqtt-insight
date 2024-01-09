@@ -177,6 +177,7 @@ public class LogToolbar extends JPanel {
 
     public void focusSearch() {
         searchField.requestFocus();
+        searchField.selectAll();
     }
 
     public void find(boolean forward) {

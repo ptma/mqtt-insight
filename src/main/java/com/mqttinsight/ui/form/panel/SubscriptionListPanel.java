@@ -5,6 +5,7 @@ import com.mqttinsight.mqtt.ConnectionStatus;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.ReceivedMqttMessage;
 import com.mqttinsight.mqtt.Subscription;
+import com.mqttinsight.scripting.DecodedMqttMessage;
 import com.mqttinsight.ui.component.SubscriptionItem;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import lombok.Getter;
@@ -68,6 +69,18 @@ public class SubscriptionListPanel {
                         listItem.resetMessageCount();
                     }
                 });
+            }
+
+            @Override
+            public void onMessageRemoved(MqttMessage message) {
+                if (message instanceof ReceivedMqttMessage && !(message instanceof DecodedMqttMessage)) {
+                    for (SubscriptionItem item : subscriptions) {
+                        if (item.hasSubscription(((ReceivedMqttMessage) message).getSubscription())) {
+                            item.decrementMessageCount();
+                            break;
+                        }
+                    }
+                }
             }
         });
     }

@@ -1,4 +1,7 @@
-package com.mqttinsight.codec;
+package com.mqttinsight.codec.impl;
+
+import com.mqttinsight.codec.CodecSupport;
+import com.mqttinsight.exception.CodecException;
 
 import java.nio.charset.StandardCharsets;
 
@@ -23,7 +26,7 @@ public class PlainCodecSupport implements CodecSupport {
     }
 
     @Override
-    public byte[] toPayload(String text) {
+    public byte[] toPayload(String text) throws CodecException {
         return text == null ? new byte[0] : text.getBytes(StandardCharsets.UTF_8);
     }
 }

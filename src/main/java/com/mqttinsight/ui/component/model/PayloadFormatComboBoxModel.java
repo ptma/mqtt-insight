@@ -19,13 +19,15 @@ public class PayloadFormatComboBoxModel extends AbstractListModel<String> implem
     protected final List<String> data;
     protected String selected;
 
-    public PayloadFormatComboBoxModel(boolean withDefault) {
+    public PayloadFormatComboBoxModel(boolean withDefault, boolean filterByEncodable) {
         data = new ArrayList<>();
         if (withDefault) {
             data.add(CodecSupport.DEFAULT);
         }
-        CodecSupports.instance().getCodes().forEach(codecSupport -> {
-            data.add(codecSupport.getName());
+        CodecSupports.instance().getCodecs().forEach(codecSupport -> {
+            if (!filterByEncodable || codecSupport.encodable()) {
+                data.add(codecSupport.getName());
+            }
         });
         if (data.size() > 0) {
             selected = data.get(0);

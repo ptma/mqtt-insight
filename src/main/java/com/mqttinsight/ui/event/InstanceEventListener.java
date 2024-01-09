@@ -26,6 +26,8 @@ public interface InstanceEventListener {
 
     void clearMessages(Subscription subscription);
 
+    void onMessageRemoved(MqttMessage message);
+
     void exportAllMessages();
 
     void exportMessages(Subscription subscription);
@@ -45,4 +47,6 @@ public interface InstanceEventListener {
     void fireScriptRemove(File scriptFile);
 
     void fireScriptReload(File scriptFile);
+
+    void onCodecsChanged();
 }

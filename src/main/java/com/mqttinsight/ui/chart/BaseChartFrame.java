@@ -1,5 +1,6 @@
 package com.mqttinsight.ui.chart;
 
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mqttinsight.config.Configuration;
@@ -26,6 +27,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @author ptma
@@ -47,6 +49,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     private JButton pauseButton;
     protected AbstractSeriesTableModel<T> seriesTableModel;
     protected InstanceEventAdapter eventAdapter;
+    private ExecutorService executorService;
     @Getter
     private boolean paused = false;
 
@@ -56,11 +59,19 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
         $$$setupUI$$$();
         setIconImages(Icons.WINDOW_ICON);
         setContentPane(contentPanel);
-
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         initComponents();
         initMessageEvent();
         loadFavoriteSeries();
         applyLanguage();
+        mqttInstance.registerChartFrame(this);
+
+        bottomPanel.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent evt) {
+                Component c = (Component) evt.getSource();
+                bottomPanelResized(c.getWidth(), c.getHeight());
+            }
+        });
     }
 
     /**
@@ -89,6 +100,11 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     protected abstract AbstractSeriesTableModel<T> createSeriesTableModel();
 
     /**
+     * 系列加载到表格前调用, 子类可以对系列做一些处理
+     */
+    protected abstract void beforeSeriesLoad(T series);
+
+    /**
      * 接收到 MQTT 消息时调用，子类实现具体的业务逻辑。
      *
      * @param message MQTT消息
@@ -101,6 +117,8 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     protected abstract List<FavoriteSeries<T>> getFavoriteSeries();
 
     protected abstract void saveSeriesToFavorite(List<FavoriteSeries<T>> favoriteSeries);
+
+    protected abstract void bottomPanelResized(int width, int height);
 
     private void applyLanguage() {
         setTitle(String.format(LangUtil.getString("MessageCountStatisticsChartTitle"), mqttInstance.getProperties().getName()));
@@ -208,20 +226,25 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     }
 
     private void initMessageEvent() {
+        // Create a thread pool first, then add event listeners
+        executorService = ThreadUtil.newFixedExecutor(1, "Chart ", false);
         eventAdapter = new InstanceEventAdapter() {
             @Override
             public void onMessage(MqttMessage message) {
-                BaseChartFrame.this.onMessage(message);
+                executorService.execute(() -> {
+                    BaseChartFrame.this.onMessage(message);
+                });
             }
         };
         mqttInstance.addEventListener(eventAdapter);
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                mqttInstance.removeEventListener(eventAdapter);
-                super.windowClosing(e);
-            }
-        });
+    }
+
+    @Override
+    public void dispose() {
+        mqttInstance.removeEventListener(eventAdapter);
+        mqttInstance.unregisterChartFrame(BaseChartFrame.this);
+        executorService.shutdown();
+        super.dispose();
     }
 
     void loadFavoriteSeries() {
@@ -235,6 +258,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
                 menuItem.addActionListener(e -> {
                     seriesTableModel.removeAll();
                     for (T series : item.getSeries()) {
+                        beforeSeriesLoad(series);
                         seriesTableModel.addRow(series);
                     }
                     resetChartButton.doClick();
@@ -279,7 +303,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
                         MatchExpression expression = series.getMatchExpression();
                         ValueComparator comparator = expression.getComparator();
                         String expectedValue = expression.getValue();
-                        String readValue = Utils.getByJsonPath(expression.getExpression(), payloadStr);
+                        String readValue = Utils.getSingleValueByJsonPath(expression.getExpression(), payloadStr);
                         return ValueComparator.match(comparator, expectedValue, readValue);
                     }
                     case XPATH -> {
