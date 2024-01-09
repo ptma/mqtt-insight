@@ -199,9 +199,9 @@ tasks.register<Copy>("extractJavet") {
                 .map {
                     zipTree(it).matching {
                         if (taskPlatform_M1) {
-                            exclude("**/*x86_64.v.${javetVersion}.dylib")
+                            exclude("**/*x86_64.*.dylib")
                         } else {
-                            exclude("**/*arm64.v.${javetVersion}.dylib")
+                            exclude("**/*arm64.*.dylib")
                         }
                     }
                 }
