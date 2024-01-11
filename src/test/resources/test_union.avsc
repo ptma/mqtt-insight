@@ -1,0 +1,19 @@
+[
+{"namespace": "com.mqttinsight.codec",
+ "type": "record",
+ "name": "AvroPojo2",
+ "fields": [
+     {"name": "name", "type": "string"},
+     {"name": "age",  "type": "int"}
+ ]
+},
+{"namespace": "com.mqttinsight.codec",
+ "type": "record",
+ "name": "AvroPojo",
+ "fields": [
+     {"name": "name", "type": "string"},
+     {"name": "favorite_number",  "type": ["int", "null"]},
+     {"name": "favorite_color", "type": ["string", "null"]}
+ ]
+}
+]
