@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 @AllArgsConstructor(staticName = "of")
@@ -20,6 +21,8 @@ public class MessageElement implements TypeElement {
     private final List<TypeElement> nestedElements = new ArrayList<>();
     private final List<ExtensionsElement> extensions = new ArrayList<>();
     private final List<OptionElement> options = new ArrayList<>();
+
+    private final AtomicInteger hitCount = new AtomicInteger(0);
 
     @Override
     public String getDocumentation() {
@@ -49,6 +52,14 @@ public class MessageElement implements TypeElement {
 
     public void addOption(OptionElement option) {
         options.add(Element.checkNotNull(option, "option"));
+    }
+
+    public int incrementHitCount() {
+        return hitCount.incrementAndGet();
+    }
+
+    public int getHitCount() {
+        return hitCount.get();
     }
 
     static void validateFieldTagUniqueness(String qualifiedName, List<FieldElement> fields, List<OneOfElement> oneOfs) {
@@ -84,4 +95,5 @@ public class MessageElement implements TypeElement {
 
         return this;
     }
+
 }

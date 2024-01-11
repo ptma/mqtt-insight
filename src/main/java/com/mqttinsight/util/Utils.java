@@ -3,7 +3,10 @@ package com.mqttinsight.util;
 import cn.hutool.core.img.ColorUtil;
 import cn.hutool.core.lang.PatternPool;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
@@ -47,7 +50,15 @@ import java.util.regex.Pattern;
 public class Utils {
 
     private static final SecureRandom RANDOM = new SecureRandom();
-    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+    private static final ObjectMapper JSON_MAPPER = JsonMapper.builder()
+        .enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS)
+        .enable(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER)
+        .enable(JsonReadFeature.ALLOW_TRAILING_COMMA)
+        .enable(JsonReadFeature.ALLOW_SINGLE_QUOTES)
+        .enable(JsonReadFeature.ALLOW_UNQUOTED_FIELD_NAMES)
+        .enable(JsonReadFeature.ALLOW_MISSING_VALUES)
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        .build();
 
     private static final Color DARKER_TEXT_COLOR = Color.BLACK;
     private static final Color LIGHTER_TEXT_COLOR = ColorUtil.hexToColor("#ABB2BF");
@@ -275,7 +286,7 @@ public class Utils {
     }
 
     public static class JSON {
-        
+
         public static <T> T readObject(File jsonFile, Class<T> valueType) throws IOException {
             return JSON_MAPPER.readValue(jsonFile, valueType);
         }
