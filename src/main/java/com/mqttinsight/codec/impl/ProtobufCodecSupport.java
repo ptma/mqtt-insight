@@ -28,7 +28,7 @@ public class ProtobufCodecSupport extends JsonCodecSupport implements DynamicCod
         this.instantiated = false;
     }
 
-    private ProtobufCodecSupport(String name, String protoFile) throws SchemaLoadException {
+    public ProtobufCodecSupport(String name, String protoFile) throws SchemaLoadException {
         this.name = name;
         this.protoFile = protoFile;
         this.dynamicProtoSchema = new DynamicProtoSchema(this.protoFile);

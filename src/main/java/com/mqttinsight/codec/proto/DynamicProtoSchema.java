@@ -1,5 +1,6 @@
 package com.mqttinsight.codec.proto;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
 import com.google.protobuf.DynamicMessage;
@@ -13,6 +14,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * @author ptma
+ */
 @Slf4j
 public class DynamicProtoSchema {
 
@@ -36,15 +40,14 @@ public class DynamicProtoSchema {
     public Map<String, Object> parse(byte[] binary) throws ProtoParseException {
         DynamicMessage dynamicMessage = null;
         MessageElement messageElement = null;
-        for (TypeElement type : proto.getTypes()) {
-            if (type instanceof MessageElement) {
-                DynamicMessage tempMessage = tryBuildMessage(type.getName(), binary);
-                if (tempMessage != null) {
-                    dynamicMessage = tempMessage;
-                    messageElement = (MessageElement) type;
-                    if (dynamicMessage.getUnknownFields().asMap().isEmpty()) {
-                        break;
-                    }
+        for (MessageElement type : proto.getMessages()) {
+            DynamicMessage tempMessage = tryBuildMessage(type.getName(), binary);
+            if (tempMessage != null) {
+                dynamicMessage = tempMessage;
+                messageElement = (MessageElement) type;
+                if (dynamicMessage.getUnknownFields().asMap().isEmpty()) {
+                    messageElement.incrementHitCount();
+                    break;
                 }
             }
         }
@@ -54,9 +57,13 @@ public class DynamicProtoSchema {
 
         Map<String, Object> objectMap = new HashMap<>();
         dynamicMessage.getAllFields().forEach((k, v) -> {
-            objectMap.put(k.getName(), v);
+            if (v instanceof ByteString) {
+                objectMap.put(k.getName(), ((ByteString) v).toByteArray());
+            } else {
+                objectMap.put(k.getName(), v);
+            }
         });
-        if (dynamicMessage.getAllFields().size() != messageElement.getFields().size()) {
+        if (dynamicMessage.getAllFields().size() < messageElement.getFields().size()) {
             Set<String> fieldSet = dynamicMessage.getAllFields()
                 .keySet()
                 .stream()

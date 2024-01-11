@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,4 +66,11 @@ public class Proto {
         options.add(Element.checkNotNull(option, "option"));
     }
 
+    public List<MessageElement> getMessages() {
+        return types.stream()
+            .filter(e -> e instanceof MessageElement)
+            .map(e -> (MessageElement) e)
+            .sorted(Comparator.comparingInt(MessageElement::getHitCount).reversed())
+            .toList();
+    }
 }

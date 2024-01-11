@@ -2,29 +2,26 @@ package com.mqttinsight.codec;
 
 import com.mqttinsight.codec.impl.AvroCodecSupport;
 import com.mqttinsight.exception.CodecException;
+import com.mqttinsight.util.Utils;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 class AvroCodecSupportTest {
 
-    private AvroCodecSupport codecSupport;
-
-    @BeforeEach
-    void init() {
-        String filename = getClass().getResource("/test.avsc").getFile();
-        codecSupport = new AvroCodecSupport("Test", filename);
-    }
-
     @Test
-    void test() throws IOException, CodecException {
+    void testPojo() throws IOException, CodecException {
+        String filename = getClass().getResource("/test.avsc").getFile();
+        AvroCodecSupport codecSupport = new AvroCodecSupport("Test", filename);
+
         AvroPojo pojo = new AvroPojo();
         pojo.setName("Ben");
         pojo.setFavoriteNumber(7);
@@ -41,8 +38,44 @@ class AvroCodecSupportTest {
             byte[] encoded2 = codecSupport.toPayload(json);
 
             Assertions.assertArrayEquals(encoded, encoded2);
-
         }
     }
 
+    @Test
+    void testUnionPojo() throws IOException, CodecException {
+        String filename = getClass().getResource("/test_union.avsc").getFile();
+        AvroCodecSupport codecSupport = new AvroCodecSupport("Test", filename);
+
+        Map<String, Object> pojo = new HashMap<>();
+        pojo.put("name", "Jack");
+        pojo.put("favorite_number", 9);
+        pojo.put("favorite_color", "red");
+
+        String pojoJson = Utils.JSON.toString(pojo);
+        byte[] encoded = codecSupport.toPayload(pojoJson);
+        String decodedJson = codecSupport.toString(encoded);
+
+        Map<String, Object> decodedMap = Utils.JSON.toObject(decodedJson, HashMap.class);
+        Assertions.assertEquals(decodedMap.get("name"), "Jack");
+        Assertions.assertEquals(decodedMap.get("favorite_number"), 9);
+        Assertions.assertEquals(decodedMap.get("favorite_color"), "red");
+    }
+
+    @Test
+    void testUnionPojo2() throws IOException, CodecException {
+        String filename = getClass().getResource("/test_union.avsc").getFile();
+        AvroCodecSupport codecSupport = new AvroCodecSupport("Test", filename);
+
+        Map<String, Object> pojo = new HashMap<>();
+        pojo.put("name", "John");
+        pojo.put("age", 30);
+
+        String pojoJson = Utils.JSON.toString(pojo);
+        byte[] encoded = codecSupport.toPayload(pojoJson);
+        String decodedJson = codecSupport.toString(encoded);
+
+        Map<String, Object> decodedMap = Utils.JSON.toObject(decodedJson, HashMap.class);
+        Assertions.assertEquals(decodedMap.get("name"), "John");
+        Assertions.assertEquals(decodedMap.get("age"), 30);
+    }
 }

@@ -478,14 +478,16 @@ public final class ProtoParser {
 
     private void addToList(List<Object> list, Object value) {
         if (value instanceof List) {
-            list.addAll((List) value);
+            list.addAll((List<?>) value);
         } else {
             list.add(value);
         }
     }
 
     private List<Object> readList() {
-        if (readChar() != '[') throw new AssertionError();
+        if (readChar() != '[') {
+            throw new AssertionError();
+        }
         List<Object> result = new ArrayList<>();
         while (true) {
             if (peekChar() == ']') {
@@ -669,74 +671,7 @@ public final class ProtoParser {
     }
 
     private DataType readDataType() {
-        String name = readWord();
-        switch (name) {
-            case "map" -> {
-                if (readChar() != '<') {
-                    throw unexpected("expected '<'");
-                }
-                DataType keyType = readDataType();
-                if (readChar() != ',') {
-                    throw unexpected("expected ','");
-                }
-                DataType valueType = readDataType();
-                if (readChar() != '>') {
-                    throw unexpected("expected '>'");
-                }
-                return DataType.MapType.create(keyType, valueType);
-            }
-            case "any" -> {
-                return DataType.ScalarType.ANY;
-            }
-            case "bool" -> {
-                return DataType.ScalarType.BOOL;
-            }
-            case "bytes" -> {
-                return DataType.ScalarType.BYTES;
-            }
-            case "double" -> {
-                return DataType.ScalarType.DOUBLE;
-            }
-            case "float" -> {
-                return DataType.ScalarType.FLOAT;
-            }
-            case "fixed32" -> {
-                return DataType.ScalarType.FIXED32;
-            }
-            case "fixed64" -> {
-                return DataType.ScalarType.FIXED64;
-            }
-            case "int32" -> {
-                return DataType.ScalarType.INT32;
-            }
-            case "int64" -> {
-                return DataType.ScalarType.INT64;
-            }
-            case "sfixed32" -> {
-                return DataType.ScalarType.SFIXED32;
-            }
-            case "sfixed64" -> {
-                return DataType.ScalarType.SFIXED64;
-            }
-            case "sint32" -> {
-                return DataType.ScalarType.SINT32;
-            }
-            case "sint64" -> {
-                return DataType.ScalarType.SINT64;
-            }
-            case "string" -> {
-                return DataType.ScalarType.STRING;
-            }
-            case "uint32" -> {
-                return DataType.ScalarType.UINT32;
-            }
-            case "uint64" -> {
-                return DataType.ScalarType.UINT64;
-            }
-            default -> {
-                return DataType.NamedType.create(name);
-            }
-        }
+        return toDataType(readWord());
     }
 
     private DataType toDataType(String name) {
