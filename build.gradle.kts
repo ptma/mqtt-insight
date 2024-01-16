@@ -199,9 +199,9 @@ tasks.register<Copy>("extractJavet") {
                 .map {
                     zipTree(it).matching {
                         if (taskPlatform_M1) {
-                            exclude("**/*x86_64.v.${javetVersion}.dylib")
+                            exclude("**/*x86_64.*.dylib")
                         } else {
-                            exclude("**/*arm64.v.${javetVersion}.dylib")
+                            exclude("**/*arm64.*.dylib")
                         }
                     }
                 }
@@ -239,11 +239,11 @@ tasks.register<Jar>("repackJavet") {
 tasks.register<Copy>("replaceJavet") {
     if (taskPlatform == Platform.mac) {
         from(layout.buildDirectory.file("libs/javet-macos-${javetVersion}.jar"))
+        into(layout.buildDirectory.dir("MqttInsight.app/Contents/Resources/Java/libs"))
     } else {
         from(layout.buildDirectory.file("libs/javet-${javetVersion}.jar"))
+        into(layout.buildDirectory.dir("MqttInsight/libs"))
     }
-
-    into(layout.buildDirectory.dir("MqttInsight/libs"))
 
     dependsOn("repackJavet")
 }
