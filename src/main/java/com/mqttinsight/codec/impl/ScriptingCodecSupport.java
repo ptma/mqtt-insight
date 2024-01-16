@@ -1,5 +1,6 @@
 package com.mqttinsight.codec.impl;
 
+import cn.hutool.core.util.XmlUtil;
 import com.caoccao.javet.enums.V8ValueReferenceType;
 import com.caoccao.javet.values.reference.V8ValueTypedArray;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -46,7 +47,7 @@ public class ScriptingCodecSupport extends JsonCodecSupport implements DynamicCo
         if (newInstance.options.getLoadSchema() != null) {
             newInstance.options.getLoadSchema().apply(schemaFile);
         } else if (newInstance.options.isDynamic()) {
-            throw new CodecException("Cannot load dynamic codec without a schema loader");
+            throw new CodecException("Cannot initialize a dynamic codec without \"schemaLoader\" function.");
         }
         newInstance.instantiated = true;
         return newInstance;
@@ -74,8 +75,10 @@ public class ScriptingCodecSupport extends JsonCodecSupport implements DynamicCo
 
     @Override
     public String toPrettyString(String payload) {
-        if ("text/json".equals(getSyntax())) {
+        if ("json".equals(options.getFormat())) {
             return prettyPrint(payload);
+        } else if ("xml".equals(options.getFormat())) {
+            return XmlUtil.format(payload);
         } else {
             return payload;
         }
