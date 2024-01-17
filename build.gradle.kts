@@ -4,12 +4,8 @@ import groovy.json.JsonSlurper
 import groovy.lang.Closure
 import io.github.fvarrui.javapackager.gradle.PackagePluginExtension
 import io.github.fvarrui.javapackager.gradle.PackageTask
-import io.github.fvarrui.javapackager.model.HeaderType
-import io.github.fvarrui.javapackager.model.LinuxConfig
-import io.github.fvarrui.javapackager.model.MacConfig
-import io.github.fvarrui.javapackager.model.MacStartup
+import io.github.fvarrui.javapackager.model.*
 import io.github.fvarrui.javapackager.model.Platform
-import io.github.fvarrui.javapackager.model.WindowsConfig
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.internal.os.OperatingSystem
 
@@ -41,7 +37,7 @@ val organization: String = "ptma@163.com"
 val copyright: String = "Copyright 2023 ptma@163.com"
 val supportUrl: String = "https://github.com/ptma/mqtt-insight"
 
-val flatlafVersion = "3.2.1"
+val flatlafVersion = "3.3"
 val javetVersion = "2.2.2"
 val fatJar = false
 

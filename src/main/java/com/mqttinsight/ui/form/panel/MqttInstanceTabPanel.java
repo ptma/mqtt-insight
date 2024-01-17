@@ -1,7 +1,6 @@
 package com.mqttinsight.ui.form.panel;
 
 import cn.hutool.core.thread.ThreadUtil;
-import com.formdev.flatlaf.FlatClientProperties;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
@@ -101,7 +100,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         Border tabbedPanelBorder = new SingleLineBorder(UIManager.getColor("Component.borderColor"), true, true, true, true);
         detailTabbedPanel.setBorder(tabbedPanelBorder);
         detailTabbedPanel.setTabPlacement(JTabbedPane.LEFT);
-        detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.TOP);
+        detailTabbedPanel.putClientProperty("JTabbedPane.tabRotation", "auto");
 
         detailTabbedPanel.addTab(LangUtil.getString("Preview"), Icons.PREVIEW, messagePreviewPanel, LangUtil.getString("Preview"));
         detailTabbedPanel.addTab(LangUtil.getString("Publish"), Icons.SEND, messagePublishPanel, LangUtil.getString("Publish"));
@@ -186,14 +185,12 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             int maxHeight = messageSplitPanel.getPreferredSize().height - PREVIEW_PANEL_MIN_HEIGHT;
             messageSplitPanel.setDividerLocation(Math.min(divider, maxHeight));
             detailTabbedPanel.setTabPlacement(JTabbedPane.LEFT);
-            detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.TOP);
         } else {
             messageSplitPanel.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
             Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_HORIZONTAL_DIVIDER, 850);
             int maxWidth = messageSplitPanel.getPreferredSize().width - PREVIEW_PANEL_MIN_WIDTH;
             messageSplitPanel.setDividerLocation(Math.min(divider, maxWidth));
             detailTabbedPanel.setTabPlacement(JTabbedPane.TOP);
-            detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.LEADING);
         }
         this.viewMode = viewMode;
         messagePublishPanel.toggleViewMode(viewMode);
