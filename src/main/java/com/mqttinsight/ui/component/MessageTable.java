@@ -324,19 +324,25 @@ public class MessageTable extends JXTable {
     }
 
     public void copyTopic() {
-        int modelIndex = convertRowIndexToModel(getSelectedRow());
-        MqttMessage message = tableModel.get(modelIndex);
-        StringSelection selec = new StringSelection(message.getTopic());
-        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        clipboard.setContents(selec, selec);
+        int selRow = getSelectedRow();
+        if (selRow >= 0 && selRow < getRowCount()) {
+            int modelIndex = convertRowIndexToModel(selRow);
+            MqttMessage message = tableModel.get(modelIndex);
+            StringSelection selec = new StringSelection(message.getTopic());
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(selec, selec);
+        }
     }
 
     public void copyPayload() {
-        int modelIndex = convertRowIndexToModel(getSelectedRow());
-        MqttMessage message = tableModel.get(modelIndex);
-        StringSelection selec = new StringSelection(message.getPayload());
-        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        clipboard.setContents(selec, selec);
+        int selRow = getSelectedRow();
+        if (selRow >= 0 && selRow < getRowCount()) {
+            int modelIndex = convertRowIndexToModel(selRow);
+            MqttMessage message = tableModel.get(modelIndex);
+            StringSelection selec = new StringSelection(message.getPayload());
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(selec, selec);
+        }
     }
 
     public void goAndSelectRow(int row) {
