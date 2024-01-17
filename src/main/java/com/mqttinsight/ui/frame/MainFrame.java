@@ -7,6 +7,7 @@ import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.ui.form.ConnectionManagerForm;
 import com.mqttinsight.ui.form.MainWindowForm;
+import com.mqttinsight.ui.log.LogTab;
 import com.mqttinsight.util.Const;
 import com.mqttinsight.util.Icons;
 import org.jdesktop.swingx.JXFrame;
@@ -37,6 +38,8 @@ public class MainFrame extends JXFrame {
         setJMenuBar(new MainMenu());
         initGlobalComponentStyles();
 
+        LogTab.instance();
+        
         CodecSupportLoader.loadCodecs();
 
         initMainWindowForm();
