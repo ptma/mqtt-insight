@@ -31,7 +31,7 @@ public class MsgpackCodecSupport extends JsonCodecSupport {
             ObjectNode object = MSGPACK_MAPPER.readValue(payload, ObjectNode.class);
             return Utils.JSON.toString(object);
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.warn(e.getMessage());
             return new String(payload, StandardCharsets.UTF_8);
         }
     }
