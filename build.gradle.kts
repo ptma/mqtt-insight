@@ -79,7 +79,7 @@ dependencies {
     implementation("com.intellij:forms_rt:7.0.3") {
         exclude(group = "asm", module = "asm-commons")
     }
-    implementation("com.miglayout:miglayout-swing:11.1")
+    implementation("com.miglayout:miglayout-swing:11.3")
 
     implementation("com.fifesoft:rsyntaxtextarea:3.3.4")
     implementation(files("libs/swing-toast-notifications-1.0.1.jar"))
@@ -96,7 +96,7 @@ dependencies {
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
     implementation("org.eclipse.paho:org.eclipse.paho.mqttv5.client:1.2.5")
 
-    if (OperatingSystem.current().isMacOsX()) {
+    if (OperatingSystem.current().isMacOsX) {
         implementation("com.caoccao.javet:javet-macos:${javetVersion}") // Mac OS (x86_64 and arm64)
     } else {
         implementation("com.caoccao.javet:javet:${javetVersion}") // Linux and Windows (x86_64)
