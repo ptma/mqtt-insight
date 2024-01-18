@@ -38,7 +38,7 @@ public class HessianCodecSupport extends JsonCodecSupport {
             HessianInput hInput = new HessianInput(bis);
             return Utils.JSON.toString(hInput.readObject());
         } catch (IOException e) {
-            log.error(e.getMessage());
+            log.warn(e.getMessage());
             return new String(payload, StandardCharsets.UTF_8);
         }
     }

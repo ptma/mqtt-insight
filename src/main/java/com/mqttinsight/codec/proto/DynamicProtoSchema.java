@@ -41,14 +41,14 @@ public class DynamicProtoSchema {
         DynamicMessage dynamicMessage = null;
         MessageElement messageElement = null;
         for (MessageElement type : proto.getMessages()) {
-            DynamicMessage tempMessage = tryBuildMessage(type.getName(), binary);
-            if (tempMessage != null) {
-                dynamicMessage = tempMessage;
-                messageElement = (MessageElement) type;
+            try {
+                dynamicMessage = tryBuildMessage(type.getName(), binary);
+                messageElement = type;
                 if (dynamicMessage.getUnknownFields().asMap().isEmpty()) {
                     messageElement.incrementHitCount();
                     break;
                 }
+            } catch (InvalidProtocolBufferException ignore) {
             }
         }
         if (dynamicMessage == null) {
@@ -79,16 +79,10 @@ public class DynamicProtoSchema {
         return objectMap;
     }
 
-    private DynamicMessage tryBuildMessage(String testName, byte[] binary) {
-        DynamicMessage properBuilder = null;
-        try {
-            DynamicMessage.Builder testBuilder = dynamicSchema.newMessageBuilder(testName);
-            testBuilder.mergeFrom(binary);
-            properBuilder = testBuilder.build();
-        } catch (InvalidProtocolBufferException e) {
-            log.warn(e.getMessage());
-        }
-        return properBuilder;
+    private DynamicMessage tryBuildMessage(String testName, byte[] binary) throws InvalidProtocolBufferException {
+        DynamicMessage.Builder testBuilder = dynamicSchema.newMessageBuilder(testName);
+        testBuilder.mergeFrom(binary);
+        return testBuilder.build();
     }
 
     private DynamicSchema getDynamicSchema(Proto proto) throws DescriptorValidationException {

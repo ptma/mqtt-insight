@@ -105,7 +105,7 @@ public class MessageTableModel extends AbstractTableModel {
     }
 
     public MqttMessage get(int index) {
-        if (index < 0 || index >= messages.size()) {
+        if (index < 0 || index >= getRowCount()) {
             return null;
         }
         return messages.get(index);
@@ -117,7 +117,7 @@ public class MessageTableModel extends AbstractTableModel {
             fireTableRowsDeleted(0, 0);
         }
         messages.add(message);
-        int lastIndex = messages.size() - 1;
+        int lastIndex = getRowCount() - 1;
         fireTableRowsInserted(lastIndex, lastIndex);
     }
 
@@ -128,12 +128,12 @@ public class MessageTableModel extends AbstractTableModel {
             fireTableRowsDeleted(0, 0);
             insertIndex--;
         }
-        if (insertIndex >= 0) {
-            messages.add(index, message);
-            fireTableRowsInserted(index, index);
+        if (insertIndex >= 0 && insertIndex <= getRowCount()) {
+            messages.add(insertIndex, message);
+            fireTableRowsInserted(insertIndex, insertIndex);
         } else {
             messages.add(message);
-            int lastIndex = messages.size() - 1;
+            int lastIndex = getRowCount() - 1;
             fireTableRowsInserted(lastIndex, lastIndex);
         }
     }
@@ -144,14 +144,13 @@ public class MessageTableModel extends AbstractTableModel {
 
     public void clear() {
         if (messages.size() > 0) {
-            int lastRow = messages.size() - 1;
             messages.clear();
-            fireTableRowsDeleted(0, lastRow);
+            fireTableDataChanged();
         }
     }
 
     public void remove(int index) {
-        if (index < 0 || index >= messages.size()) {
+        if (index < 0 || index >= getRowCount()) {
             return;
         }
         messages.remove(index);
@@ -159,7 +158,7 @@ public class MessageTableModel extends AbstractTableModel {
     }
 
     public void cleanMessages(Subscription subscription) {
-        int len = messages.size();
+        int len = getRowCount();
         for (int i = len - 1; i >= 0; i--) {
             MqttMessage message = messages.get(i);
             if (message instanceof ReceivedMqttMessage && subscription.equals(((ReceivedMqttMessage) message).getSubscription())) {

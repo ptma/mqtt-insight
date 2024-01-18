@@ -39,7 +39,11 @@ public class CodecSupportLoader {
                 if (codecSupport == null) {
                     log.error("Cannot find the codec support {}", dynamicCodec.getType());
                 } else {
-                    CodecSupports.instance().register(codecSupport.newDynamicInstance(dynamicCodec.getName(), dynamicCodec.getSchemaFile()));
+                    if (FileUtil.exist(dynamicCodec.getSchemaFile())) {
+                        CodecSupports.instance().register(codecSupport.newDynamicInstance(dynamicCodec.getName(), dynamicCodec.getSchemaFile()));
+                    } else {
+                        log.warn("The schema file \"{}\" of dynamic codec \"{}\" does not exist.", dynamicCodec.getSchemaFile(), dynamicCodec.getName());
+                    }
                 }
             } catch (Exception ex) {
                 log.error(ex.getMessage());

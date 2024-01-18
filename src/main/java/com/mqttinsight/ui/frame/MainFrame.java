@@ -7,6 +7,7 @@ import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.ui.form.ConnectionManagerForm;
 import com.mqttinsight.ui.form.MainWindowForm;
+import com.mqttinsight.ui.log.LogTab;
 import com.mqttinsight.util.Const;
 import com.mqttinsight.util.Icons;
 import org.jdesktop.swingx.JXFrame;
@@ -37,6 +38,8 @@ public class MainFrame extends JXFrame {
         setJMenuBar(new MainMenu());
         initGlobalComponentStyles();
 
+        LogTab.instance();
+
         CodecSupportLoader.loadCodecs();
 
         initMainWindowForm();
@@ -56,11 +59,12 @@ public class MainFrame extends JXFrame {
 
     private void initGlobalComponentStyles() {
         UIManager.put("TitlePane.unifiedBackground", false);
-        UIManager.put("MenuItem.selectionType", true);
         UIManager.put("Component.borderWidth", 1);
         UIManager.put("Component.focusWidth", 0);
         UIManager.put("Component.innerFocusWidth", 0);
         UIManager.put("ScrollBar.showButtons", true);
+        UIManager.put("ScrollBar.thumbInsets", new Insets(2, 2, 2, 2));
+        UIManager.put("ScrollBar.thumbArc", 999);
         UIManager.put("Component.arrowType", "chevron");
         UIManager.put("TextComponent.arc", 5);
         UIManager.put("SplitPaneDivider.style", "grip");

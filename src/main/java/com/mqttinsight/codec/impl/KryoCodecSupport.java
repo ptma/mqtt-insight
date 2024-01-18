@@ -89,7 +89,7 @@ public class KryoCodecSupport extends JsonCodecSupport implements DynamicCodecSu
             Object obj = kryo.readClassAndObject(input);
             return Utils.JSON.toString(obj);
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.warn(e.getMessage());
             return new String(payload, StandardCharsets.UTF_8);
         }
     }

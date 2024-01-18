@@ -2,7 +2,6 @@ package com.mqttinsight.codec;
 
 import com.caoccao.javet.values.reference.V8ValueTypedArray;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -11,7 +10,6 @@ import java.util.function.Function;
  * @author ptma
  */
 @Getter
-@Setter
 public class ScriptingCodecOption {
 
     private String format;
@@ -23,7 +21,8 @@ public class ScriptingCodecOption {
     private Function<String, V8ValueTypedArray> encoder;
     private Function<String, Void> loadSchema;
 
-    private ScriptingCodecOption() {}
+    private ScriptingCodecOption() {
+    }
 
     public static ScriptingCodecOption of(Function<byte[], String> decoder,
                                           Function<String, V8ValueTypedArray> encoder,

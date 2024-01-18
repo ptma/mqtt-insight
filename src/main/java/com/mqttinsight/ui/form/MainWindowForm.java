@@ -31,7 +31,6 @@ public class MainWindowForm {
 
     private JPanel contentPanel;
     private FlatTabbedPane tabPanel;
-    private LogTab logTab = new LogTab();
 
     private static class MainWindowFormHolder {
         final static MainWindowForm INSTANCE = new MainWindowForm();
@@ -61,7 +60,7 @@ public class MainWindowForm {
                 return;
             }
         }
-        tabPanel.insertTab(LangUtil.getString("Log"), Icons.LOG_VERBOSE, logTab, null, 0);
+        tabPanel.insertTab(LangUtil.getString("Log"), Icons.LOG_VERBOSE, LogTab.instance(), null, 0);
         tabPanel.setSelectedIndex(0);
     }
 
@@ -97,11 +96,7 @@ public class MainWindowForm {
                     }
                 } catch (Exception ex) {
                     log.error(ex.getMessage(), ex);
-                    if (ex.getCause() != null) {
-                        Utils.Message.error(LangUtil.getString("OpenConnectionError"), ex.getCause());
-                    } else {
-                        Utils.Message.error(LangUtil.getString("OpenConnectionError"), ex);
-                    }
+                    Utils.Message.error(LangUtil.getString("OpenConnectionError"), ex);
                 }
             }
 

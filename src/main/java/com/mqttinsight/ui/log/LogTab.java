@@ -20,6 +20,14 @@ public class LogTab extends JPanel {
     private static final KeyStroke FIND_HOT_KEY = KeyStroke.getKeyStroke("ctrl F");
     private static final KeyStroke ESC_KEY = KeyStroke.getKeyStroke("ESCAPE");
 
+    private static class LogTabHolder {
+        final static LogTab INSTANCE = new LogTab();
+    }
+
+    public static LogTab instance() {
+        return LogTabHolder.INSTANCE;
+    }
+
     private JPanel toolbarPanel;
     private LogToolbar searchToolbar;
     private JScrollPane textScrollPanel;
@@ -27,7 +35,7 @@ public class LogTab extends JPanel {
 
     private boolean scrollToEnd = true;
 
-    public LogTab() {
+    private LogTab() {
         super();
         setLayout(new BorderLayout(0, 0));
         setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
