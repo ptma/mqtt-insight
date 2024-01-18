@@ -16,6 +16,7 @@ import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
 import com.mqttinsight.MqttInsightApplication;
+import com.mqttinsight.ui.component.ExceptionDialog;
 import com.mqttinsight.ui.component.NormalMenuItem;
 import com.mqttinsight.ui.form.InputDialog;
 import org.jdesktop.swingx.graphics.ColorUtilities;
@@ -170,9 +171,11 @@ public class Utils {
         }
 
         public static void error(Component parent, String message, Throwable ex) {
-            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(parent),
-                message + "\n\n" + ex.getMessage(),
-                LangUtil.getString("Error"), JOptionPane.ERROR_MESSAGE);
+            if (ex == null) {
+                error(parent, message);
+            } else {
+                ExceptionDialog.open(SwingUtilities.windowForComponent(parent), message, ex);
+            }
         }
 
         public static void error(String message) {

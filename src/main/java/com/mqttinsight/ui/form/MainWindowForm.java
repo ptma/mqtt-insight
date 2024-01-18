@@ -96,11 +96,7 @@ public class MainWindowForm {
                     }
                 } catch (Exception ex) {
                     log.error(ex.getMessage(), ex);
-                    if (ex.getCause() != null) {
-                        Utils.Message.error(LangUtil.getString("OpenConnectionError"), ex.getCause());
-                    } else {
-                        Utils.Message.error(LangUtil.getString("OpenConnectionError"), ex);
-                    }
+                    Utils.Message.error(LangUtil.getString("OpenConnectionError"), ex);
                 }
             }
 
