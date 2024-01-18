@@ -44,15 +44,15 @@ public class OptionsForm extends JDialog {
     private JPanel mainPanel;
     private JSpinner fontSizeField;
     private JComboBox<String> fontComboBox;
-    private JComboBox<String> themeComboBox;
-    private JComboBox<String> languageComboBox;
+    private JComboBox<Themes> themeComboBox;
+    private JComboBox<Languages> languageComboBox;
     private JLabel fontLabel;
     private JLabel fontSizeLabel;
     private JXTitledSeparator messageEditorSeparator;
     private JXTitledSeparator uiSeparator;
     private JLabel themeLabel;
     private JLabel languageLabel;
-    private JComboBox<String> messageViewComboBox;
+    private JComboBox<MessageViewMode> messageViewComboBox;
     private JXTitledSeparator messageViewSeparator;
     private JLabel defaultViewLabel;
     private JLabel maxMessageRowsLabel;
@@ -181,11 +181,20 @@ public class OptionsForm extends JDialog {
 
     private void onOK() {
         if (optionsChanged) {
-            Configuration.instance().set(ConfKeys.LANGUAGE, languageComboBox.getSelectedItem());
-            Configuration.instance().set(ConfKeys.THEME, themeComboBox.getSelectedItem());
+            Configuration.instance().set(ConfKeys.LANGUAGE,
+                Optional.ofNullable(languageComboBox.getSelectedItem())
+                    .orElse(Locale.getDefault().toLanguageTag()).toString()
+            );
+            Configuration.instance().set(ConfKeys.THEME,
+                Optional.ofNullable(themeComboBox.getSelectedItem())
+                    .orElse(Themes.LIGHT).toString()
+            );
             Configuration.instance().set(ConfKeys.FONT_NAME, fontComboBox.getSelectedItem());
             Configuration.instance().set(ConfKeys.FONT_SIZE, fontSizeField.getValue());
-            Configuration.instance().set(ConfKeys.MESSAGE_VIEW, messageViewComboBox.getSelectedItem());
+            Configuration.instance().set(ConfKeys.MESSAGE_VIEW,
+                Optional.ofNullable(messageViewComboBox.getSelectedItem())
+                    .orElse(MessageViewMode.TABLE).toString()
+            );
             Configuration.instance().set(ConfKeys.MAX_MESSAGE_ROWS, maxMessageRowsField.getValue());
             Configuration.instance().set(ConfKeys.TIME_FORMAT, timeFormatComboBox.getSelectedItem());
             Configuration.instance().save(true);

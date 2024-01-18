@@ -3,8 +3,6 @@ package com.mqttinsight;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.SystemInfo;
-import com.mqttinsight.config.ConfKeys;
-import com.mqttinsight.config.Configuration;
 import com.mqttinsight.ui.component.TextFieldPopupEventListener;
 import com.mqttinsight.ui.frame.MainFrame;
 import com.mqttinsight.util.Const;
@@ -15,7 +13,6 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Locale;
 
 /**
  * @author ptma
@@ -54,8 +51,7 @@ public class MqttInsightApplication {
                 // FlatInspector.install("ctrl shift alt X");
                 // FlatUIDefaultsInspector.install("ctrl shift alt Y");
                 ThemeUtil.setupTheme(args);
-                String languageTag = Configuration.instance().getString(ConfKeys.LANGUAGE, Locale.getDefault().toLanguageTag());
-                LangUtil.setLocale(Locale.forLanguageTag(languageTag));
+                LangUtil.setupLanguage();
                 Toolkit toolkit = Toolkit.getDefaultToolkit();
                 toolkit.addAWTEventListener(new TextFieldPopupEventListener(), AWTEvent.MOUSE_EVENT_MASK);
 

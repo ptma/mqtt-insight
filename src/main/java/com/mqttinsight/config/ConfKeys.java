@@ -19,10 +19,6 @@ public final class ConfKeys {
     public static final String MESSAGE_HORIZONTAL_DIVIDER = "messageHorizontalDivider";
     public static final String MESSAGE_VERTICAL_DIVIDER = "messageVerticalDivider";
 
-    public static final String RECENT_CONNECTIONS = "recentConnections";
-    public static final String CONNECTIONS = "connections";
-    public static final String DYNAMIC_CODECS = "dynamicCodecs";
-
     public static final String SCRITP_OPEN_DIALOG_PATH = "scritpOpenDialogPath";
     public static final String CERT_OPEN_DIALOG_PATH = "certOpenDialogPath";
     public static final String EXPORT_SAVE_DIALOG_PATH = "exportSaveDialogPath";

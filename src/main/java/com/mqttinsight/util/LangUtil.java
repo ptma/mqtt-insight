@@ -1,5 +1,8 @@
 package com.mqttinsight.util;
 
+import com.mqttinsight.config.ConfKeys;
+import com.mqttinsight.config.Configuration;
+
 import javax.swing.*;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -18,6 +21,15 @@ public class LangUtil {
         }
         bundle = ResourceBundle.getBundle(BUNDLE_NAME);
         return bundle;
+    }
+
+    public static void setupLanguage() {
+        try {
+            String languageTag = Configuration.instance().getString(ConfKeys.LANGUAGE, Locale.getDefault().toLanguageTag());
+            LangUtil.setLocale(Locale.forLanguageTag(languageTag));
+        } catch (Exception e) {
+            LangUtil.setLocale(Locale.getDefault());
+        }
     }
 
     public static void setLocale(Locale locale) {
