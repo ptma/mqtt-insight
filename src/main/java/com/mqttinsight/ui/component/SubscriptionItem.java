@@ -177,6 +177,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
 
         paletteButton.addColorSelectionListener(color -> {
             subscription.setColor(color);
+            mqttInstance.applyEvent(InstanceEventListener::subscriptionColorChanged);
             updateComponents();
         });
 

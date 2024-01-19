@@ -121,6 +121,18 @@ public class MessageViewPanel {
             }
 
             @Override
+            public void payloadFormatChanged() {
+                messageTable.revalidate();
+                messageTable.repaint();
+            }
+
+            @Override
+            public void subscriptionColorChanged() {
+                messageTable.revalidate();
+                messageTable.repaint();
+            }
+
+            @Override
             public void clearMessages(Subscription subscription) {
                 MessageViewPanel.this.clearMessages(subscription);
             }

@@ -87,7 +87,7 @@ public class MessagePreviewPanel extends JPanel {
         if (isDarkTheme) {
             badgeColor = Utils.brighter(bgColor, 0.7f);
         } else {
-            badgeColor = Utils.darker(bgColor, 0.85f);
+            badgeColor = Utils.darker(bgColor, 0.9f);
         }
         badgePainter.setFillPaint(badgeColor);
         badgePainter.setBorderPaint(new Color(badgeColor.getRed(), badgeColor.getGreen(), badgeColor.getBlue(), 128));
@@ -249,7 +249,7 @@ public class MessagePreviewPanel extends JPanel {
 
     public void activeFindToolbar() {
         toolbarPanel.setVisible(true);
-        textSearchToolbar.focusSearch();
+        textSearchToolbar.focusSearch(payloadEditor.textArea().getSelectedText());
     }
 
     public void closeFindToolbar() {

@@ -22,6 +22,8 @@ public interface InstanceEventListener {
 
     void payloadFormatChanged();
 
+    void subscriptionColorChanged();
+
     void clearAllMessages();
 
     void clearMessages(Subscription subscription);

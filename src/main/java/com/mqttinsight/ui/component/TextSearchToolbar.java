@@ -161,7 +161,10 @@ public class TextSearchToolbar extends JPanel {
         }, KeyStroke.getKeyStroke("ESCAPE"), JComponent.WHEN_FOCUSED);
     }
 
-    public void focusSearch() {
+    public void focusSearch(String text) {
+        if (text != null && !text.isEmpty()) {
+            searchField.setText(text);
+        }
         searchField.requestFocus();
         searchField.selectAll();
     }
