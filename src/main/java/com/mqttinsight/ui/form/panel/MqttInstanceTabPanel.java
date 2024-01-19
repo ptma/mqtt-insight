@@ -31,7 +31,9 @@ import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /**
@@ -80,7 +82,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     public MqttInstanceTabPanel(MqttProperties properties) {
         super();
         this.properties = properties;
-        eventListeners = new ArrayList<>();
+        eventListeners = new CopyOnWriteArrayList<>();
         chartFrames = new ArrayList<>();
         setLayout(new BorderLayout());
         $$$setupUI$$$();
@@ -274,7 +276,13 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     @Override
     public void applyEvent(Consumer<InstanceEventListener> action) {
         try {
-            eventListeners.forEach(action);
+            Iterator<InstanceEventListener> itr = eventListeners.iterator();
+            while (itr.hasNext()) {
+                InstanceEventListener listener = itr.next();
+                if (listener != null) {
+                    action.accept(listener);
+                }
+            }
         } catch (Exception e) {
             log.warn(e.getMessage(), e);
         }
