@@ -71,6 +71,11 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
     }
 
     @Override
+    protected String getConfigKeyPrefix() {
+        return "ContentChartFrame_";
+    }
+
+    @Override
     protected void bottomPanelResized(int width, int height) {
         chart.getStyler().setPlotContentSize((width - 40d) / width);
     }

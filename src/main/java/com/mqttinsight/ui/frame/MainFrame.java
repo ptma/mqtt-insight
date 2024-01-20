@@ -5,11 +5,13 @@ import com.formdev.flatlaf.icons.FlatTabbedPaneCloseIcon;
 import com.mqttinsight.codec.CodecSupportLoader;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
+import com.mqttinsight.ui.component.StatePersistenceFrame;
 import com.mqttinsight.ui.form.ConnectionManagerForm;
 import com.mqttinsight.ui.form.MainWindowForm;
 import com.mqttinsight.ui.log.LogTab;
 import com.mqttinsight.util.Const;
 import com.mqttinsight.util.Icons;
+import com.mqttinsight.util.Utils;
 import org.jdesktop.swingx.JXFrame;
 import raven.toast.Notifications;
 
@@ -23,17 +25,15 @@ import java.awt.event.WindowEvent;
 /**
  * @author ptma
  */
-public class MainFrame extends JXFrame {
+public class MainFrame extends StatePersistenceFrame {
 
-    private static final int MIN_WIDTH = 950;
-    private static final int MIN_HEIGHT = 600;
-
-    private int windowState = 0;
-    private boolean loaded = false;
+    private static final Dimension MIN_DIMENSION = new Dimension(950, 600);
 
     public MainFrame() {
-        super(Const.APP_NAME, true);
-        this.setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
+        super();
+        setTitle(Const.APP_NAME);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setMinimumSize(MIN_DIMENSION);
         setIconImages(Icons.WINDOW_ICON);
         setJMenuBar(new MainMenu());
         initGlobalComponentStyles();
@@ -43,12 +43,27 @@ public class MainFrame extends JXFrame {
         CodecSupportLoader.loadCodecs();
 
         initMainWindowForm();
-        initListeners();
+        initWindowsListener();
 
         FlatDesktop.setQuitHandler(response -> {
-            MainWindowForm.instance().close();
+            MainFrame.this.close();
             response.performQuit();
         });
+    }
+
+    @Override
+    protected String getConfigKeyPrefix() {
+        return "";
+    }
+
+    @Override
+    protected void onWindowOpened(WindowEvent e) {
+        ConnectionManagerForm.open();
+    }
+
+    @Override
+    protected void onWindowClosing(WindowEvent e) {
+        MainFrame.this.close();
     }
 
     private void initMainWindowForm() {
@@ -86,56 +101,6 @@ public class MainFrame extends JXFrame {
         UIManager.put("Toast.effectWidth", 1000);
     }
 
-    private void loadFrameSize() {
-        Integer windowWidth = Configuration.instance().getInt(ConfKeys.WINDOW_WIDTH);
-        Integer windowHeight = Configuration.instance().getInt(ConfKeys.WINDOW_HEIGHT);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        if (windowWidth != null && windowHeight != null) {
-            // Cannot exceeds screen size
-            int width = Math.min(windowWidth, screenSize.width);
-            int height = Math.min(windowHeight, screenSize.height);
-            // Cannot be smaller than the minimum size
-            width = Math.max(width, MIN_WIDTH);
-            height = Math.max(height, MIN_HEIGHT);
-            Dimension size = new Dimension(width, height);
-            this.setPreferredSize(size);
-            this.setSize(size);
-
-            Integer windowTop = Configuration.instance().getInt(ConfKeys.WINDOW_TOP);
-            Integer windowLeft = Configuration.instance().getInt(ConfKeys.WINDOW_LEFT);
-            if (windowTop != null && windowLeft != null) {
-                int x = Math.max(windowLeft, 0);
-                int y = Math.max(windowTop, 0);
-                x = Math.min(x, screenSize.width - width);
-                y = Math.min(y, screenSize.height - height);
-                this.setLocation(new Point(x, y));
-            } else {
-                this.setLocation((screenSize.width - width) / 2, (screenSize.height - height) / 2);
-            }
-        } else {
-            // Default size
-            Dimension size;
-            if (screenSize.getWidth() > 1280) {
-                this.setLocation((screenSize.width - 1280) / 2, (screenSize.height - 800) / 2);
-                size = new Dimension(1280, 800);
-            } else if (screenSize.getWidth() > 1024) {
-                this.setLocation((screenSize.width - 1200) / 2, (screenSize.height - 768) / 2);
-                size = new Dimension(1200, 768);
-            } else {
-                this.setLocation((screenSize.width - 960) / 2, (screenSize.height - 640) / 2);
-                size = new Dimension(960, 640);
-            }
-            this.setPreferredSize(size);
-            this.setSize(size);
-        }
-
-        windowState = Configuration.instance().getInt(ConfKeys.WINDOW_STATE, 0);
-        if (windowState == JFrame.MAXIMIZED_BOTH) {
-            this.setExtendedState(windowState);
-        }
-        loaded = true;
-    }
-
     public void close() {
         CodecSupportLoader.dispose();
         Configuration.instance().save();
@@ -144,50 +109,4 @@ public class MainFrame extends JXFrame {
         this.dispose();
     }
 
-    private void initListeners() {
-        this.addWindowStateListener(e -> {
-            windowState = e.getNewState();
-            Configuration.instance().set(ConfKeys.WINDOW_STATE, e.getNewState());
-            Configuration.instance().changed();
-        });
-
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowOpened(WindowEvent e) {
-                loadFrameSize();
-                ConnectionManagerForm.open();
-            }
-
-            @Override
-            public void windowClosing(WindowEvent e) {
-                MainFrame.this.close();
-                super.windowClosing(e);
-            }
-
-        });
-        this.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                if (loaded && windowState != JFrame.MAXIMIZED_BOTH) {
-                    Dimension size = e.getComponent().getSize();
-                    Configuration.instance().set(ConfKeys.WINDOW_WIDTH, size.width);
-                    Configuration.instance().set(ConfKeys.WINDOW_HEIGHT, size.height);
-                    Configuration.instance().changed();
-                }
-            }
-
-            @Override
-            public void componentMoved(ComponentEvent e) {
-                if (loaded && windowState != JFrame.MAXIMIZED_BOTH) {
-                    Point location = e.getComponent().getLocation();
-                    // 窗口最大化时, 坐标均会变成负数
-                    if (location.x >= 0 && location.y >= 0) {
-                        Configuration.instance().set(ConfKeys.WINDOW_LEFT, location.x);
-                        Configuration.instance().set(ConfKeys.WINDOW_TOP, location.y);
-                        Configuration.instance().changed();
-                    }
-                }
-            }
-        });
-    }
 }

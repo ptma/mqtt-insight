@@ -8,6 +8,7 @@ import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.ui.chart.series.*;
 import com.mqttinsight.ui.component.SplitButton;
 import com.mqttinsight.ui.component.SplitIconMenuItem;
+import com.mqttinsight.ui.component.StatePersistenceFrame;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Icons;
@@ -33,7 +34,7 @@ import java.util.concurrent.ExecutorService;
  * @author ptma
  */
 @Slf4j
-public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame {
+public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePersistenceFrame {
     protected final MqttInstance mqttInstance;
     private JPanel contentPanel;
     protected JButton addSeriesButton;
@@ -48,7 +49,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     protected JPanel bottomPanel;
     private JButton pauseButton;
     protected AbstractSeriesTableModel<T> seriesTableModel;
-    protected InstanceEventAdapter eventAdapter;
+    protected InstanceEventAdapter instanceEventAdapter;
     private ExecutorService executorService;
     @Getter
     private boolean paused = false;
@@ -57,11 +58,12 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
         super();
         this.mqttInstance = mqttInstance;
         $$$setupUI$$$();
+        setMinimumSize(new Dimension(800, 600));
         setIconImages(Icons.WINDOW_ICON);
         setContentPane(contentPanel);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         initComponents();
-        initMessageEvent();
+        initEventListeners();
         loadFavoriteSeries();
         applyLanguage();
         mqttInstance.registerChartFrame(this);
@@ -225,10 +227,10 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
         }
     }
 
-    private void initMessageEvent() {
+    private void initEventListeners() {
         // Create a thread pool first, then add event listeners
         executorService = ThreadUtil.newFixedExecutor(1, "Chart ", false);
-        eventAdapter = new InstanceEventAdapter() {
+        instanceEventAdapter = new InstanceEventAdapter() {
             @Override
             public void onMessage(MqttMessage message) {
                 executorService.execute(() -> {
@@ -236,12 +238,13 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
                 });
             }
         };
-        mqttInstance.addEventListener(eventAdapter);
+        mqttInstance.addEventListener(instanceEventAdapter);
+        initWindowsListener();
     }
 
     @Override
     public void dispose() {
-        mqttInstance.removeEventListener(eventAdapter);
+        mqttInstance.removeEventListener(instanceEventAdapter);
         mqttInstance.unregisterChartFrame(BaseChartFrame.this);
         executorService.shutdown();
         super.dispose();

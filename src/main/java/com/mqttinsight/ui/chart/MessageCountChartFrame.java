@@ -56,6 +56,11 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     }
 
     @Override
+    protected String getConfigKeyPrefix() {
+        return "CountChartFrame_";
+    }
+
+    @Override
     protected void bottomPanelResized(int width, int height) {
         // do nothing
     }
