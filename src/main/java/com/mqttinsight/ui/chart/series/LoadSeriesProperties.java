@@ -31,7 +31,6 @@ public class LoadSeriesProperties implements SeriesProperties {
     @Setter
     private StatisticalMethod statisticalMethod;
     @Getter
-    @Setter
     private Duration window;
 
     @JsonIgnore
