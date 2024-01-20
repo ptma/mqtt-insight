@@ -30,9 +30,7 @@ public class MainFrame extends StatePersistenceFrame {
     private static final Dimension MIN_DIMENSION = new Dimension(950, 600);
 
     public MainFrame() {
-        super();
-        setTitle(Const.APP_NAME);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        super(Const.APP_NAME, true);
         setMinimumSize(MIN_DIMENSION);
         setIconImages(Icons.WINDOW_ICON);
         setJMenuBar(new MainMenu());
@@ -74,13 +72,14 @@ public class MainFrame extends StatePersistenceFrame {
 
     private void initGlobalComponentStyles() {
         UIManager.put("TitlePane.unifiedBackground", false);
+        UIManager.put("MenuItem.selectionType", true);
         UIManager.put("Component.borderWidth", 1);
         UIManager.put("Component.focusWidth", 0);
         UIManager.put("Component.innerFocusWidth", 0);
+        UIManager.put("Component.arrowType", "chevron");
         UIManager.put("ScrollBar.showButtons", true);
         UIManager.put("ScrollBar.thumbInsets", new Insets(2, 2, 2, 2));
         UIManager.put("ScrollBar.thumbArc", 999);
-        UIManager.put("Component.arrowType", "chevron");
         UIManager.put("TextComponent.arc", 5);
         UIManager.put("SplitPaneDivider.style", "grip");
         UIManager.put("SplitPane.centerOneTouchButtons", true);

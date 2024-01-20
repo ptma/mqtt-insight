@@ -2,6 +2,7 @@ package com.mqttinsight.ui.component;
 
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
+import org.jdesktop.swingx.JXFrame;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,12 +16,21 @@ import java.awt.event.WindowEvent;
  *
  * @author ptma
  */
-public abstract class StatePersistenceFrame extends JFrame {
+public abstract class StatePersistenceFrame extends JXFrame {
 
     private boolean completed = false;
     private int windowState = 0;
 
     public StatePersistenceFrame() {
+        this(null, false);
+    }
+
+    public StatePersistenceFrame(String title) {
+        this(title, false);
+    }
+
+    public StatePersistenceFrame(String title, boolean exitOnClose) {
+        super(title, null, exitOnClose);
     }
 
     protected abstract String getConfigKeyPrefix();

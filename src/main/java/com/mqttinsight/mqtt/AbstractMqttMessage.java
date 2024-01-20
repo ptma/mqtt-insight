@@ -2,6 +2,7 @@ package com.mqttinsight.mqtt;
 
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 
@@ -24,7 +25,9 @@ public abstract class AbstractMqttMessage implements MqttMessage {
 
     private final Date time;
 
+    @JsonIgnore
     protected transient String decodeFormat;
+    @JsonIgnore
     protected transient String decodedPayload;
 
     public AbstractMqttMessage(String topic, byte[] payload, int qos, boolean retained, boolean duplicate) {

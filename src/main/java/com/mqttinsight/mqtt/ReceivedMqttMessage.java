@@ -1,5 +1,6 @@
 package com.mqttinsight.mqtt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mqttinsight.codec.CodecSupport;
 
 import java.awt.*;
@@ -9,6 +10,7 @@ import java.awt.*;
  */
 public class ReceivedMqttMessage extends AbstractMqttMessage implements MqttMessage {
 
+    @JsonIgnore
     protected transient Subscription subscription;
 
     private MessageType messageType = MessageType.RECEIVED;

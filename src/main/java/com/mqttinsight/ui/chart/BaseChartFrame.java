@@ -275,6 +275,9 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
                     }
                 });
             });
+            favoriteSplitButton.setIcon(Icons.FAVORITE_FILL);
+        } else {
+            favoriteSplitButton.setIcon(Icons.FAVORITE);
         }
     }
 
@@ -335,7 +338,6 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
      * @noinspection ALL
      */
     private void $$$setupUI$$$() {
-        createUIComponents();
         contentPanel = new JPanel();
         contentPanel.setLayout(new BorderLayout(0, 0));
         contentPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
@@ -368,6 +370,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
         toolbar.add(pauseButton);
         final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
         toolbar.add(toolBar$Separator3);
+        favoriteSplitButton = new SplitButton();
         toolbar.add(favoriteSplitButton);
         tableScrollPanel = new JScrollPane();
         topPanel.add(tableScrollPanel, BorderLayout.CENTER);
@@ -384,10 +387,5 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
      */
     public JComponent $$$getRootComponent$$$() {
         return contentPanel;
-    }
-
-    private void createUIComponents() {
-        favoriteSplitButton = new SplitButton("Favorite");
-        favoriteSplitButton.setIcon(Icons.FAVORITE);
     }
 }

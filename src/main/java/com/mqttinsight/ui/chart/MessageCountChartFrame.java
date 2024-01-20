@@ -242,7 +242,6 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
         chartPanel.setResetString(LangUtil.getString("ResetZoom"));
         chartPanel.setExportAsString(LangUtil.getString("ExportAs"));
 
-
         if (!seriesCache.isEmpty()) {
             seriesCache.forEach((seriesName, seriesValue) -> {
                 if (ChartMode.PIE.equals(chartMode)) {

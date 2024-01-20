@@ -1,5 +1,7 @@
 package com.mqttinsight.mqtt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * @author ptma
  */
@@ -7,6 +9,7 @@ public class PublishedMqttMessage extends AbstractMqttMessage implements MqttMes
 
     private final MessageType messageType = MessageType.PUBLISHED;
 
+    @JsonIgnore
     protected final transient String format;
 
     public static PublishedMqttMessage of(String topic, byte[] payload, int qos, boolean retained, String format) {
