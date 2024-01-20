@@ -3,10 +3,12 @@ package com.mqttinsight.codec.impl;
 import cn.hutool.core.util.XmlUtil;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.exception.CodecException;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author ptma
  */
+@Slf4j
 public class XmlCodecSupport extends PlainCodecSupport implements CodecSupport {
 
     @Override
@@ -21,7 +23,12 @@ public class XmlCodecSupport extends PlainCodecSupport implements CodecSupport {
 
     @Override
     public String toPrettyString(String payload) {
-        return XmlUtil.format(payload);
+        try {
+            return XmlUtil.format(payload);
+        } catch (Exception e) {
+            log.warn(e.getMessage(), e);
+            return payload;
+        }
     }
 
     @Override

@@ -75,11 +75,16 @@ public class ScriptingCodecSupport extends JsonCodecSupport implements DynamicCo
 
     @Override
     public String toPrettyString(String payload) {
-        if ("json".equals(options.getFormat())) {
-            return prettyPrint(payload);
-        } else if ("xml".equals(options.getFormat())) {
-            return XmlUtil.format(payload);
-        } else {
+        try {
+            if ("json".equals(options.getFormat())) {
+                return prettyPrint(payload);
+            } else if ("xml".equals(options.getFormat())) {
+                return XmlUtil.format(payload);
+            } else {
+                return payload;
+            }
+        } catch (Exception e) {
+            log.warn(e.getMessage(), e);
             return payload;
         }
     }
