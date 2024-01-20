@@ -40,6 +40,8 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     @Setter
     private boolean selected;
 
+    private InstanceEventAdapter instanceEventAdapter;
+
     private JXLabel topicLabel;
     private JToolBar toolBar;
     private JXLabel counterLabel;
@@ -197,12 +199,14 @@ public class SubscriptionItem extends JPanel implements MouseListener {
                 }
             }
         });
-        mqttInstance.addEventListener(new InstanceEventAdapter() {
+
+        instanceEventAdapter = new InstanceEventAdapter() {
             @Override
             public void onCodecsChanged() {
                 loadFormatMenus();
             }
-        });
+        };
+        mqttInstance.addEventListener(instanceEventAdapter);
     }
 
     private void loadFormatMenus() {
@@ -258,6 +262,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     }
 
     private void close(ActionEvent e) {
+        mqttInstance.removeEventListener(instanceEventAdapter);
         this.unsubscribe(true);
     }
 
