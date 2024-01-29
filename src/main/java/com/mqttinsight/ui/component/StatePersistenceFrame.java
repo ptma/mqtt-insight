@@ -18,7 +18,7 @@ import java.awt.event.WindowEvent;
  */
 public abstract class StatePersistenceFrame extends JXFrame {
 
-    private boolean completed = false;
+    private boolean stateAndSizeLoaded = false;
     private int windowState = 0;
 
     public StatePersistenceFrame() {
@@ -31,6 +31,7 @@ public abstract class StatePersistenceFrame extends JXFrame {
 
     public StatePersistenceFrame(String title, boolean exitOnClose) {
         super(title, null, exitOnClose);
+        initWindowsListener();
     }
 
     protected abstract String getConfigKeyPrefix();
@@ -46,7 +47,7 @@ public abstract class StatePersistenceFrame extends JXFrame {
     /**
      * 需在窗体其它初始化完成后手动调用
      */
-    protected void initWindowsListener() {
+    private void initWindowsListener() {
         this.addWindowStateListener(e -> {
             Configuration.instance().set(getConfigKeyPrefix() + ConfKeys.WINDOW_STATE, e.getNewState());
             Configuration.instance().changed();
@@ -56,7 +57,7 @@ public abstract class StatePersistenceFrame extends JXFrame {
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                if (completed && windowState != JFrame.MAXIMIZED_BOTH) {
+                if (stateAndSizeLoaded && windowState != JFrame.MAXIMIZED_BOTH) {
                     Dimension size = e.getComponent().getSize();
                     Configuration.instance().set(getConfigKeyPrefix() + ConfKeys.WINDOW_WIDTH, size.width);
                     Configuration.instance().set(getConfigKeyPrefix() + ConfKeys.WINDOW_HEIGHT, size.height);
@@ -66,7 +67,7 @@ public abstract class StatePersistenceFrame extends JXFrame {
 
             @Override
             public void componentMoved(ComponentEvent e) {
-                if (completed && windowState != JFrame.MAXIMIZED_BOTH) {
+                if (stateAndSizeLoaded && windowState != JFrame.MAXIMIZED_BOTH) {
                     Point location = e.getComponent().getLocation();
                     // 窗口最大化时, 坐标均会变成负数
                     if (location.x >= 0 && location.y >= 0) {
@@ -92,10 +93,42 @@ public abstract class StatePersistenceFrame extends JXFrame {
         });
     }
 
+    private Dimension getScreenSize() {
+        GraphicsEnvironment graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice[] devices = graphicsEnv.getScreenDevices();
+        int width = 0;
+        int height = 0;
+        for (GraphicsDevice device : devices) {
+            Rectangle bounds = device.getDefaultConfiguration().getBounds();
+            if (bounds.x == 0) {
+                width = Math.max(width, bounds.width);
+            } else {
+                width = Math.max(width, bounds.width) + bounds.x;
+            }
+            if (bounds.y == 0) {
+                height = Math.max(height, bounds.height);
+            } else {
+                height = Math.max(height, bounds.height) + bounds.y;
+            }
+        }
+        return new Dimension(width, height);
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        if (visible) {
+            loadFrameSize();
+        }
+        super.setVisible(visible);
+    }
+
     private void loadFrameSize() {
+        if (stateAndSizeLoaded) {
+            return;
+        }
         Integer windowWidth = Configuration.instance().getInt(getConfigKeyPrefix() + ConfKeys.WINDOW_WIDTH);
         Integer windowHeight = Configuration.instance().getInt(getConfigKeyPrefix() + ConfKeys.WINDOW_HEIGHT);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        Dimension screenSize = getScreenSize(); // Toolkit.getDefaultToolkit().getScreenSize();
         if (windowWidth != null && windowHeight != null) {
             // Cannot exceeds screen size
             int width = Math.min(windowWidth, screenSize.width);
@@ -139,8 +172,9 @@ public abstract class StatePersistenceFrame extends JXFrame {
 
         int windowState = Configuration.instance().getInt(getConfigKeyPrefix() + ConfKeys.WINDOW_STATE, 0);
         if (windowState == JFrame.MAXIMIZED_BOTH) {
+            this.windowState = windowState;
             this.setExtendedState(windowState);
         }
-        completed = true;
+        stateAndSizeLoaded = true;
     }
 }

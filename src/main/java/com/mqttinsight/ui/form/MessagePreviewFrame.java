@@ -78,7 +78,6 @@ public class MessagePreviewFrame extends StatePersistenceFrame {
             }
         };
         mqttInstance.addEventListener(instanceEventAdapter);
-        initWindowsListener();
     }
 
 }

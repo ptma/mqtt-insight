@@ -3,7 +3,6 @@ package com.mqttinsight.ui.frame;
 import com.formdev.flatlaf.extras.FlatDesktop;
 import com.formdev.flatlaf.icons.FlatTabbedPaneCloseIcon;
 import com.mqttinsight.codec.CodecSupportLoader;
-import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.ui.component.StatePersistenceFrame;
 import com.mqttinsight.ui.form.ConnectionManagerForm;
@@ -11,15 +10,10 @@ import com.mqttinsight.ui.form.MainWindowForm;
 import com.mqttinsight.ui.log.LogTab;
 import com.mqttinsight.util.Const;
 import com.mqttinsight.util.Icons;
-import com.mqttinsight.util.Utils;
-import org.jdesktop.swingx.JXFrame;
 import raven.toast.Notifications;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 /**
@@ -41,7 +35,6 @@ public class MainFrame extends StatePersistenceFrame {
         CodecSupportLoader.loadCodecs();
 
         initMainWindowForm();
-        initWindowsListener();
 
         FlatDesktop.setQuitHandler(response -> {
             MainFrame.this.close();
@@ -73,6 +66,8 @@ public class MainFrame extends StatePersistenceFrame {
     private void initGlobalComponentStyles() {
         UIManager.put("TitlePane.unifiedBackground", false);
         UIManager.put("MenuItem.selectionType", true);
+        UIManager.put("MenuItem.selectionArc", 5);
+        UIManager.put("MenuItem.selectionInsets", new Insets(0, 2, 0, 2));
         UIManager.put("Component.borderWidth", 1);
         UIManager.put("Component.focusWidth", 0);
         UIManager.put("Component.innerFocusWidth", 0);

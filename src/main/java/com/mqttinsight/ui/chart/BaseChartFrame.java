@@ -239,7 +239,6 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
             }
         };
         mqttInstance.addEventListener(instanceEventAdapter);
-        initWindowsListener();
     }
 
     @Override
