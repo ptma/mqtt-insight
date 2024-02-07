@@ -97,8 +97,8 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         messageViewPanel = new MessageViewPanel(this, viewMode);
         messagePublishPanel = new MessagePublishPanel(this);
         messagePreviewPanel = new MessagePreviewPanel(this);
-        subscriptionSplitPanel.setLeftComponent(subscriptionListPanel.getRootPanel());
-        messageSplitPanel.setTopComponent(messageViewPanel.getRootPanel());
+        subscriptionSplitPanel.setLeftComponent(subscriptionListPanel);
+        messageSplitPanel.setTopComponent(messageViewPanel);
 
         Border tabbedPanelBorder = new SingleLineBorder(UIManager.getColor("Component.borderColor"), true, true, true, true);
         detailTabbedPanel.setBorder(tabbedPanelBorder);
