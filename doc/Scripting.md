@@ -11,6 +11,6 @@ MqttInsight 提供了两种脚本类型的支持，用户可以根据自己的�
     - 定时发布消息
     - 转发消息到其它的目标地址或接口
 
-脚本功能通过 Javet 框架实现， 支持 Node.js(v18.17.1) 中的大多数 API (fs, events, crypto, ...)。
+脚本功能通过 Javet 框架实现， 支持 Node.js(v20.11.1) 中的大多数 API (fs, events, crypto, ...)。
 
 > 脚本中如果使用了第三方的 npm 包, 需要在脚本所在目录执行 npm install xxx, 目前还**不支持 Node.js 的全局包(global)**
