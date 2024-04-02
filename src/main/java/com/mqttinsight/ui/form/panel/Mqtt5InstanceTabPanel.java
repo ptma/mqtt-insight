@@ -80,24 +80,34 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
         if (withFail) {
             ThreadUtil.execute(() -> {
                 try {
-                    mqttClient.disconnectForcibly();
+                    if (mqttClient != null) {
+                        mqttClient.disconnectForcibly();
+                    }
                 } catch (Exception e) {
                     log.warn(e.getMessage(), e);
                 }
             });
         } else {
             onConnectionChanged(ConnectionStatus.DISCONNECTING);
-            mqttClient.disconnect();
+            if (mqttClient != null) {
+                mqttClient.disconnect();
+            }
             onConnectionChanged(ConnectionStatus.DISCONNECTED);
         }
     }
 
     @Override
     @SneakyThrows
-    public void doClose() {
+    public void dispose() {
         try {
-            mqttClient.close(true);
-            persistence.close();
+            if (mqttClient != null) {
+                mqttClient.close(true);
+                mqttClient = null;
+            }
+            if (persistence != null) {
+                persistence.close();
+                persistence = null;
+            }
         } catch (Exception ignore) {
 
         }
@@ -105,7 +115,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
 
     @Override
     public boolean isConnected() {
-        return mqttClient.isConnected();
+        return mqttClient != null && mqttClient.isConnected();
     }
 
     @Override
@@ -228,6 +238,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
 
         @Override
         public void onFailure(IMqttToken token, Throwable exception) {
+            dispose();
             MqttException ex = (MqttException) exception;
             String causeMessage = getCauseMessage(ex);
             onConnectionFailed(ex.getReasonCode(), causeMessage);
@@ -238,6 +249,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
     private class Mqtt5CallbackHandler implements MqttCallback {
         @Override
         public void disconnected(MqttDisconnectResponse response) {
+            dispose();
             if (response.getReturnCode() == MqttReturnCode.RETURN_CODE_SUCCESS
                 || response.getReturnCode() == MqttReturnCode.RETURN_CODE_DISCONNECT_WITH_WILL_MESSAGE) {
                 Mqtt5InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.DISCONNECTED);

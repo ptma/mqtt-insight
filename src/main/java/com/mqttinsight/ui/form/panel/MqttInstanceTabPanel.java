@@ -254,7 +254,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             onConnectionChanged(ConnectionStatus.DISCONNECTING);
             disconnect(false);
         }
-        doClose();
+        dispose();
         return true;
     }
 
@@ -382,7 +382,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     public abstract boolean doSubscribe(final Subscription subscription);
 
-    public abstract void doClose();
+    public abstract void dispose();
 
     @Override
     public boolean subscribe(Subscription subscription) {
