@@ -61,7 +61,10 @@ public class ConnectionNode {
     }
 
     public void setName(String name) {
-            this.name = name;
+        this.name = name;
+        if (this.properties != null) {
+            this.properties.setName(name);
+        }
     }
 
     @JsonIgnore
