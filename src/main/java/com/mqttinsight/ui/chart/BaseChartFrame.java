@@ -69,6 +69,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
         mqttInstance.registerChartFrame(this);
 
         bottomPanel.addComponentListener(new ComponentAdapter() {
+            @Override
             public void componentResized(ComponentEvent evt) {
                 Component c = (Component) evt.getSource();
                 bottomPanelResized(c.getWidth(), c.getHeight());
