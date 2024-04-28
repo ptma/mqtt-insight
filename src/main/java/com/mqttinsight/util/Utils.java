@@ -307,32 +307,46 @@ public class Utils {
         }
     }
 
+    /**
+     * 获取比给定的颜色更亮的颜色
+     *
+     * @param color  指定的颜色。
+     * @param factor 调节因子 (0, 1)，值越小颜色越亮。
+     * @return 变亮后的新颜色。
+     */
     public static Color brighter(Color color, float factor) {
+        if (factor <= 0 || factor >= 1) {
+            throw new IllegalArgumentException("The factor must be within the range of (0, 1)");
+        }
         int r = color.getRed();
         int g = color.getGreen();
         int b = color.getBlue();
         int alpha = color.getAlpha();
-        int i = (int) (1.0 / (1.0 - factor));
+
+        int threshold = (int) (1.0 / (1.0 - factor));
+
         if (r == 0 && g == 0 && b == 0) {
-            return new Color(i, i, i, alpha);
-        }
-        if (r > 0 && r < i) {
-            r = i;
-        }
-        if (g > 0 && g < i) {
-            g = i;
-        }
-        if (b > 0 && b < i) {
-            b = i;
+            return new Color(Math.min(threshold, 255), Math.min(threshold, 255), Math.min(threshold, 255), alpha);
         }
 
-        return new Color(Math.min((int) (r / factor), 255),
-            Math.min((int) (g / factor), 255),
-            Math.min((int) (b / factor), 255),
-            alpha);
+        r = Math.min((int) (r / factor), 255);
+        g = Math.min((int) (g / factor), 255);
+        b = Math.min((int) (b / factor), 255);
+
+        return new Color(r, g, b, alpha);
     }
 
+    /**
+     * 获取比给定的颜色更暗的颜色。
+     *
+     * @param color  指定的颜色。
+     * @param factor 调节因子，[0, 1]，因子越小颜色越暗。
+     * @return 变暗后的新颜色。
+     */
     public static Color darker(Color color, float factor) {
+        if (factor < 0 || factor > 1) {
+            throw new IllegalArgumentException("The factor must be within the range of [0, 1]");
+        }
         return new Color(Math.max((int) (color.getRed() * factor), 0),
             Math.max((int) (color.getGreen() * factor), 0),
             Math.max((int) (color.getBlue() * factor), 0),
@@ -395,7 +409,7 @@ public class Utils {
         try {
             Object value = JsonPath.read(source, jsonPath);
             if (value instanceof List) {
-                java.util.List list = (java.util.List) value;
+                List<?> list = (List<?>) value;
                 return list.isEmpty() ? "" : list.get(0).toString();
             } else {
                 return value.toString();

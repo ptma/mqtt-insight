@@ -281,9 +281,17 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
         }
     }
 
+    /**
+     * 检查消息是否与序列的定义相匹配。
+     *
+     * @param series  序列，包含匹配条件和模式。
+     * @param message MQTT消息，包含主题和负载。
+     * @return 如果消息匹配序列的条件，则返回true；否则返回false。
+     */
     protected boolean messageMatchesSeries(T series, MqttMessage message) {
         switch (series.getMatch()) {
             case TOPIC -> {
+                // 主题匹配
                 switch (series.getMatchMode()) {
                     case WILDCARD -> {
                         return TopicUtil.match(series.getMatchExpression().getExpression(), message.getTopic());
@@ -297,6 +305,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
                 }
             }
             case PAYLOAD -> {
+                // 载荷匹配
                 String payloadStr = message.payloadAsString(false);
                 if (StrUtil.isEmpty(payloadStr)) {
                     return false;
@@ -307,17 +316,13 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
                     }
                     case JSON_PATH -> {
                         MatchExpression expression = series.getMatchExpression();
-                        ValueComparator comparator = expression.getComparator();
-                        String expectedValue = expression.getValue();
                         String readValue = Utils.getSingleValueByJsonPath(expression.getExpression(), payloadStr);
-                        return ValueComparator.match(comparator, expectedValue, readValue);
+                        return ValueComparator.match(expression, readValue);
                     }
                     case XPATH -> {
                         MatchExpression expression = series.getMatchExpression();
-                        ValueComparator comparator = expression.getComparator();
-                        String expectedValue = expression.getValue();
                         String readValue = Utils.getByXPath(expression.getExpression(), payloadStr);
-                        return ValueComparator.match(comparator, expectedValue, readValue);
+                        return ValueComparator.match(expression, readValue);
                     }
                     default -> {
                         return false;

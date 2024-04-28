@@ -103,9 +103,7 @@ public class MessageViewPanel extends JScrollPane {
 
             @Override
             public void clearAllMessages() {
-                messageTableModel.clear();
-                lastSelectedRow = -1;
-                messageTable.goAndSelectRow(-1);
+                MessageViewPanel.this.clearAllMessages();
             }
 
             @Override
@@ -120,14 +118,12 @@ public class MessageViewPanel extends JScrollPane {
 
             @Override
             public void payloadFormatChanged() {
-                messageTable.revalidate();
-                messageTable.repaint();
+                MessageViewPanel.this.repaintTable();
             }
 
             @Override
             public void subscriptionColorChanged() {
-                messageTable.revalidate();
-                messageTable.repaint();
+                MessageViewPanel.this.repaintTable();
             }
 
             @Override
@@ -188,8 +184,25 @@ public class MessageViewPanel extends JScrollPane {
         return sb.toString();
     }
 
+    private void repaintTable() {
+        SwingUtilities.invokeLater(() -> {
+            messageTable.revalidate();
+            messageTable.repaint();
+        });
+    }
+
+    private void clearAllMessages() {
+        SwingUtilities.invokeLater(() -> {
+            messageTableModel.clear();
+            lastSelectedRow = -1;
+            messageTable.goAndSelectRow(-1);
+        });
+    }
+
     private void clearMessages(Subscription subscription) {
-        messageTableModel.cleanMessages(subscription);
+        SwingUtilities.invokeLater(() -> {
+            messageTableModel.cleanMessages(subscription);
+        });
     }
 
     /**

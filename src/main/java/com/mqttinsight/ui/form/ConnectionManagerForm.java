@@ -188,11 +188,11 @@ public class ConnectionManagerForm extends JDialog {
                     ConnectionNode duplicateNode = new ConnectionNode(selectedNode.getProperties().clone());
                     String duplicateName = duplicateNode.getName() + " (Copy)";
                     int duplicateIndex = 0;
-                    while (treeTableModel.hasName(duplicateName)) {
+                    while (treeTableModel.nameExists(duplicateName)) {
                         duplicateName = String.format("%s (Copy %d)", duplicateNode.getName(), ++duplicateIndex);
                     }
                     duplicateNode.setName(duplicateName);
-                    treeTableModel.addChildNode(selectedNode.parentNode(), duplicateNode);
+                    treeTableModel.insertChild(selectedNode.parentNode(), selectedNode.indexOfParent() + 1, duplicateNode);
                 } catch (CloneNotSupportedException e) {
                     Utils.Toast.warn(e.getMessage());
                     log.error(e.getMessage(), e);

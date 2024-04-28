@@ -7,6 +7,7 @@ import com.mqttinsight.mqtt.Subscription;
 import com.mqttinsight.util.LangUtil;
 
 import javax.swing.table.AbstractTableModel;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -158,12 +159,17 @@ public class MessageTableModel extends AbstractTableModel {
     }
 
     public void cleanMessages(Subscription subscription) {
-        int len = getRowCount();
-        for (int i = len - 1; i >= 0; i--) {
-            MqttMessage message = messages.get(i);
+        Iterator<MqttMessage> itr = messages.iterator();
+        boolean changed = false;
+        while (itr.hasNext()) {
+            MqttMessage message = itr.next();
             if (message instanceof ReceivedMqttMessage && subscription.equals(((ReceivedMqttMessage) message).getSubscription())) {
-                remove(i);
+                itr.remove();
+                changed = true;
             }
+        }
+        if (changed) {
+            fireTableDataChanged();
         }
     }
 
