@@ -273,6 +273,14 @@ public class MessageTable extends JXTable {
         colRetained.setCellRenderer(tableRenderer);
         colRetained.putClientProperty("columnIndex", MessageTableModel.COLUMN_RETAINED);
 
+        // Size column
+        TableColumnExt colSize = this.getColumnExt(6);
+        colSize.setWidth(80);
+        colSize.setPreferredWidth(80);
+        colSize.setMinWidth(50);
+        colSize.setMaxWidth(120);
+        colSize.putClientProperty("columnIndex", MessageTableModel.COLUMN_SIZE);
+
         // Time column
         TableColumnExt colTime = this.getColumnExt(5);
         colTime.setWidth(160);
@@ -287,10 +295,10 @@ public class MessageTable extends JXTable {
         loadColumnConfigsAndBindingListener(colQos);
         loadColumnConfigsAndBindingListener(colRetained);
         loadColumnConfigsAndBindingListener(colTime);
+        loadColumnConfigsAndBindingListener(colSize);
     }
 
     private void initDialogueViewColumns() {
-        TableColumnExt column;
         // Icon column
         TableColumnExt singleCol = this.getColumnExt(0);
         singleCol.setResizable(false);

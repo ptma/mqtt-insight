@@ -22,6 +22,7 @@ public class MessageTableModel extends AbstractTableModel {
     public static final int COLUMN_QOS = 3;
     public static final int COLUMN_RETAINED = 4;
     public static final int COLUMN_TIME = 5;
+    public static final int COLUMN_SIZE = 6;
 
     private final SizeLimitSynchronizedList<MqttMessage> messages;
 
@@ -46,7 +47,7 @@ public class MessageTableModel extends AbstractTableModel {
     @Override
     public int getColumnCount() {
         if (viewMode == MessageViewMode.TABLE) {
-            return 6;
+            return 7;
         } else {
             return 1;
         }
@@ -72,7 +73,6 @@ public class MessageTableModel extends AbstractTableModel {
         } else {
             return messages.get(row).getTopic() + " " + messages.get(row).getPayload();
         }
-
     }
 
     @Override
@@ -90,6 +90,8 @@ public class MessageTableModel extends AbstractTableModel {
                 return LangUtil.getString("Retained");
             case COLUMN_TIME:
                 return LangUtil.getString("ReceivedTime");
+            case COLUMN_SIZE:
+                return LangUtil.getString("MessageSize");
             default:
                 return "-";
         }

@@ -1,17 +1,15 @@
 package com.mqttinsight.ui.form.panel;
 
-import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.io.unit.DataSizeUtil;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
-import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.ui.component.SingleLineBorder;
 import com.mqttinsight.ui.component.SyntaxTextEditor;
 import com.mqttinsight.ui.component.TextSearchToolbar;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.component.model.PayloadFormatComboBoxModel;
-import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import net.miginfocom.swing.MigLayout;
@@ -21,8 +19,6 @@ import org.jdesktop.swingx.painter.RectanglePainter;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author ptma
@@ -45,6 +41,7 @@ public class BasePreviewPanel extends JPanel {
     private JXLabel timeLabel;
     private JXLabel qosLabel;
     private JXLabel retainedLabel;
+    private JXLabel sizeLabel;
     private JLabel formatLabel;
     private JComboBox<String> formatComboBox;
     protected JCheckBox prettyCheckbox;
@@ -107,7 +104,14 @@ public class BasePreviewPanel extends JPanel {
         retainedLabel.setBackgroundPainter(badgePainter);
         retainedLabel.setOpaque(false);
         retainedLabel.setBorder(badgeBorder);
-        topPanel.add(retainedLabel, "hidemode 2");
+        topPanel.add(retainedLabel, "hidemode 3");
+
+        sizeLabel = new JXLabel(" ");
+        sizeLabel.setBackgroundPainter(badgePainter);
+        sizeLabel.setOpaque(false);
+        sizeLabel.setBorder(badgeBorder);
+        sizeLabel.setHorizontalTextPosition(SwingConstants.RIGHT);
+        topPanel.add(sizeLabel, "");
 
         formatLabel = new JLabel(LangUtil.getString("PayloadFormat"));
         topPanel.add(formatLabel, "right");
@@ -150,7 +154,7 @@ public class BasePreviewPanel extends JPanel {
             topPanelLayout.setComponentConstraints(topicField, "growx");
             topPanelLayout.setComponentConstraints(formatLabel, "");
         } else {
-            topPanelLayout.setColumnConstraints("[][][][][][grow,right][]");
+            topPanelLayout.setColumnConstraints("[][][][][][][grow,right][]");
             topPanelLayout.setRowConstraints("[][]");
             topPanelLayout.setComponentConstraints(topicField, "growx, span, wrap");
             topPanelLayout.setComponentConstraints(formatLabel, "newline");
@@ -181,6 +185,7 @@ public class BasePreviewPanel extends JPanel {
                 retainedLabel.setVisible(false);
                 qosLabel.setText(" ");
                 timeLabel.setText(" ");
+                sizeLabel.setText(" ");
                 payloadEditor.setText("");
             });
         } else {
@@ -197,6 +202,7 @@ public class BasePreviewPanel extends JPanel {
                     retainedLabel.setVisible(previewedMessage.isRetained());
                     qosLabel.setText(String.format("QoS %d", previewedMessage.getQos()));
                     timeLabel.setText(previewedMessage.getTime());
+                    sizeLabel.setText(DataSizeUtil.format(previewedMessage.payloadSize()));
                     payloadEditor.setText(previewText);
                     payloadEditor.setSyntax(codec.getSyntax());
 

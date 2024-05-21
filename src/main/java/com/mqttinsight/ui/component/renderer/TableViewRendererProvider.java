@@ -1,6 +1,7 @@
 package com.mqttinsight.ui.component.renderer;
 
 import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.io.unit.DataSizeUtil;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
@@ -111,6 +112,12 @@ public class TableViewRendererProvider extends ComponentProvider<JLabel> {
                 rendererComponent.setText(message.timeWithFormat(TIME_FORMAT));
                 rendererComponent.setIcon(null);
                 rendererComponent.setHorizontalAlignment(JLabel.CENTER);
+                break;
+            case MessageTableModel.COLUMN_SIZE:
+                
+                rendererComponent.setText(DataSizeUtil.format(message.payloadSize()));
+                rendererComponent.setIcon(null);
+                rendererComponent.setHorizontalAlignment(JLabel.RIGHT);
                 break;
             default:
                 rendererComponent.setIcon(null);
