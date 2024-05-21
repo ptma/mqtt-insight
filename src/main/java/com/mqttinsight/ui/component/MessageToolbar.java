@@ -521,6 +521,7 @@ public class MessageToolbar extends JToolBar {
 
     public void doFilter() {
         RowFilter rowFilter = RowFilters.regexFilter(searchPatternModel.getPattern(),
+            MessageTableModel.COLUMN_TYPE,
             MessageTableModel.COLUMN_TOPIC,
             MessageTableModel.COLUMN_PAYLOAD
         );
