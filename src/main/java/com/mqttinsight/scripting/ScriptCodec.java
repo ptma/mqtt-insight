@@ -102,7 +102,7 @@ public class ScriptCodec {
             }
             if (map.containsKey("color")) {
                 String color = (String) map.get("color");
-                if (color.matches("^#[0-9A-F]{6}$")) {
+                if (color.matches("^#[0-9a-fA-F]{6}$")) {
                     msg.setColor(color);
                 }
             }
