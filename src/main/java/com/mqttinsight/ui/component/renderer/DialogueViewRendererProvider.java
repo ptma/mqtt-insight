@@ -59,6 +59,9 @@ public class DialogueViewRendererProvider extends ComponentProvider<DialogueBubb
         MessageTable table = (MessageTable) context.getComponent();
         int modelIndex = table.convertRowIndexToModel(context.getRow());
         MqttMessage message = messageModel.get(modelIndex);
+        if (message == null) {
+            return;
+        }
         if (rendererComponent instanceof DialogueBubble) {
             DialogueBubble itemComponent = (DialogueBubble) rendererComponent;
             itemComponent.setTopic(message.getTopic());

@@ -2,13 +2,11 @@ package com.mqttinsight.ui.component.model;
 
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.ReceivedMqttMessage;
-import com.mqttinsight.mqtt.SizeLimitSynchronizedList;
 import com.mqttinsight.mqtt.Subscription;
 import com.mqttinsight.util.LangUtil;
 
 import javax.swing.table.AbstractTableModel;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author ptma
@@ -24,12 +22,14 @@ public class MessageTableModel extends AbstractTableModel {
     public static final int COLUMN_TIME = 5;
     public static final int COLUMN_SIZE = 6;
 
-    private final SizeLimitSynchronizedList<MqttMessage> messages;
+    private final int maximum;
+    private final List<MqttMessage> messages;
 
     private MessageViewMode viewMode = MessageViewMode.TABLE;
 
     public MessageTableModel(final int maximum) {
-        messages = new SizeLimitSynchronizedList<>(maximum);
+        this.maximum = maximum;
+        messages = Collections.synchronizedList(new ArrayList<>());
     }
 
     public List<MqttMessage> getMessages() {
@@ -44,12 +44,24 @@ public class MessageTableModel extends AbstractTableModel {
         return viewMode;
     }
 
+    public boolean isOverMaximum() {
+        return maximum > 0 && messages.size() > maximum;
+    }
+
     @Override
     public int getColumnCount() {
         if (viewMode == MessageViewMode.TABLE) {
             return 7;
         } else {
             return 1;
+        }
+    }
+
+    public Optional<MqttMessage> getMessage(int index) {
+        try {
+            return Optional.ofNullable(messages.get(index));
+        } catch (IndexOutOfBoundsException e) {
+            return Optional.empty();
         }
     }
 
@@ -64,9 +76,9 @@ public class MessageTableModel extends AbstractTableModel {
         if (viewMode == MessageViewMode.TABLE) {
             switch (column) {
                 case MessageTableModel.COLUMN_PAYLOAD:
-                    return messages.get(row).getPayload();
+                    return getMessage(row).map(MqttMessage::getPayload).orElse("");
                 case MessageTableModel.COLUMN_TOPIC:
-                    return messages.get(row).getTopic();
+                    return getMessage(row).map(MqttMessage::getTopic).orElse("");
                 default:
                     return "";
             }
@@ -114,30 +126,23 @@ public class MessageTableModel extends AbstractTableModel {
         return messages.get(index);
     }
 
-    public void add(MqttMessage message) {
-        while (messages.isMaximum()) {
-            messages.remove(0);
-            fireTableRowsDeleted(0, 0);
-        }
+    public synchronized void add(MqttMessage message) {
         messages.add(message);
         int lastIndex = getRowCount() - 1;
         fireTableRowsInserted(lastIndex, lastIndex);
-    }
-
-    public void add(int index, MqttMessage message) {
-        int insertIndex = index;
-        while (messages.isMaximum()) {
+        while (isOverMaximum()) {
             messages.remove(0);
             fireTableRowsDeleted(0, 0);
-            insertIndex--;
         }
-        if (insertIndex >= 0 && insertIndex <= getRowCount()) {
-            messages.add(insertIndex, message);
-            fireTableRowsInserted(insertIndex, insertIndex);
-        } else {
-            messages.add(message);
-            int lastIndex = getRowCount() - 1;
-            fireTableRowsInserted(lastIndex, lastIndex);
+    }
+
+    public synchronized void add(int index, MqttMessage message) {
+        messages.add(index, message);
+        fireTableRowsInserted(index, index);
+
+        while (isOverMaximum()) {
+            messages.remove(0);
+            fireTableRowsDeleted(0, 0);
         }
     }
 
@@ -145,14 +150,14 @@ public class MessageTableModel extends AbstractTableModel {
         return messages.lastIndexOf(message);
     }
 
-    public void clear() {
+    public synchronized void clear() {
         if (messages.size() > 0) {
             messages.clear();
             fireTableDataChanged();
         }
     }
 
-    public void remove(int index) {
+    public synchronized void remove(int index) {
         if (index < 0 || index >= getRowCount()) {
             return;
         }
@@ -160,7 +165,7 @@ public class MessageTableModel extends AbstractTableModel {
         fireTableRowsDeleted(index, index);
     }
 
-    public void cleanMessages(Subscription subscription) {
+    public synchronized void cleanMessages(Subscription subscription) {
         Iterator<MqttMessage> itr = messages.iterator();
         boolean changed = false;
         while (itr.hasNext()) {
@@ -175,4 +180,30 @@ public class MessageTableModel extends AbstractTableModel {
         }
     }
 
+    @Override
+    public void fireTableRowsInserted(int firstRow, int lastRow) {
+        try {
+            super.fireTableRowsInserted(firstRow, lastRow);
+        } catch (IndexOutOfBoundsException ignore) {
+            super.fireTableDataChanged();
+        }
+    }
+
+    @Override
+    public void fireTableRowsUpdated(int firstRow, int lastRow) {
+        try {
+            super.fireTableRowsUpdated(firstRow, lastRow);
+        } catch (IndexOutOfBoundsException ignore) {
+            super.fireTableDataChanged();
+        }
+    }
+
+    @Override
+    public void fireTableRowsDeleted(int firstRow, int lastRow) {
+        try {
+            super.fireTableRowsDeleted(firstRow, lastRow);
+        } catch (IndexOutOfBoundsException ignore) {
+            super.fireTableDataChanged();
+        }
+    }
 }
