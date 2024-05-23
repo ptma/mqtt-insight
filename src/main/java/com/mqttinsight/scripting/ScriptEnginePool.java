@@ -35,8 +35,13 @@ public class ScriptEnginePool {
     }
 
     public ScriptEngine getScriptEngine() throws JavetException {
-        IJavetEngine<NodeRuntime> javetEngine = javetEnginePool.getEngine();
-        return new ScriptEngine(javetEngine, converter, logger);
+        return new ScriptEngine(javetEnginePool.getEngine(), converter, logger);
+    }
+
+    public void releaseEngine(IJavetEngine<NodeRuntime> iJavetEngine) {
+        if (iJavetEngine != null) {
+            javetEnginePool.releaseEngine(iJavetEngine);
+        }
     }
 
     public IJavetConverter getConverter() {

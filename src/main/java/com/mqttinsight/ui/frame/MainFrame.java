@@ -4,6 +4,7 @@ import com.formdev.flatlaf.extras.FlatDesktop;
 import com.formdev.flatlaf.icons.FlatTabbedPaneCloseIcon;
 import com.mqttinsight.codec.CodecSupportLoader;
 import com.mqttinsight.config.Configuration;
+import com.mqttinsight.scripting.ScriptEnginePool;
 import com.mqttinsight.ui.component.StatePersistenceFrame;
 import com.mqttinsight.ui.form.ConnectionManagerForm;
 import com.mqttinsight.ui.form.MainWindowForm;
@@ -97,6 +98,7 @@ public class MainFrame extends StatePersistenceFrame {
 
     public void close() {
         CodecSupportLoader.dispose();
+        ScriptEnginePool.instance().close();
         Configuration.instance().save();
         MainWindowForm.instance().close();
         Configuration.instance().clearTempPath();

@@ -85,7 +85,7 @@ public class CodecSupportLoader {
     }
 
     public static void dispose() {
-        engines.values().forEach(ScriptEngine::dispose);
+        engines.values().forEach(ScriptEngine::closeRuntime);
         engines.clear();
     }
 
