@@ -21,12 +21,12 @@ public class Base64CodecSupport implements CodecSupport {
     }
 
     @Override
-    public String toString(byte[] payload) {
+    public String toString(String topic, byte[] payload) {
         return Base64.encode(payload);
     }
 
     @Override
-    public byte[] toPayload(String text) throws CodecException {
+    public byte[] toPayload(String topic, String text) throws CodecException {
         return text == null ? new byte[0] : Base64.decode(text);
     }
 }

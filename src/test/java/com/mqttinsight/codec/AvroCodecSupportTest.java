@@ -34,8 +34,8 @@ class AvroCodecSupportTest {
             encoder.flush();
             byte[] encoded = outputStream.toByteArray();
 
-            String json = codecSupport.toString(encoded);
-            byte[] encoded2 = codecSupport.toPayload(json);
+            String json = codecSupport.toString("testtopic", encoded);
+            byte[] encoded2 = codecSupport.toPayload("testtopic", json);
 
             Assertions.assertArrayEquals(encoded, encoded2);
         }
@@ -52,8 +52,8 @@ class AvroCodecSupportTest {
         pojo.put("favorite_color", "red");
 
         String pojoJson = Utils.JSON.toString(pojo);
-        byte[] encoded = codecSupport.toPayload(pojoJson);
-        String decodedJson = codecSupport.toString(encoded);
+        byte[] encoded = codecSupport.toPayload("testtopic", pojoJson);
+        String decodedJson = codecSupport.toString("testtopic", encoded);
 
         Map<String, Object> decodedMap = Utils.JSON.toObject(decodedJson, HashMap.class);
         Assertions.assertEquals(decodedMap.get("name"), "Jack");
@@ -71,8 +71,8 @@ class AvroCodecSupportTest {
         pojo.put("age", 30);
 
         String pojoJson = Utils.JSON.toString(pojo);
-        byte[] encoded = codecSupport.toPayload(pojoJson);
-        String decodedJson = codecSupport.toString(encoded);
+        byte[] encoded = codecSupport.toPayload("testtopic", pojoJson);
+        String decodedJson = codecSupport.toString("testtopic", encoded);
 
         Map<String, Object> decodedMap = Utils.JSON.toObject(decodedJson, HashMap.class);
         Assertions.assertEquals(decodedMap.get("name"), "John");

@@ -26,7 +26,7 @@ public class MsgpackCodecSupport extends JsonCodecSupport {
     }
 
     @Override
-    public String toString(byte[] payload) {
+    public String toString(String topic, byte[] payload) {
         try {
             ObjectNode object = MSGPACK_MAPPER.readValue(payload, ObjectNode.class);
             return Utils.JSON.toString(object);
@@ -37,7 +37,7 @@ public class MsgpackCodecSupport extends JsonCodecSupport {
     }
 
     @Override
-    public byte[] toPayload(String text) throws CodecException {
+    public byte[] toPayload(String topic, String text) throws CodecException {
         try {
             ObjectNode object = Utils.JSON.toObject(text);
             return MSGPACK_MAPPER.writeValueAsBytes(object);

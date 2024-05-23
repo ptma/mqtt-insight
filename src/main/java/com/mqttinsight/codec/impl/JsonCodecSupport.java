@@ -24,8 +24,8 @@ public class JsonCodecSupport extends PlainCodecSupport implements CodecSupport 
     }
 
     @Override
-    public byte[] toPayload(String json) throws CodecException {
-        return super.toPayload(json);
+    public byte[] toPayload(String topic, String json) throws CodecException {
+        return super.toPayload(topic, json);
     }
 
     protected String prettyPrint(String json) {

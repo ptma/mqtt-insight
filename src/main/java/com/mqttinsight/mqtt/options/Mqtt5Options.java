@@ -55,7 +55,7 @@ public class Mqtt5Options {
                 new MqttMessage(
                     CodecSupports.instance()
                         .getByName(willMessage.getPayloadFormat())
-                        .toPayload(willMessage.getPayload()),
+                        .toPayload(willMessage.getTopic(), willMessage.getPayload()),
                     willMessage.getQos(),
                     willMessage.isRetained(), null)
             );

@@ -49,7 +49,7 @@ public abstract class AbstractMqttMessage implements MqttMessage {
     public String decodePayload(CodecSupport codec, boolean pretty) {
         if (this.decodeFormat == null || !this.decodeFormat.equals(codec.getName()) || decodedPayload == null) {
             this.decodeFormat = codec.getName();
-            decodedPayload = codec.toString(payloadAsBytes());
+            decodedPayload = codec.toString(getTopic(), payloadAsBytes());
         }
         if (pretty) {
             return codec.toPrettyString(decodedPayload);

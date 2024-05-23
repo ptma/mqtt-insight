@@ -448,4 +448,12 @@ public class Utils {
             return null;
         }
     }
+
+    public static Throwable getRootThrowable(Throwable throwable) {
+        Throwable result = throwable;
+        while (result.getCause() != null) {
+            result = result.getCause();
+        }
+        return result;
+    }
 }

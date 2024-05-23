@@ -4,7 +4,6 @@ import com.formdev.flatlaf.FlatClientProperties;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 import com.mqttinsight.config.Configuration;
-import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.exception.VerificationException;
 import com.mqttinsight.mqtt.PublishedItem;
 import com.mqttinsight.mqtt.PublishedMqttMessage;
@@ -204,7 +203,7 @@ public class MessagePublishPanel extends JPanel {
                 int qos = qosComboBox.getSelectedIndex();
                 boolean retained = retainedCheckBox.isSelected();
                 String format = (String) formatComboBox.getSelectedItem();
-                byte[] payload = CodecSupports.instance().getByName(format).toPayload(payloadString);
+                byte[] payload = CodecSupports.instance().getByName(format).toPayload(topic, payloadString);
                 mqttInstance.publishMessage(PublishedMqttMessage.of(
                     topic,
                     payload,
@@ -213,9 +212,10 @@ public class MessagePublishPanel extends JPanel {
                     format
                 ));
                 addPublishedTopic(topic, payloadString, qos, retained, format);
-            } catch (CodecException e) {
-                Utils.Toast.error(e.getMessage());
-                log.error(e.getMessage(), e);
+            } catch (Exception e) {
+                Throwable throwable = Utils.getRootThrowable(e);
+                Utils.Toast.error(throwable.getMessage());
+                log.error(throwable.getMessage(), throwable);
             }
         });
     }

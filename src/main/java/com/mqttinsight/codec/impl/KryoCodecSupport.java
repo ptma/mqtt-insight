@@ -81,7 +81,7 @@ public class KryoCodecSupport extends JsonCodecSupport implements DynamicCodecSu
     }
 
     @Override
-    public String toString(byte[] payload) {
+    public String toString(String topic, byte[] payload) {
         try {
             Kryo kryo = KRYOS.get();
             kryo.setClassLoader(classLoader);
@@ -95,7 +95,7 @@ public class KryoCodecSupport extends JsonCodecSupport implements DynamicCodecSu
     }
 
     @Override
-    public byte[] toPayload(String json) throws CodecException {
+    public byte[] toPayload(String topic, String json) throws CodecException {
         throw new CodecException("Kryo encoding is not supported.");
     }
 }

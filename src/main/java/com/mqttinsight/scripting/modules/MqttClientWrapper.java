@@ -116,6 +116,17 @@ public class MqttClientWrapper {
     }
 
     /**
+     * 消息主题是否与订阅主题匹配
+     *
+     * @param pattern 订阅的主题，支持通配符
+     * @param topic   发布的消息主题
+     * @return 是否匹配
+     */
+    public boolean topicMatch(String pattern, String topic) {
+        return TopicUtil.match(pattern, topic);
+    }
+
+    /**
      * 解码消息(所有主题)
      * <pre>
      * <code>

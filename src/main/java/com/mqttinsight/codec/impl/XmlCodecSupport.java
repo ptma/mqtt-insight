@@ -32,8 +32,8 @@ public class XmlCodecSupport extends PlainCodecSupport implements CodecSupport {
     }
 
     @Override
-    public byte[] toPayload(String text) throws CodecException {
-        return super.toPayload(text);
+    public byte[] toPayload(String topic, String text) throws CodecException {
+        return super.toPayload(topic, text);
     }
 
 }

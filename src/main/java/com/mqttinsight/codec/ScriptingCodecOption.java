@@ -4,6 +4,7 @@ import com.caoccao.javet.values.reference.V8ValueTypedArray;
 import lombok.Getter;
 
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -17,15 +18,15 @@ public class ScriptingCodecOption {
     private String[] schemaExts;
 
 
-    private Function<byte[], String> decoder;
-    private Function<String, V8ValueTypedArray> encoder;
+    private BiFunction<String, byte[], String> decoder;
+    private BiFunction<String, String, V8ValueTypedArray> encoder;
     private Function<String, Void> loadSchema;
 
     private ScriptingCodecOption() {
     }
 
-    public static ScriptingCodecOption of(Function<byte[], String> decoder,
-                                          Function<String, V8ValueTypedArray> encoder,
+    public static ScriptingCodecOption of(BiFunction<String, byte[], String> decoder,
+                                          BiFunction<String, String, V8ValueTypedArray> encoder,
                                           Function<String, Void> loadSchema,
                                           Map<String, Object> optionMap) {
         ScriptingCodecOption option = new ScriptingCodecOption();

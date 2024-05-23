@@ -20,12 +20,12 @@ public class HexCodecSupport implements CodecSupport {
     }
 
     @Override
-    public String toString(byte[] payload) {
+    public String toString(String topic, byte[] payload) {
         return toHexString(payload);
     }
 
     @Override
-    public byte[] toPayload(String text) throws CodecException {
+    public byte[] toPayload(String topic, String text) throws CodecException {
         return text == null ? new byte[0] : Hex.decode(text.replaceAll(" ", ""));
     }
 

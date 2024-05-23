@@ -27,8 +27,8 @@ class MsgpackCodecSupportTest {
 
         ObjectMapper objectMapper = new MessagePackMapper();
         byte[] encoded = objectMapper.writeValueAsBytes(pojo);
-        String json = codecSupport.toString(encoded);
-        byte[] encoded2 = codecSupport.toPayload(json);
+        String json = codecSupport.toString("testtopic", encoded);
+        byte[] encoded2 = codecSupport.toPayload("testtopic", json);
         Assertions.assertArrayEquals(encoded, encoded2);
     }
 

@@ -61,7 +61,7 @@ public class ProtobufCodecSupport extends JsonCodecSupport implements DynamicCod
     }
 
     @Override
-    public String toString(byte[] payload) {
+    public String toString(String topic, byte[] payload) {
         try {
             Map<String, Object> msg = dynamicProtoSchema.parse(payload);
             return Utils.JSON.toString(msg);
@@ -72,7 +72,7 @@ public class ProtobufCodecSupport extends JsonCodecSupport implements DynamicCod
     }
 
     @Override
-    public byte[] toPayload(String json) throws CodecException {
+    public byte[] toPayload(String topic, String json) throws CodecException {
         throw new CodecException("Protobuf encoding is not supported.");
     }
 }

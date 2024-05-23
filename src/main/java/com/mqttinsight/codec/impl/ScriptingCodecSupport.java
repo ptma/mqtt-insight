@@ -12,6 +12,8 @@ import com.mqttinsight.util.Utils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * @author ptma
  */
@@ -90,13 +92,19 @@ public class ScriptingCodecSupport extends JsonCodecSupport implements DynamicCo
     }
 
     @Override
-    public String toString(byte[] payload) {
-        return options.getDecoder().apply(payload);
+    public String toString(String topic, byte[] payload) {
+        try {
+            String str = options.getDecoder().apply(topic, payload);
+            return str == null ? new String(payload, StandardCharsets.UTF_8) : str;
+        } catch (Exception e) {
+            log.error("Decoding failed. topic: {}, {}", topic, Utils.getRootThrowable(e).getMessage());
+            return new String(payload, StandardCharsets.UTF_8);
+        }
     }
 
     @Override
-    public byte[] toPayload(String text) throws CodecException {
-        return options.getEncoder() != null ? convert(options.getEncoder().apply(text)) : new byte[0];
+    public byte[] toPayload(String topic, String text) throws CodecException {
+        return options.getEncoder() != null ? convert(options.getEncoder().apply(topic, text)) : new byte[0];
     }
 
     private byte[] convert(V8ValueTypedArray payload) throws CodecException {

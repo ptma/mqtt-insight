@@ -80,7 +80,7 @@ public class AvroCodecSupport extends JsonCodecSupport implements DynamicCodecSu
     }
 
     @Override
-    public String toString(byte[] payload) {
+    public String toString(String topic, byte[] payload) {
         try {
             if (schema.getType().equals(Schema.Type.UNION)) {
                 for (Schema s : schema.getTypes()) {
@@ -111,7 +111,7 @@ public class AvroCodecSupport extends JsonCodecSupport implements DynamicCodecSu
     }
 
     @Override
-    public byte[] toPayload(String json) throws CodecException {
+    public byte[] toPayload(String topic, String json) throws CodecException {
         try {
             Map<String, Object> objectMap = Utils.JSON.toObject(json, HashMap.class);
             if (schema.getType().equals(Schema.Type.UNION)) {
