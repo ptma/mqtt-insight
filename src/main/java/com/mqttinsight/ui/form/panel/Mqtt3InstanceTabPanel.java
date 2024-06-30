@@ -237,6 +237,7 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
             String causeMessage = getCauseMessage(ex);
             Mqtt3InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.FAILED, ex.getReasonCode(), causeMessage);
             log.warn("Disconnected from {} with an error. errorCode: {}, {}", properties.completeServerURI(), ex.getReasonCode(), causeMessage);
+            autoReconnect();
         }
 
         @Override

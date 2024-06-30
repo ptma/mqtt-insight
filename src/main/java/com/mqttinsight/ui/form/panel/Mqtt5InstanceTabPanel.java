@@ -258,6 +258,7 @@ public class Mqtt5InstanceTabPanel extends MqttInstanceTabPanel {
                 String causeMessage = getCauseMessage(response.getException());
                 Mqtt5InstanceTabPanel.this.onConnectionChanged(ConnectionStatus.FAILED, response.getReturnCode(), causeMessage);
                 log.warn("Disconnect with error from {}. errorCode: {}, {}", properties.completeServerURI(), response.getReturnCode(), causeMessage);
+                autoReconnect();
             }
         }
 

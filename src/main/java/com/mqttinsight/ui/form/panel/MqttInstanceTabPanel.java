@@ -34,6 +34,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -78,6 +79,8 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     private final List<BaseChartFrame> chartFrames;
 
     private ScriptLoader scriptLoader;
+
+    protected AtomicInteger reconnectAttempts = new AtomicInteger(0);
 
     public MqttInstanceTabPanel(MqttProperties properties) {
         super();
@@ -300,6 +303,15 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         }
     }
 
+    protected void autoReconnect() {
+        int reconnects = reconnectAttempts.incrementAndGet();
+        if (reconnects > 10) {
+            log.warn("Exceeded maximum reconnection attempts. {}", properties.completeServerURI());
+        } else {
+            connect();
+        }
+    }
+
     protected void onConnectionChanged(ConnectionStatus status) {
         SwingUtilities.invokeLater(() -> {
             connectionStatus = status;
@@ -326,6 +338,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             } else if (status.equals(ConnectionStatus.CONNECTED)) {
                 LangUtil.buttonText(connectButton, "Disconnect");
                 connectButton.setIcon(Icons.SUSPEND);
+                reconnectAttempts.set(0);
             }
 
             subscribeButton.setEnabled(status.equals(ConnectionStatus.CONNECTED));
