@@ -1,5 +1,6 @@
 package com.mqttinsight.mqtt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mqttinsight.codec.CodecSupport;
 
 import java.awt.*;
@@ -41,9 +42,12 @@ public interface MqttMessage {
 
     String timeWithFormat(String dateTimeFormat);
 
+    @JsonIgnore
     default Color getColor() {
         return null;
     }
+
+    void setColor(Color color);
 
     default int payloadSize() {
         byte[] payload = payloadAsBytes();

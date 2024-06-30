@@ -33,13 +33,6 @@ public class DecodedMqttMessage extends ReceivedMqttMessage {
     }
 
     @Override
-    public Color getColor() {
-        return color != null ? ColorUtil.hexToColor(color) : (
-            subscription == null ? null : subscription.getColor()
-        );
-    }
-
-    @Override
     public MessageType getMessageType() {
         return messageType;
     }
@@ -49,6 +42,16 @@ public class DecodedMqttMessage extends ReceivedMqttMessage {
         return format != null ? format : (
             subscription != null ? subscription.getPayloadFormat() : CodecSupport.PLAIN
         );
+    }
+
+    @Override
+    public Color getColor() {
+        return color != null ? ColorUtil.hexToColor(color) : super.getColor();
+    }
+    
+    @Override
+    public void setColor(Color color) {
+        this.color = ColorUtil.toHex(color);
     }
 
     public void setColor(String color) {

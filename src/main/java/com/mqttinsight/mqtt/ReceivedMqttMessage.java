@@ -34,7 +34,7 @@ public class ReceivedMqttMessage extends AbstractMqttMessage implements MqttMess
     @Override
     @JsonIgnore
     public Color getColor() {
-        return subscription == null ? null : subscription.getColor();
+        return super.getColor() != null ? super.getColor() : subscription == null ? null : subscription.getColor();
     }
 
     @Override

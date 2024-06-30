@@ -29,7 +29,7 @@ import java.awt.event.MouseListener;
  */
 @EqualsAndHashCode(callSuper = false)
 public class SubscriptionItem extends JPanel implements MouseListener {
-
+    private static final boolean DARK_LAF = UIManager.getBoolean("laf.dark");
     private final Color borderColor = UIManager.getColor("Component.borderColor");
 
     private final MqttInstance mqttInstance;
@@ -318,11 +318,10 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         badgePainter.setRounded(true);
         badgePainter.setRoundWidth(16);
         badgePainter.setRoundHeight(16);
-        boolean isDarkTheme = UIManager.getBoolean("laf.dark");
         Color bgColor = subscription.getColor();
-        Color fgColor = Utils.getReverseForegroundColor(bgColor);
+        Color fgColor = Utils.getReverseForegroundColor(bgColor, DARK_LAF);
         Color badgeColor;
-        if (isDarkTheme) {
+        if (DARK_LAF) {
             badgeColor = Utils.brighter(bgColor, 0.7f);
         } else {
             badgeColor = Utils.darker(bgColor, 0.85f);

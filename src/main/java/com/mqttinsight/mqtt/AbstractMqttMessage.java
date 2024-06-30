@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 
+import java.awt.*;
 import java.util.Date;
 
 /**
@@ -24,6 +25,8 @@ public abstract class AbstractMqttMessage implements MqttMessage {
     private final boolean duplicate;
 
     private final Date time;
+
+    private Color color;
 
     @JsonIgnore
     protected transient String decodeFormat;
@@ -100,5 +103,15 @@ public abstract class AbstractMqttMessage implements MqttMessage {
 
     public void setPayload(byte[] payload) {
         this.payload = payload;
+    }
+
+    @Override
+    @JsonIgnore
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
     }
 }

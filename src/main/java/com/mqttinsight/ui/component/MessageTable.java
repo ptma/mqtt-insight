@@ -1,6 +1,8 @@
 package com.mqttinsight.ui.component;
 
+import cn.hutool.core.img.ColorUtil;
 import com.formdev.flatlaf.extras.components.FlatPopupMenu;
+import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.ReceivedMqttMessage;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jdesktop.swingx.JXTable;
 import org.jdesktop.swingx.decorator.ColorHighlighter;
 import org.jdesktop.swingx.decorator.HighlightPredicate;
+import org.jdesktop.swingx.graphics.ColorUtilities;
 import org.jdesktop.swingx.renderer.DefaultTableRenderer;
 import org.jdesktop.swingx.search.AbstractSearchable;
 import org.jdesktop.swingx.table.TableColumnExt;
@@ -54,6 +57,7 @@ public class MessageTable extends JXTable {
     private JMenuItem menuClear;
     private JMenuItem menuClearVisible;
     private JMenuItem menuExport;
+    private JMenu colorMenu;
     private boolean autoScroll;
     private final VisibleFilter visibleFilter = new VisibleFilter();
 
@@ -71,12 +75,14 @@ public class MessageTable extends JXTable {
         setRowSelectionAllowed(true);
         setColumnSelectionAllowed(false);
         putClientProperty(AbstractSearchable.MATCH_HIGHLIGHTER, Boolean.TRUE);
+
+        boolean darkLaf = UIManager.getBoolean("laf.dark");
         if (tableModel.getViewMode() == MessageViewMode.TABLE) {
             tableRenderer = new DefaultTableRenderer(new TableViewRendererProvider(tableModel));
             setRowHeight(28);
             initTableViewColumns();
             setColumnControlVisible(true);
-            setShowHorizontalLines(UIManager.getBoolean("laf.dark"));
+            setShowHorizontalLines(darkLaf);
         } else {
             tableRenderer = new DefaultTableRenderer(new DialogueViewRendererProvider(tableModel));
             initDialogueViewColumns();
@@ -88,7 +94,7 @@ public class MessageTable extends JXTable {
         this.createDefaultRenderers();
         AbstractSearchable searchable = (AbstractSearchable) this.getSearchable();
         Color highlighterBg = Color.YELLOW.brighter();
-        Color highlighterFg = Utils.getReverseForegroundColor(highlighterBg);
+        Color highlighterFg = Utils.getReverseForegroundColor(highlighterBg, darkLaf);
         searchable.setMatchHighlighter(new ColorHighlighter(HighlightPredicate.NEVER, highlighterBg, highlighterFg, highlighterBg, highlighterFg));
 
         this.getActionMap().remove("find");
@@ -107,11 +113,11 @@ public class MessageTable extends JXTable {
                 }
             }
         });
-        initPopupMenu();
+        initPopupMenu(darkLaf);
         setRowFilter(null);
     }
 
-    private void initPopupMenu() {
+    private void initPopupMenu(boolean darkLaf) {
         popupMenu = new FlatPopupMenu();
         menuCopyTopic = Utils.UI.createMenuItem(LangUtil.getString("Copy&Topic"), (e) -> copyTopic());
         popupMenu.add(menuCopyTopic);
@@ -149,6 +155,37 @@ public class MessageTable extends JXTable {
 
         popupMenu.addSeparator();
 
+        {
+            colorMenu = new JMenu(LangUtil.getString("Color"));
+            colorMenu.setIcon(Icons.PALETTE);
+
+            float saturation = 1.0f;
+            float lightness = darkLaf ? 0.7f : 0.3f;
+            int colorCols = 16;
+            for (int col = 0; col < colorCols; col++) {
+                float hue = col * 1.0f / colorCols;
+                Color color = ColorUtilities.HSLtoRGB(hue, saturation, lightness);
+                JMenuItem colorItem = new JMenuItem();
+                colorItem.setText(ColorUtil.toHex(color));
+                colorItem.setOpaque(true);
+                colorItem.setBackground(color);
+                colorItem.setForeground(Utils.getReverseForegroundColor(color, darkLaf));
+                colorItem.addActionListener(e -> {
+                    changeRowColor(color);
+                });
+                colorMenu.add(colorItem);
+            }
+            colorMenu.addSeparator();
+            JMenuItem moreItem = Utils.UI.createMenuItem(LangUtil.getString("MoreColor"), e -> {
+                chooseRowColor();
+            });
+            colorMenu.add(moreItem);
+
+            popupMenu.add(colorMenu);
+        }
+
+        popupMenu.addSeparator();
+
         menuClear = Utils.UI.createMenuItem(LangUtil.getString("ClearAllMessages"), (e) -> mqttInstance.applyEvent(InstanceEventListener::clearAllMessages));
         menuClear.setIcon(Icons.CLEAR);
         popupMenu.add(menuClear);
@@ -168,6 +205,7 @@ public class MessageTable extends JXTable {
                     menuCopyTopic.setEnabled(onRow);
                     menuCopy.setEnabled(onRow);
                     menuDelete.setEnabled(onRow);
+                    colorMenu.setEnabled(onRow);
                     if (onRow) {
                         MessageTable.this.setRowSelectionInterval(rowIndex, rowIndex);
                     }
@@ -350,6 +388,37 @@ public class MessageTable extends JXTable {
             StringSelection selec = new StringSelection(message.getPayload());
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(selec, selec);
+        }
+    }
+
+    private void changeRowColor(Color color) {
+        int selRow = getSelectedRow();
+        if (selRow >= 0 && selRow < getRowCount()) {
+            int modelIndex = convertRowIndexToModel(selRow);
+            MqttMessage message = tableModel.get(modelIndex);
+            message.setColor(color);
+        }
+    }
+
+    private void chooseRowColor() {
+        int selRow = getSelectedRow();
+        if (selRow >= 0 && selRow < getRowCount()) {
+            int modelIndex = convertRowIndexToModel(selRow);
+            MqttMessage message = tableModel.get(modelIndex);
+            JColorChooser colorChooser = new JColorChooser();
+            if (message.getColor() != null) {
+                colorChooser.setColor(message.getColor());
+            }
+            JDialog dialog = JColorChooser.createDialog(MqttInsightApplication.frame,
+                LangUtil.getString("ChooseColor"),
+                true,
+                colorChooser,
+                e1 -> {
+                    message.setColor(colorChooser.getColor());
+                },
+                null
+            );
+            dialog.setVisible(true);
         }
     }
 

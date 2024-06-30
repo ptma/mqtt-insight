@@ -369,9 +369,19 @@ public class Utils {
         return new Color(red, green, blue);
     }
 
-    public static Color getReverseForegroundColor(Color color) {
-        float grayLevel = (color.getRed() * 299 + color.getGreen() * 587 + color.getBlue() * 114) / 1000f / 255;
-        return grayLevel >= 0.45 ? DARKER_TEXT_COLOR : LIGHTER_TEXT_COLOR;
+    /**
+     * 根据给定的颜色和界面主题，获取对应背景色的前景颜色（文本颜色）。
+     * 该方法通过计算给定颜色的灰度级别来决定返回的文本颜色应该是深色还是浅色。
+     *
+     * @param bgColor 需要反转其前景色的颜色对象。
+     * @param darkLaf 指示当前界面主题是否为暗色主题的布尔值。
+     * @return 与给定颜色相反的文本颜色，基于界面主题的黑暗程度。
+     */
+    public static Color getReverseForegroundColor(Color bgColor, boolean darkLaf) {
+        float grayLevel = (bgColor.getRed() * 299 + bgColor.getGreen() * 587 + bgColor.getBlue() * 114) / 1000f / 255;
+        return grayLevel >= 0.45 ? DARKER_TEXT_COLOR : (
+            darkLaf ? LIGHTER_TEXT_COLOR : Color.WHITE
+        );
     }
 
     public static String md5(String content) throws NoSuchAlgorithmException {
