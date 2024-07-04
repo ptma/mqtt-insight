@@ -334,6 +334,8 @@ public class MessageTable extends JXTable {
         loadColumnConfigsAndBindingListener(colRetained);
         loadColumnConfigsAndBindingListener(colTime);
         loadColumnConfigsAndBindingListener(colSize);
+
+        this.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
     }
 
     private void initDialogueViewColumns() {
