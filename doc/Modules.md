@@ -100,7 +100,7 @@ mqtt.topicVariables("/device/{product}", "/device/test123");
 /*
 返回
 {
-    "product", "test1234"
+    "product", "test123"
 }
 */
 ```
@@ -167,7 +167,7 @@ mqtt.topicVariables("/device/{product}", "/device/test123");
 /*
 返回
 {
-    "product", "test1234"
+    "product", "test123"
 }
 */
 ```
