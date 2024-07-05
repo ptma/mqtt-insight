@@ -2,10 +2,15 @@ package com.mqttinsight.mqtt;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import javax.swing.*;
+import java.awt.*;
+
 /**
  * @author ptma
  */
 public class PublishedMqttMessage extends AbstractMqttMessage implements MqttMessage {
+
+    private static final Color PUBLISH_BG = UIManager.getBoolean("laf.dark") ? Color.decode("#133918") : Color.decode("#C5EBCA");
 
     private final MessageType messageType = MessageType.PUBLISHED;
 
@@ -31,4 +36,9 @@ public class PublishedMqttMessage extends AbstractMqttMessage implements MqttMes
         return format;
     }
 
+    @Override
+    public Color getColor() {
+        Color color = super.getColor();
+        return color == null ? PUBLISH_BG : color;
+    }
 }
