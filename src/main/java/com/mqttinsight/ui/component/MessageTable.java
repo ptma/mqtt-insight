@@ -369,6 +369,7 @@ public class MessageTable extends JXTable {
             tableModel.remove(modelIndex);
             mqttInstance.applyEvent(listener -> listener.onMessageRemoved(message));
         }
+        System.gc();
     }
 
     public void copyTopic() {

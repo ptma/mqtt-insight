@@ -154,6 +154,7 @@ public class MessageTableModel extends AbstractTableModel {
         if (messages.size() > 0) {
             messages.clear();
             fireTableDataChanged();
+            System.gc();
         }
     }
 
@@ -178,6 +179,7 @@ public class MessageTableModel extends AbstractTableModel {
         if (changed) {
             fireTableDataChanged();
         }
+        System.gc();
     }
 
     @Override
