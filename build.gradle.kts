@@ -181,6 +181,12 @@ configure<PackagePluginExtension> {
     customizedJre(true)
     modules(requireModules)
     jreDirectoryName("jre")
+    vmArgs(
+        listOf(
+            "-Xms256M",
+            "-Xmx2048M"
+        )
+    )
 }
 
 var taskPlatform = Platform.windows
