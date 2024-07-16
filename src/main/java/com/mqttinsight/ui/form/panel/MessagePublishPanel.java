@@ -1,5 +1,8 @@
 package com.mqttinsight.ui.form.panel;
 
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
@@ -24,6 +27,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author ptma
@@ -200,6 +204,37 @@ public class MessagePublishPanel extends JPanel {
             try {
                 String topic = topicComboBox.getSelectedItem().toString();
                 String payloadString = payloadEditor.getText();
+
+                {
+                    // replace variables
+                    payloadString = StrUtil.replace(payloadString, "\\$\\{timestamp\\}", (p) -> System.currentTimeMillis() + "");
+                    payloadString = StrUtil.replace(payloadString, "\\$\\{uuid\\}", (p) -> UUID.randomUUID().toString());
+                    payloadString = StrUtil.replace(payloadString, "\\$\\{int(\\(\\s*(\\d*),?\\s*?(\\d*)\\s*\\))?\\}", (matcher) -> {
+                        int min = NumberUtil.isInteger(matcher.group(2)) ? Integer.parseInt(matcher.group(2)) : 0;
+                        int max = NumberUtil.isInteger(matcher.group(3)) ? Integer.parseInt(matcher.group(3)) : 100;
+                        if (min > max) {
+                            int temp = min;
+                            min = max;
+                            max = temp;
+                        }
+                        return RandomUtil.randomInt(min, max) + "";
+                    });
+                    payloadString = StrUtil.replace(payloadString, "\\$\\{float(\\(\\s*([\\-\\+]?\\d+(\\.?\\d+)?)\\s*,\\s*?([\\-\\+]?\\d+(\\.?\\d+)?)\\s*\\))?\\}", (matcher) -> {
+                        float min = NumberUtil.isNumber(matcher.group(2)) ? NumberUtil.toBigDecimal(matcher.group(2)).floatValue() : 0;
+                        float max = NumberUtil.isNumber(matcher.group(3)) ? NumberUtil.toBigDecimal(matcher.group(3)).floatValue() : 1;
+                        if (min > max) {
+                            float temp = min;
+                            min = max;
+                            max = temp;
+                        }
+                        return RandomUtil.randomFloat(min, max) + "";
+                    });
+                    payloadString = StrUtil.replace(payloadString, "\\$\\{string(\\((\\d*)\\))?\\}", (matcher) -> {
+                        int length = NumberUtil.isInteger(matcher.group(2)) ? Integer.parseInt(matcher.group(2)) : 4;
+                        return RandomUtil.randomString(length);
+                    });
+                }
+
                 int qos = qosComboBox.getSelectedIndex();
                 boolean retained = retainedCheckBox.isSelected();
                 String format = (String) formatComboBox.getSelectedItem();
