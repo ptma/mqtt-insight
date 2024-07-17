@@ -203,13 +203,14 @@ public class MessagePublishPanel extends JPanel {
         SwingUtilities.invokeLater(() -> {
             try {
                 String topic = topicComboBox.getSelectedItem().toString();
-                String payloadString = payloadEditor.getText();
+                String originalPayload = payloadEditor.getText();
+                String replacedPayload = originalPayload;
 
                 {
                     // replace variables
-                    payloadString = StrUtil.replace(payloadString, "\\$\\{timestamp\\}", (p) -> System.currentTimeMillis() + "");
-                    payloadString = StrUtil.replace(payloadString, "\\$\\{uuid\\}", (p) -> UUID.randomUUID().toString());
-                    payloadString = StrUtil.replace(payloadString, "\\$\\{int(\\(\\s*(\\d*),?\\s*?(\\d*)\\s*\\))?\\}", (matcher) -> {
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{timestamp\\}", (p) -> System.currentTimeMillis() + "");
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{uuid\\}", (p) -> UUID.randomUUID().toString());
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{int(\\(\\s*(\\d*),?\\s*?(\\d*)\\s*\\))?\\}", (matcher) -> {
                         int min = NumberUtil.isInteger(matcher.group(2)) ? Integer.parseInt(matcher.group(2)) : 0;
                         int max = NumberUtil.isInteger(matcher.group(3)) ? Integer.parseInt(matcher.group(3)) : 100;
                         if (min > max) {
@@ -219,7 +220,7 @@ public class MessagePublishPanel extends JPanel {
                         }
                         return RandomUtil.randomInt(min, max) + "";
                     });
-                    payloadString = StrUtil.replace(payloadString, "\\$\\{float(\\(\\s*([\\-\\+]?\\d+(\\.?\\d+)?)\\s*,\\s*?([\\-\\+]?\\d+(\\.?\\d+)?)\\s*\\))?\\}", (matcher) -> {
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{float(\\(\\s*([\\-\\+]?\\d+(\\.?\\d+)?)\\s*,\\s*?([\\-\\+]?\\d+(\\.?\\d+)?)\\s*\\))?\\}", (matcher) -> {
                         float min = NumberUtil.isNumber(matcher.group(2)) ? NumberUtil.toBigDecimal(matcher.group(2)).floatValue() : 0;
                         float max = NumberUtil.isNumber(matcher.group(3)) ? NumberUtil.toBigDecimal(matcher.group(3)).floatValue() : 1;
                         if (min > max) {
@@ -229,7 +230,7 @@ public class MessagePublishPanel extends JPanel {
                         }
                         return RandomUtil.randomFloat(min, max) + "";
                     });
-                    payloadString = StrUtil.replace(payloadString, "\\$\\{string(\\((\\d*)\\))?\\}", (matcher) -> {
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{string(\\((\\d*)\\))?\\}", (matcher) -> {
                         int length = NumberUtil.isInteger(matcher.group(2)) ? Integer.parseInt(matcher.group(2)) : 4;
                         return RandomUtil.randomString(length);
                     });
@@ -238,7 +239,7 @@ public class MessagePublishPanel extends JPanel {
                 int qos = qosComboBox.getSelectedIndex();
                 boolean retained = retainedCheckBox.isSelected();
                 String format = (String) formatComboBox.getSelectedItem();
-                byte[] payload = CodecSupports.instance().getByName(format).toPayload(topic, payloadString);
+                byte[] payload = CodecSupports.instance().getByName(format).toPayload(topic, replacedPayload);
                 mqttInstance.publishMessage(PublishedMqttMessage.of(
                     topic,
                     payload,
@@ -246,7 +247,7 @@ public class MessagePublishPanel extends JPanel {
                     retained,
                     format
                 ));
-                addPublishedTopic(topic, payloadString, qos, retained, format);
+                addPublishedTopic(topic, originalPayload, qos, retained, format);
             } catch (Exception e) {
                 Throwable throwable = Utils.getRootThrowable(e);
                 Utils.Toast.error(throwable.getMessage());
