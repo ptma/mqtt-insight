@@ -71,8 +71,10 @@ public class TableViewRendererProvider extends ComponentProvider<JLabel> {
             rendererComponent.setBackground(table.getSelectionBackground());
         } else {
             Color bgColor = message.getColor();
-            rendererComponent.setForeground(Utils.getReverseForegroundColor(bgColor, DARK_LAF));
-            rendererComponent.setBackground(bgColor);
+            if (bgColor != null) {
+                rendererComponent.setForeground(Utils.getReverseForegroundColor(bgColor, DARK_LAF));
+                rendererComponent.setBackground(bgColor);
+            }
         }
         int columnIndex = (Integer) table.getColumnExt(context.getColumn()).getClientProperty("columnIndex");
         switch (columnIndex) {
