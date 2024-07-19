@@ -47,7 +47,8 @@ public class MessagePublishPanel extends JPanel {
     private JComboBox<String> formatComboBox;
     private JPanel payloadPanel;
     private JButton publishButton;
-    private JPanel buttonPanel;
+    private JLabel tipsLabel;
+    private JPanel bottomPanel;
 
     public MessagePublishPanel(MqttInstance mqttInstance) {
         this.mqttInstance = mqttInstance;
@@ -59,11 +60,15 @@ public class MessagePublishPanel extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         topPanel = new JPanel();
         payloadPanel = new JPanel(new BorderLayout(0, 0));
-        buttonPanel = new JPanel(new BorderLayout(0, 0));
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
+        bottomPanel = new JPanel(new MigLayout(
+            "insets 0 0 0 0,gap 5",
+            "[][][grow]",
+            "[]"
+        ));
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
         add(topPanel, BorderLayout.NORTH);
         add(payloadPanel, BorderLayout.CENTER);
-        add(buttonPanel, BorderLayout.SOUTH);
+        add(bottomPanel, BorderLayout.SOUTH);
 
         topPanelLayout = new MigLayout(
             "insets 0 0 5 0,gap 5",
@@ -122,7 +127,11 @@ public class MessagePublishPanel extends JPanel {
 
         publishButton = new JButton(LangUtil.getString("PublishMessage") + " (Ctrl + Enter)", Icons.SEND_GREEN);
         publishButton.addActionListener(e -> publishMessage());
-        buttonPanel.add(publishButton, BorderLayout.WEST);
+        bottomPanel.add(publishButton);
+        tipsLabel = new JLabel();
+        tipsLabel.setIcon(Icons.TIPS);
+        tipsLabel.setToolTipText(LangUtil.getString("PublishTips"));
+        bottomPanel.add(tipsLabel);
 
         // Register shortcut
         InputMap inputMap = payloadEditor.textArea().getInputMap();
@@ -211,14 +220,14 @@ public class MessagePublishPanel extends JPanel {
                     replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{timestamp\\}", (p) -> System.currentTimeMillis() + "");
                     replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{uuid\\}", (p) -> UUID.randomUUID().toString());
                     replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{int(\\(\\s*(\\d*),?\\s*?(\\d*)\\s*\\))?\\}", (matcher) -> {
-                        int min = NumberUtil.isInteger(matcher.group(2)) ? Integer.parseInt(matcher.group(2)) : 0;
-                        int max = NumberUtil.isInteger(matcher.group(3)) ? Integer.parseInt(matcher.group(3)) : 100;
+                        long min = NumberUtil.isLong(matcher.group(2)) ? Long.parseLong(matcher.group(2)) : 0;
+                        long max = NumberUtil.isInteger(matcher.group(3)) ? Long.parseLong(matcher.group(3)) : 100;
                         if (min > max) {
-                            int temp = min;
+                            long temp = min;
                             min = max;
                             max = temp;
                         }
-                        return RandomUtil.randomInt(min, max) + "";
+                        return RandomUtil.randomLong(min, max) + "";
                     });
                     replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{float(\\(\\s*([\\-\\+]?\\d+(\\.?\\d+)?)\\s*,\\s*?([\\-\\+]?\\d+(\\.?\\d+)?)\\s*\\))?\\}", (matcher) -> {
                         float min = NumberUtil.isNumber(matcher.group(2)) ? NumberUtil.toBigDecimal(matcher.group(2)).floatValue() : 0;
