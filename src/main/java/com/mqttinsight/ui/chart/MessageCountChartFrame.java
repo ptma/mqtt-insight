@@ -56,6 +56,11 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
     }
 
     @Override
+    protected String getConfigKeyPrefix() {
+        return "CountChartFrame_";
+    }
+
+    @Override
     protected void bottomPanelResized(int width, int height) {
         // do nothing
     }
@@ -236,7 +241,6 @@ public class MessageCountChartFrame extends BaseChartFrame<CountSeriesProperties
         chartPanel.setPrintString(LangUtil.getString("Print"));
         chartPanel.setResetString(LangUtil.getString("ResetZoom"));
         chartPanel.setExportAsString(LangUtil.getString("ExportAs"));
-
 
         if (!seriesCache.isEmpty()) {
             seriesCache.forEach((seriesName, seriesValue) -> {

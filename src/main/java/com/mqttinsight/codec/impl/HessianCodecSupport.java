@@ -30,7 +30,7 @@ public class HessianCodecSupport extends JsonCodecSupport {
     }
 
     @Override
-    public String toString(byte[] payload) {
+    public String toString(String topic, byte[] payload) {
         if (payload == null) {
             return "";
         }
@@ -44,7 +44,7 @@ public class HessianCodecSupport extends JsonCodecSupport {
     }
 
     @Override
-    public byte[] toPayload(String json) throws CodecException {
+    public byte[] toPayload(String topic, String json) throws CodecException {
         throw new CodecException("Hessian encoding is not supported.");
     }
 }

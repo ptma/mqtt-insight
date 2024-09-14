@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class ConnectionTreeTableModel extends AbstractTreeTableModel {
 
-    protected ConnectionNode root;
+    protected final ConnectionNode root;
 
     public static ConnectionTreeTableModel newInstance() {
         return new ConnectionTreeTableModel(new ConnectionNode(""));
@@ -25,11 +25,15 @@ public class ConnectionTreeTableModel extends AbstractTreeTableModel {
     }
 
     public boolean isGroup(Object node) {
-        ConnectionNode treeNode = (ConnectionNode) node;
-        return treeNode.isGroup();
+        if (node instanceof ConnectionNode) {
+            ConnectionNode treeNode = (ConnectionNode) node;
+            return treeNode.isGroup();
+        } else {
+            return false;
+        }
     }
 
-    public boolean hasName(String name) {
+    public boolean nameExists(String name) {
         return root.hasNameInChildren(name);
     }
 
@@ -51,6 +55,13 @@ public class ConnectionTreeTableModel extends AbstractTreeTableModel {
         }
     }
 
+    /**
+     * 将一个子节点插入到指定父节点的指定位置。
+     *
+     * @param parent 父节点，不可为null。
+     * @param index  指定子节点插入的位置。
+     * @param child  要插入的子节点，如果为null，则不进行任何操作。
+     */
     public void insertChild(ConnectionNode parent, int index, ConnectionNode child) {
         if (child == null) {
             return;
@@ -129,10 +140,20 @@ public class ConnectionTreeTableModel extends AbstractTreeTableModel {
         }
     }
 
+    /**
+     * 判断给定的节点是否是叶子节点。
+     *
+     * @param node 待判断的节点，应为 ConnectionNode 类型。
+     * @return true or false。
+     */
     @Override
     public boolean isLeaf(Object node) {
-        ConnectionNode treeNode = (ConnectionNode) node;
-        return !treeNode.isGroup();
+        if (node instanceof ConnectionNode) {
+            ConnectionNode treeNode = (ConnectionNode) node;
+            return !treeNode.isGroup();
+        } else {
+            return false;
+        }
     }
 
     @Override

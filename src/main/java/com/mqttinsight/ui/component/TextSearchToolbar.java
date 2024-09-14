@@ -2,6 +2,7 @@ package com.mqttinsight.ui.component;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.components.FlatTextField;
+import com.mqttinsight.ui.form.panel.BasePreviewPanel;
 import com.mqttinsight.ui.form.panel.MessagePreviewPanel;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
@@ -24,7 +25,7 @@ public class TextSearchToolbar extends JPanel {
     protected static final Color NOTFOUND_TEXT_COLOR = Color.decode("#FF6666");
     protected static final Color FOUND_TEXT_COLOR = UIManager.getColor("TextField.foreground");
 
-    private final MessagePreviewPanel parent;
+    private final BasePreviewPanel parent;
     private final JTextArea textArea;
     private FlatTextField searchField;
     private JToggleButton matchCaseButton;
@@ -36,7 +37,7 @@ public class TextSearchToolbar extends JPanel {
     private SearchContext context;
     private boolean searching = false;
 
-    public TextSearchToolbar(final MessagePreviewPanel parent, final JTextArea textArea) {
+    public TextSearchToolbar(final BasePreviewPanel parent, final JTextArea textArea) {
         super();
         this.parent = parent;
         this.textArea = textArea;
@@ -161,7 +162,10 @@ public class TextSearchToolbar extends JPanel {
         }, KeyStroke.getKeyStroke("ESCAPE"), JComponent.WHEN_FOCUSED);
     }
 
-    public void focusSearch() {
+    public void focusSearch(String text) {
+        if (text != null && !text.isEmpty()) {
+            searchField.setText(text);
+        }
         searchField.requestFocus();
         searchField.selectAll();
     }

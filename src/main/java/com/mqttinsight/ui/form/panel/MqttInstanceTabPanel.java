@@ -31,7 +31,10 @@ import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -77,10 +80,12 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     private ScriptLoader scriptLoader;
 
+    protected AtomicInteger reconnectAttempts = new AtomicInteger(0);
+
     public MqttInstanceTabPanel(MqttProperties properties) {
         super();
         this.properties = properties;
-        eventListeners = new ArrayList<>();
+        eventListeners = new CopyOnWriteArrayList<>();
         chartFrames = new ArrayList<>();
         setLayout(new BorderLayout());
         $$$setupUI$$$();
@@ -95,8 +100,8 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         messageViewPanel = new MessageViewPanel(this, viewMode);
         messagePublishPanel = new MessagePublishPanel(this);
         messagePreviewPanel = new MessagePreviewPanel(this);
-        subscriptionSplitPanel.setLeftComponent(subscriptionListPanel.getRootPanel());
-        messageSplitPanel.setTopComponent(messageViewPanel.getRootPanel());
+        subscriptionSplitPanel.setLeftComponent(subscriptionListPanel);
+        messageSplitPanel.setTopComponent(messageViewPanel);
 
         Border tabbedPanelBorder = new SingleLineBorder(UIManager.getColor("Component.borderColor"), true, true, true, true);
         detailTabbedPanel.setBorder(tabbedPanelBorder);
@@ -252,7 +257,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             onConnectionChanged(ConnectionStatus.DISCONNECTING);
             disconnect(false);
         }
-        doClose();
+        dispose();
         return true;
     }
 
@@ -274,7 +279,13 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     @Override
     public void applyEvent(Consumer<InstanceEventListener> action) {
         try {
-            eventListeners.forEach(action);
+            Iterator<InstanceEventListener> itr = eventListeners.iterator();
+            while (itr.hasNext()) {
+                InstanceEventListener listener = itr.next();
+                if (listener != null) {
+                    action.accept(listener);
+                }
+            }
         } catch (Exception e) {
             log.warn(e.getMessage(), e);
         }
@@ -288,6 +299,15 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         if (connectionStatus.equals(ConnectionStatus.CONNECTED)) {
             disconnect(false);
         } else if (connectionStatus.equals(ConnectionStatus.DISCONNECTED) || connectionStatus.equals(ConnectionStatus.FAILED)) {
+            connect();
+        }
+    }
+
+    protected void autoReconnect() {
+        int reconnects = reconnectAttempts.incrementAndGet();
+        if (reconnects > 10) {
+            log.warn("Exceeded maximum reconnection attempts. {}", properties.completeServerURI());
+        } else {
             connect();
         }
     }
@@ -318,6 +338,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             } else if (status.equals(ConnectionStatus.CONNECTED)) {
                 LangUtil.buttonText(connectButton, "Disconnect");
                 connectButton.setIcon(Icons.SUSPEND);
+                reconnectAttempts.set(0);
             }
 
             subscribeButton.setEnabled(status.equals(ConnectionStatus.CONNECTED));
@@ -374,7 +395,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     public abstract boolean doSubscribe(final Subscription subscription);
 
-    public abstract void doClose();
+    public abstract void dispose();
 
     @Override
     public boolean subscribe(Subscription subscription) {

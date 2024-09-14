@@ -62,13 +62,8 @@ public class ScriptCodec {
     }
 
     public void decode(String scriptPath, String topic, Function<MqttMessageWrapper, Object> scriptingDecoder) {
-        if (decodersGroupMap.containsKey(scriptPath)) {
-            decodersGroupMap.get(scriptPath).put(topic, scriptingDecoder);
-        } else {
-            Map<String, Function<MqttMessageWrapper, Object>> decodersMap = new ConcurrentHashMap<>();
-            decodersMap.put(topic, scriptingDecoder);
-            decodersGroupMap.put(scriptPath, decodersMap);
-        }
+        decodersGroupMap.computeIfAbsent(scriptPath, k -> new ConcurrentHashMap<>())
+            .put(topic, scriptingDecoder);
     }
 
     public void removeScript(String scriptPath) {
@@ -102,7 +97,7 @@ public class ScriptCodec {
             }
             if (map.containsKey("color")) {
                 String color = (String) map.get("color");
-                if (color.matches("^#[0-9A-F]{6}$")) {
+                if (color.matches("^#[0-9a-fA-F]{6}$")) {
                     msg.setColor(color);
                 }
             }

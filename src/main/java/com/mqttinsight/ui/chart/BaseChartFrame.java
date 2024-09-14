@@ -8,6 +8,7 @@ import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.ui.chart.series.*;
 import com.mqttinsight.ui.component.SplitButton;
 import com.mqttinsight.ui.component.SplitIconMenuItem;
+import com.mqttinsight.ui.component.StatePersistenceFrame;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Icons;
@@ -33,7 +34,7 @@ import java.util.concurrent.ExecutorService;
  * @author ptma
  */
 @Slf4j
-public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame {
+public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePersistenceFrame {
     protected final MqttInstance mqttInstance;
     private JPanel contentPanel;
     protected JButton addSeriesButton;
@@ -48,7 +49,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
     protected JPanel bottomPanel;
     private JButton pauseButton;
     protected AbstractSeriesTableModel<T> seriesTableModel;
-    protected InstanceEventAdapter eventAdapter;
+    protected InstanceEventAdapter instanceEventAdapter;
     private ExecutorService executorService;
     @Getter
     private boolean paused = false;
@@ -57,16 +58,18 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
         super();
         this.mqttInstance = mqttInstance;
         $$$setupUI$$$();
+        setMinimumSize(new Dimension(800, 600));
         setIconImages(Icons.WINDOW_ICON);
         setContentPane(contentPanel);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         initComponents();
-        initMessageEvent();
+        initEventListeners();
         loadFavoriteSeries();
         applyLanguage();
         mqttInstance.registerChartFrame(this);
 
         bottomPanel.addComponentListener(new ComponentAdapter() {
+            @Override
             public void componentResized(ComponentEvent evt) {
                 Component c = (Component) evt.getSource();
                 bottomPanelResized(c.getWidth(), c.getHeight());
@@ -225,10 +228,10 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
         }
     }
 
-    private void initMessageEvent() {
+    private void initEventListeners() {
         // Create a thread pool first, then add event listeners
         executorService = ThreadUtil.newFixedExecutor(1, "Chart ", false);
-        eventAdapter = new InstanceEventAdapter() {
+        instanceEventAdapter = new InstanceEventAdapter() {
             @Override
             public void onMessage(MqttMessage message) {
                 executorService.execute(() -> {
@@ -236,12 +239,12 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
                 });
             }
         };
-        mqttInstance.addEventListener(eventAdapter);
+        mqttInstance.addEventListener(instanceEventAdapter);
     }
 
     @Override
     public void dispose() {
-        mqttInstance.removeEventListener(eventAdapter);
+        mqttInstance.removeEventListener(instanceEventAdapter);
         mqttInstance.unregisterChartFrame(BaseChartFrame.this);
         executorService.shutdown();
         super.dispose();
@@ -272,12 +275,23 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
                     }
                 });
             });
+            favoriteSplitButton.setIcon(Icons.FAVORITE_FILL);
+        } else {
+            favoriteSplitButton.setIcon(Icons.FAVORITE);
         }
     }
 
+    /**
+     * 检查消息是否与序列的定义相匹配。
+     *
+     * @param series  序列，包含匹配条件和模式。
+     * @param message MQTT消息，包含主题和负载。
+     * @return 如果消息匹配序列的条件，则返回true；否则返回false。
+     */
     protected boolean messageMatchesSeries(T series, MqttMessage message) {
         switch (series.getMatch()) {
             case TOPIC -> {
+                // 主题匹配
                 switch (series.getMatchMode()) {
                     case WILDCARD -> {
                         return TopicUtil.match(series.getMatchExpression().getExpression(), message.getTopic());
@@ -291,6 +305,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
                 }
             }
             case PAYLOAD -> {
+                // 载荷匹配
                 String payloadStr = message.payloadAsString(false);
                 if (StrUtil.isEmpty(payloadStr)) {
                     return false;
@@ -301,17 +316,13 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
                     }
                     case JSON_PATH -> {
                         MatchExpression expression = series.getMatchExpression();
-                        ValueComparator comparator = expression.getComparator();
-                        String expectedValue = expression.getValue();
                         String readValue = Utils.getSingleValueByJsonPath(expression.getExpression(), payloadStr);
-                        return ValueComparator.match(comparator, expectedValue, readValue);
+                        return ValueComparator.match(expression, readValue);
                     }
                     case XPATH -> {
                         MatchExpression expression = series.getMatchExpression();
-                        ValueComparator comparator = expression.getComparator();
-                        String expectedValue = expression.getValue();
                         String readValue = Utils.getByXPath(expression.getExpression(), payloadStr);
-                        return ValueComparator.match(comparator, expectedValue, readValue);
+                        return ValueComparator.match(expression, readValue);
                     }
                     default -> {
                         return false;
@@ -332,7 +343,6 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
      * @noinspection ALL
      */
     private void $$$setupUI$$$() {
-        createUIComponents();
         contentPanel = new JPanel();
         contentPanel.setLayout(new BorderLayout(0, 0));
         contentPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
@@ -365,6 +375,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
         toolbar.add(pauseButton);
         final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
         toolbar.add(toolBar$Separator3);
+        favoriteSplitButton = new SplitButton();
         toolbar.add(favoriteSplitButton);
         tableScrollPanel = new JScrollPane();
         topPanel.add(tableScrollPanel, BorderLayout.CENTER);
@@ -381,10 +392,5 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends JFrame 
      */
     public JComponent $$$getRootComponent$$$() {
         return contentPanel;
-    }
-
-    private void createUIComponents() {
-        favoriteSplitButton = new SplitButton("Favorite");
-        favoriteSplitButton.setIcon(Icons.FAVORITE);
     }
 }

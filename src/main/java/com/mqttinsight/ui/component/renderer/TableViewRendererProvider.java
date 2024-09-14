@@ -1,10 +1,10 @@
 package com.mqttinsight.ui.component.renderer;
 
 import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.io.unit.DataSizeUtil;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
-import com.mqttinsight.mqtt.PublishedMqttMessage;
 import com.mqttinsight.ui.component.model.MessageTableModel;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.Utils;
@@ -22,7 +22,7 @@ import java.awt.*;
  */
 public class TableViewRendererProvider extends ComponentProvider<JLabel> {
 
-    private static final Color PUBLISH_BG = UIManager.getBoolean("laf.dark") ? Color.decode("#133918") : Color.decode("#C5EBCA");
+    private static final boolean DARK_LAF = UIManager.getBoolean("laf.dark");
     private static final String TIME_FORMAT = Configuration.instance().getString(ConfKeys.TIME_FORMAT, DatePattern.NORM_DATETIME_MS_PATTERN);
 
     private MessageTableModel tableModel;
@@ -71,12 +71,8 @@ public class TableViewRendererProvider extends ComponentProvider<JLabel> {
             rendererComponent.setBackground(table.getSelectionBackground());
         } else {
             Color bgColor = message.getColor();
-            if (message instanceof PublishedMqttMessage) {
-                Color fgColor = Utils.getReverseForegroundColor(PUBLISH_BG);
-                rendererComponent.setBackground(PUBLISH_BG);
-                rendererComponent.setForeground(fgColor);
-            } else if (bgColor != null) {
-                rendererComponent.setForeground(Utils.getReverseForegroundColor(bgColor));
+            if (bgColor != null) {
+                rendererComponent.setForeground(Utils.getReverseForegroundColor(bgColor, DARK_LAF));
                 rendererComponent.setBackground(bgColor);
             }
         }
@@ -111,6 +107,12 @@ public class TableViewRendererProvider extends ComponentProvider<JLabel> {
                 rendererComponent.setText(message.timeWithFormat(TIME_FORMAT));
                 rendererComponent.setIcon(null);
                 rendererComponent.setHorizontalAlignment(JLabel.CENTER);
+                break;
+            case MessageTableModel.COLUMN_SIZE:
+
+                rendererComponent.setText(DataSizeUtil.format(message.payloadSize()));
+                rendererComponent.setIcon(null);
+                rendererComponent.setHorizontalAlignment(JLabel.RIGHT);
                 break;
             default:
                 rendererComponent.setIcon(null);

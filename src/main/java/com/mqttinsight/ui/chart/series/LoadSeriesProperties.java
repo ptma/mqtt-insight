@@ -1,5 +1,6 @@
 package com.mqttinsight.ui.chart.series;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -12,18 +13,29 @@ import java.util.stream.Collectors;
 /**
  * @author ptma
  */
-@Getter
-@Setter
 @EqualsAndHashCode
 public class LoadSeriesProperties implements SeriesProperties {
+    @Getter
+    @Setter
     private String seriesName;
+    @Getter
+    @Setter
     private Match match;
+    @Getter
+    @Setter
     private MatchMode matchMode;
+    @Getter
+    @Setter
     private MatchExpression matchExpression;
+    @Getter
+    @Setter
     private StatisticalMethod statisticalMethod;
+    @Getter
     private Duration window;
 
+    @JsonIgnore
     private final transient LimitedList<LoadSeriesMessage> messages = new LimitedList<>();
+    @JsonIgnore
     private final transient LimitedList<LoadSeriesXYData> xyDatas = new LimitedList<>();
 
     public void setXYDataLimit(Limit limit) {

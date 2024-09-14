@@ -73,7 +73,7 @@ public class ScriptLoader {
 
     public void closeAll() {
         scriptCodec.removeAllScripts();
-        engines.values().forEach(ScriptEngine::dispose);
+        engines.values().forEach(ScriptEngine::closeRuntime);
         engines.clear();
     }
 }

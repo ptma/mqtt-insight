@@ -7,7 +7,7 @@ public class Const {
 
     public static final String APP_NAME = "MqttInsight";
 
-    public static final int MESSAGES_STORED_MAX_SIZE = 10000;
+    public static final int MESSAGES_STORED_MAX_SIZE = 100000;
 
     public static final String EDITOR_FONT_NAME = "JetBrains Mono";
 

@@ -70,17 +70,7 @@ public class ScriptEngine {
             nodeRuntime.terminateExecution();
             nodeRuntime = null;
         }
+        ScriptEnginePool.instance().releaseEngine(javetEngine);
     }
 
-    public void dispose() {
-        try {
-            if (nodeRuntime != null) {
-                nodeRuntime.terminateExecution();
-                nodeRuntime = null;
-            }
-            javetEngine.close();
-        } catch (Throwable t) {
-            log.warn("Failed to close the Node.js runtime.", t);
-        }
-    }
 }

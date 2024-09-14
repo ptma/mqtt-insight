@@ -79,13 +79,15 @@ public class CodecSupportLoader {
             scriptEngine.execute(scriptPath, scriptContent, modules, t -> {
                 if (!t.isSuccess()) {
                     log.error("Failed to load scripting codec '{}'. {}", scriptFile.getName(), t.getMessage(), t.getException());
+                } else {
+                    log.info("Load scripting codec '{}'.", scriptFile.getName());
                 }
             });
         });
     }
 
     public static void dispose() {
-        engines.values().forEach(ScriptEngine::dispose);
+        engines.values().forEach(ScriptEngine::closeRuntime);
         engines.clear();
     }
 

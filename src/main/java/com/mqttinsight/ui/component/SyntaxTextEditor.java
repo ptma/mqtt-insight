@@ -8,6 +8,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.CaretStyle;
+import org.fife.ui.rtextarea.FoldIndicatorStyle;
 import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
@@ -35,6 +36,8 @@ public class SyntaxTextEditor extends RTextScrollPane {
         this.textArea.setTabSize(2);
         this.textArea.setShowMatchedBracketPopup(false);
         this.textArea.setBracketMatchingEnabled(false);
+        this.textArea.setMarkOccurrences(true);
+        this.textArea.setHyperlinksEnabled(true);
         this.textArea.setAutoIndentEnabled(true);
         this.textArea.setMargin(new Insets(5, 5, 5, 5));
         this.textArea.setCaretStyle(RSyntaxTextArea.INSERT_MODE, CaretStyle.VERTICAL_LINE_STYLE);
@@ -57,6 +60,7 @@ public class SyntaxTextEditor extends RTextScrollPane {
         this.setViewportView(textArea);
         this.setLineNumbersEnabled(true);
         this.setFoldIndicatorEnabled(true);
+        this.getGutter().setFoldIndicatorStyle(FoldIndicatorStyle.CLASSIC);
         this.getGutter().setBorder(new Gutter.GutterBorder(0, 5, 0, 2));
         try {
             boolean isDarkTheme = UIManager.getBoolean("laf.dark");

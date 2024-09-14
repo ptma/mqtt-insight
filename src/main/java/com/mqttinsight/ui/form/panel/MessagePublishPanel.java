@@ -1,10 +1,12 @@
 package com.mqttinsight.ui.form.panel;
 
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 import com.mqttinsight.config.Configuration;
-import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.exception.VerificationException;
 import com.mqttinsight.mqtt.PublishedItem;
 import com.mqttinsight.mqtt.PublishedMqttMessage;
@@ -25,6 +27,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author ptma
@@ -44,7 +47,8 @@ public class MessagePublishPanel extends JPanel {
     private JComboBox<String> formatComboBox;
     private JPanel payloadPanel;
     private JButton publishButton;
-    private JPanel buttonPanel;
+    private JLabel tipsLabel;
+    private JPanel bottomPanel;
 
     public MessagePublishPanel(MqttInstance mqttInstance) {
         this.mqttInstance = mqttInstance;
@@ -56,11 +60,15 @@ public class MessagePublishPanel extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         topPanel = new JPanel();
         payloadPanel = new JPanel(new BorderLayout(0, 0));
-        buttonPanel = new JPanel(new BorderLayout(0, 0));
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
+        bottomPanel = new JPanel(new MigLayout(
+            "insets 0 0 0 0,gap 5",
+            "[][][grow]",
+            "[]"
+        ));
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
         add(topPanel, BorderLayout.NORTH);
         add(payloadPanel, BorderLayout.CENTER);
-        add(buttonPanel, BorderLayout.SOUTH);
+        add(bottomPanel, BorderLayout.SOUTH);
 
         topPanelLayout = new MigLayout(
             "insets 0 0 5 0,gap 5",
@@ -119,7 +127,11 @@ public class MessagePublishPanel extends JPanel {
 
         publishButton = new JButton(LangUtil.getString("PublishMessage") + " (Ctrl + Enter)", Icons.SEND_GREEN);
         publishButton.addActionListener(e -> publishMessage());
-        buttonPanel.add(publishButton, BorderLayout.WEST);
+        bottomPanel.add(publishButton);
+        tipsLabel = new JLabel();
+        tipsLabel.setIcon(Icons.TIPS);
+        tipsLabel.setToolTipText(LangUtil.getString("PublishTips"));
+        bottomPanel.add(tipsLabel);
 
         // Register shortcut
         InputMap inputMap = payloadEditor.textArea().getInputMap();
@@ -200,11 +212,43 @@ public class MessagePublishPanel extends JPanel {
         SwingUtilities.invokeLater(() -> {
             try {
                 String topic = topicComboBox.getSelectedItem().toString();
-                String payloadString = payloadEditor.getText();
+                String originalPayload = payloadEditor.getText();
+                String replacedPayload = originalPayload;
+
+                {
+                    // replace variables
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{timestamp\\}", (p) -> System.currentTimeMillis() + "");
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{uuid\\}", (p) -> UUID.randomUUID().toString());
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{int(\\(\\s*(\\d*),?\\s*?(\\d*)\\s*\\))?\\}", (matcher) -> {
+                        long min = NumberUtil.isLong(matcher.group(2)) ? Long.parseLong(matcher.group(2)) : 0;
+                        long max = NumberUtil.isInteger(matcher.group(3)) ? Long.parseLong(matcher.group(3)) : 100;
+                        if (min > max) {
+                            long temp = min;
+                            min = max;
+                            max = temp;
+                        }
+                        return RandomUtil.randomLong(min, max) + "";
+                    });
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{float(\\(\\s*([\\-\\+]?\\d+(\\.?\\d+)?)\\s*,\\s*?([\\-\\+]?\\d+(\\.?\\d+)?)\\s*\\))?\\}", (matcher) -> {
+                        float min = NumberUtil.isNumber(matcher.group(2)) ? NumberUtil.toBigDecimal(matcher.group(2)).floatValue() : 0;
+                        float max = NumberUtil.isNumber(matcher.group(3)) ? NumberUtil.toBigDecimal(matcher.group(3)).floatValue() : 1;
+                        if (min > max) {
+                            float temp = min;
+                            min = max;
+                            max = temp;
+                        }
+                        return RandomUtil.randomFloat(min, max) + "";
+                    });
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{string(\\((\\d*)\\))?\\}", (matcher) -> {
+                        int length = NumberUtil.isInteger(matcher.group(2)) ? Integer.parseInt(matcher.group(2)) : 4;
+                        return RandomUtil.randomString(length);
+                    });
+                }
+
                 int qos = qosComboBox.getSelectedIndex();
                 boolean retained = retainedCheckBox.isSelected();
                 String format = (String) formatComboBox.getSelectedItem();
-                byte[] payload = CodecSupports.instance().getByName(format).toPayload(payloadString);
+                byte[] payload = CodecSupports.instance().getByName(format).toPayload(topic, replacedPayload);
                 mqttInstance.publishMessage(PublishedMqttMessage.of(
                     topic,
                     payload,
@@ -212,10 +256,11 @@ public class MessagePublishPanel extends JPanel {
                     retained,
                     format
                 ));
-                addPublishedTopic(topic, payloadString, qos, retained, format);
-            } catch (CodecException e) {
-                Utils.Toast.error(e.getMessage());
-                log.error(e.getMessage(), e);
+                addPublishedTopic(topic, originalPayload, qos, retained, format);
+            } catch (Exception e) {
+                Throwable throwable = Utils.getRootThrowable(e);
+                Utils.Toast.error(throwable.getMessage());
+                log.error(throwable.getMessage(), throwable);
             }
         });
     }

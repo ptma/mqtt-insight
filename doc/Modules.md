@@ -1,11 +1,14 @@
 脚本内置模块
 --
+
 * mqtt - MQTT 操作(订阅、发布、解码)工具
 * codec - 编解码器注册工具
 * toast - 消息提示工具
 * logger - 日志工具
 
-### 1. mqtt MQTT 操作(订阅、发布、解码)工具
+### 1. mqtt
+
+MQTT 操作(订阅、发布、解码)工具, 本模块不能用于编解码器脚本中。
 
 #### 1.1 mqtt.subscribe(topic[, qos])
 
@@ -97,45 +100,91 @@ mqtt.topicVariables("/device/{product}", "/device/test123");
 /*
 返回
 {
-    "product", "test1234"
+    "product", "test123"
 }
 */
 ```
 
-### 2. codec 编解码器注册工具
+#### 1.5 mqtt.topicMatch(pattern, topic)
+
+判断 Topic 是否匹配模式
+
+* `pattern` string , 主题匹配模式, 可使用 `#`、`+`、`*`、`?` 通配符以及正则表达式
+* `topic` string, 要匹配的主题
+* `return` boolean, 是否匹配
+
+### 2. codec
+
+编解码器注册工具
 
 #### 2.1 codec.register(name, decoder, encoder, schemaLoader, options)
+
 注册编解码器, 全参数, 该方法的部分参数是可选的
+
 * `name` string, 编解码器的名称
-* `decoder` Function(payload), 解码的方法
-  - `payload` Uint8Array, 消息的载荷
-  - `retrun` string, 经过解码的文本
-* `encoder` Function(text), 编码的方法, 不支持编码的设置为 null
-  - `text` string, 发布消息时用户输入的文本
-  - `retrun` Int8Array | Uint8Array | Buffer, 经过编码的载荷
+* `decoder` Function(topic, payload), 解码的方法
+    - `topic` string, 消息的主题
+    - `payload` Uint8Array, 消息的载荷
+    - `retrun` string, 经过解码的文本
+* `encoder` Function(topic, text), 编码的方法, 不支持编码的设置为 null
+    - `topic` string, 消息的主题
+    - `text` string, 发布消息时用户输入的文本
+    - `retrun` Int8Array | Uint8Array | Buffer, 经过编码的载荷
 * `schemaLoader` Function(file), **动态编解码器**传入模式文件的回调, 无返回值
-  - `file` string, 模式文件路径
+    - `file` string, 模式文件路径
 * `options` Object, 配置项
-  - `format` string, 可选, 消息的格式, 默认值为 `plain`, 可选值有: plain|json|hex|xml
-  - `dynamic` boolean, 是否为**动态编解码器**, 默认值为 false, 如果为 true, 则需要提供 `schemaExts` 参数, 并且需要实现 `schemaLoader` 方法
-  - `schemaExts` string, 可选, **动态编解码器**模式文件的扩展名, 使用 `,`分隔, 例如 `txt,xml`
-  
+    - `format` string, 可选, 消息的格式, 默认值为 `plain`, 可选值有: plain|json|hex|xml
+    - `dynamic` boolean, 是否为**动态编解码器**, 默认值为 false, 如果为 true, 则需要提供 `schemaExts` 参数,
+      并且需要实现 `schemaLoader` 方法
+    - `schemaExts` string, 可选, **动态编解码器**模式文件的扩展名, 使用 `,`分隔, 例如 `txt,xml`
+
 > **动态编解码器**  
-> 有些序列化框架需要指定模式(Schema、IDL)文件才能正确进行序列化(编码)和反序列化(解码), 例如 Protobuf。这一类的编解码器注册以后不会立即出现在格式下拉框中， 需要用户在`文件->编解码设置`中设置具体的名称和模式文件。
+> 有些序列化框架需要指定模式(Schema、IDL)文件才能正确进行序列化(编码)和反序列化(解码), 例如
+> Protobuf。这一类的编解码器注册以后不会立即出现在格式下拉框中， 需要用户在`文件->编解码设置`中设置具体的名称和模式文件。
 
 #### 2.2 codec.register(name, decoder)
-注册编解码器, 仅支持解码, 参数说明见 2.1 
+
+注册编解码器, 仅支持解码, 参数说明见 2.1
 
 #### 2.3 codec.register(name, decoder, encoder)
+
 注册编解码器, 支持解码和编码, 参数说明见 2.1
 
 #### 2.4 codec.register(name, decoder, encoder, options)
+
 注册编解码器, 支持解码和编码, 并设置参数, 参数说明见 2.1
 
+#### 2.5 codec.topicVariables(template, topic)
 
-### 3. toast 消息提示工具
+从 Topic 提取变量集
 
-toast 工具可以在 UI 上弹出各种提示消息, 格式化模板 `format` 中使用 `{}` 表示占位符
+* `template` string , 变量模版, 使用 `{VariableName}` 表示变量
+* `topic` string, 要提取的主题
+* `return` Object, 提取到的变量集
+
+```js
+mqtt.topicVariables("/device/{product}", "/device/test123");
+/*
+返回
+{
+    "product", "test123"
+}
+*/
+```
+
+#### 2.6 codec.topicMatch(pattern, topic)
+
+判断 Topic 是否匹配模式
+
+* `pattern` string , 主题匹配模式, 可使用 `#`、`+`、`*`、`?` 通配符以及正则表达式
+* `topic` string, 要匹配的主题
+* `return` boolean, 是否匹配
+
+### 3. toast
+
+消息提示工具
+
+toast 工具可以在 UI 上弹出各种提示消息, 格式化模板`format`中使用`{}`表示占位符
 
 ```js
 toast.success("Hello {}", "MqttInsight!");

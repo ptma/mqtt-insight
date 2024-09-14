@@ -36,7 +36,7 @@ class Hessian2CodecSupportTest {
         byte[] bytes = bos.toByteArray();
          */
         byte[] bytes = Hex.decode("433021636f6d2e6d717474696e73696768742e636f6465632e4865737369616e506f6a6f93046e616d650e6661766f726974654e756d6265720d6661766f72697465436f6c6f72600342656e9703726564");
-        String json = codecSupport.toString(bytes);
+        String json = codecSupport.toString("testtopic", bytes);
         Map<String, Object> map = Utils.JSON.toObject(json, HashMap.class);
         Assertions.assertEquals(map.get("name"), "Ben");
         Assertions.assertEquals(map.get("favoriteNumber"), 7);

@@ -1,5 +1,6 @@
 package com.mqttinsight.mqtt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mqttinsight.codec.CodecSupport;
 
 import java.awt.*;
@@ -9,6 +10,7 @@ import java.awt.*;
  */
 public class ReceivedMqttMessage extends AbstractMqttMessage implements MqttMessage {
 
+    @JsonIgnore
     protected transient Subscription subscription;
 
     private MessageType messageType = MessageType.RECEIVED;
@@ -24,13 +26,15 @@ public class ReceivedMqttMessage extends AbstractMqttMessage implements MqttMess
         this.subscription = subscription;
     }
 
+    @JsonIgnore
     public Subscription getSubscription() {
         return subscription;
     }
 
     @Override
+    @JsonIgnore
     public Color getColor() {
-        return subscription == null ? null : subscription.getColor();
+        return super.getColor() != null ? super.getColor() : subscription == null ? null : subscription.getColor();
     }
 
     @Override

@@ -307,32 +307,46 @@ public class Utils {
         }
     }
 
+    /**
+     * 获取比给定的颜色更亮的颜色
+     *
+     * @param color  指定的颜色。
+     * @param factor 调节因子 (0, 1)，值越小颜色越亮。
+     * @return 变亮后的新颜色。
+     */
     public static Color brighter(Color color, float factor) {
+        if (factor <= 0 || factor >= 1) {
+            throw new IllegalArgumentException("The factor must be within the range of (0, 1)");
+        }
         int r = color.getRed();
         int g = color.getGreen();
         int b = color.getBlue();
         int alpha = color.getAlpha();
-        int i = (int) (1.0 / (1.0 - factor));
+
+        int threshold = (int) (1.0 / (1.0 - factor));
+
         if (r == 0 && g == 0 && b == 0) {
-            return new Color(i, i, i, alpha);
-        }
-        if (r > 0 && r < i) {
-            r = i;
-        }
-        if (g > 0 && g < i) {
-            g = i;
-        }
-        if (b > 0 && b < i) {
-            b = i;
+            return new Color(Math.min(threshold, 255), Math.min(threshold, 255), Math.min(threshold, 255), alpha);
         }
 
-        return new Color(Math.min((int) (r / factor), 255),
-            Math.min((int) (g / factor), 255),
-            Math.min((int) (b / factor), 255),
-            alpha);
+        r = Math.min((int) (r / factor), 255);
+        g = Math.min((int) (g / factor), 255);
+        b = Math.min((int) (b / factor), 255);
+
+        return new Color(r, g, b, alpha);
     }
 
+    /**
+     * 获取比给定的颜色更暗的颜色。
+     *
+     * @param color  指定的颜色。
+     * @param factor 调节因子，[0, 1]，因子越小颜色越暗。
+     * @return 变暗后的新颜色。
+     */
     public static Color darker(Color color, float factor) {
+        if (factor < 0 || factor > 1) {
+            throw new IllegalArgumentException("The factor must be within the range of [0, 1]");
+        }
         return new Color(Math.max((int) (color.getRed() * factor), 0),
             Math.max((int) (color.getGreen() * factor), 0),
             Math.max((int) (color.getBlue() * factor), 0),
@@ -355,9 +369,19 @@ public class Utils {
         return new Color(red, green, blue);
     }
 
-    public static Color getReverseForegroundColor(Color color) {
-        float grayLevel = (color.getRed() * 299 + color.getGreen() * 587 + color.getBlue() * 114) / 1000f / 255;
-        return grayLevel >= 0.45 ? DARKER_TEXT_COLOR : LIGHTER_TEXT_COLOR;
+    /**
+     * 根据给定的颜色和界面主题，获取对应背景色的前景颜色（文本颜色）。
+     * 该方法通过计算给定颜色的灰度级别来决定返回的文本颜色应该是深色还是浅色。
+     *
+     * @param bgColor 需要反转其前景色的颜色对象。
+     * @param darkLaf 指示当前界面主题是否为暗色主题的布尔值。
+     * @return 与给定颜色相反的文本颜色，基于界面主题的黑暗程度。
+     */
+    public static Color getReverseForegroundColor(Color bgColor, boolean darkLaf) {
+        float grayLevel = (bgColor.getRed() * 299 + bgColor.getGreen() * 587 + bgColor.getBlue() * 114) / 1000f / 255;
+        return grayLevel >= 0.45 ? DARKER_TEXT_COLOR : (
+            darkLaf ? LIGHTER_TEXT_COLOR : Color.WHITE
+        );
     }
 
     public static String md5(String content) throws NoSuchAlgorithmException {
@@ -395,7 +419,7 @@ public class Utils {
         try {
             Object value = JsonPath.read(source, jsonPath);
             if (value instanceof List) {
-                java.util.List list = (java.util.List) value;
+                List<?> list = (List<?>) value;
                 return list.isEmpty() ? "" : list.get(0).toString();
             } else {
                 return value.toString();
@@ -433,5 +457,13 @@ public class Utils {
         } catch (Exception ignore) {
             return null;
         }
+    }
+
+    public static Throwable getRootThrowable(Throwable throwable) {
+        Throwable result = throwable;
+        while (result.getCause() != null) {
+            result = result.getCause();
+        }
+        return result;
     }
 }

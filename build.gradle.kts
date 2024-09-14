@@ -37,8 +37,8 @@ val organization: String = "ptma@163.com"
 val copyright: String = "Copyright 2023 ptma@163.com"
 val supportUrl: String = "https://github.com/ptma/mqtt-insight"
 
-val flatlafVersion = "3.3"
-val javetVersion = "2.2.2"
+val flatlafVersion = "3.4"
+val javetVersion = "3.0.4"
 val fatJar = false
 
 val requireModules = listOf(
@@ -109,6 +109,7 @@ dependencies {
         exclude(group = "net.minidev", module = "json-smart")
     }
 
+    implementation("commons-codec:commons-codec:1.15")
     implementation("com.google.protobuf:protobuf-java:3.25.1")
     implementation("org.msgpack:jackson-dataformat-msgpack:0.9.6")
     implementation("org.apache.avro:avro:1.11.3") {
@@ -181,6 +182,12 @@ configure<PackagePluginExtension> {
     customizedJre(true)
     modules(requireModules)
     jreDirectoryName("jre")
+    vmArgs(
+        listOf(
+            "-Xms256M",
+            "-Xmx2048M"
+        )
+    )
 }
 
 var taskPlatform = Platform.windows

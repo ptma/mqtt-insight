@@ -40,6 +40,10 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
     }
 
     @Override
+    public void subscriptionColorChanged() {
+    }
+
+    @Override
     public void clearAllMessages() {
     }
 

@@ -40,7 +40,7 @@ public class Mqtt3Options {
             connOpts.setWill(willMessage.getTopic(),
                 CodecSupports.instance()
                     .getByName(willMessage.getPayloadFormat())
-                    .toPayload(willMessage.getPayload()),
+                    .toPayload(willMessage.getTopic(), willMessage.getPayload()),
                 willMessage.getQos(),
                 willMessage.isRetained());
         }

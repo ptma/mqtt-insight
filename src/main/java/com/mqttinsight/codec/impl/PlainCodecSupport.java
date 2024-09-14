@@ -21,12 +21,12 @@ public class PlainCodecSupport implements CodecSupport {
     }
 
     @Override
-    public String toString(byte[] payload) {
+    public String toString(String topic, byte[] payload) {
         return new String(payload, StandardCharsets.UTF_8);
     }
 
     @Override
-    public byte[] toPayload(String text) throws CodecException {
+    public byte[] toPayload(String topic, String text) throws CodecException {
         return text == null ? new byte[0] : text.getBytes(StandardCharsets.UTF_8);
     }
 }

@@ -33,10 +33,11 @@ public interface CodecSupport {
     /**
      * Decode payload into text
      *
+     * @param topic   message topic
      * @param payload Payload buffer bytes
      * @return Decoded text
      */
-    String toString(byte[] payload);
+    String toString(String topic, byte[] payload);
 
     /**
      * Format payload
@@ -49,10 +50,10 @@ public interface CodecSupport {
     }
 
     /**
-     * Encode inputted text  as payload
+     * Encode inputted text as payload
      *
      * @param text Inputted text
      * @return Payload buffer bytes
      */
-    byte[] toPayload(String text) throws CodecException;
+    byte[] toPayload(String topic, String text) throws CodecException;
 }

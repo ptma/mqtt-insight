@@ -67,7 +67,7 @@
                     <constraints/>
                     <properties/>
                   </component>
-                  <component id="8dfec" class="com.mqttinsight.ui.component.SplitButton" binding="favoriteSplitButton" custom-create="true">
+                  <component id="8dfec" class="com.mqttinsight.ui.component.SplitButton" binding="favoriteSplitButton">
                     <constraints/>
                     <properties/>
                   </component>

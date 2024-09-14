@@ -21,7 +21,7 @@ import java.awt.*;
  */
 public class DialogueViewRendererProvider extends ComponentProvider<DialogueBubble> {
 
-    private static final Color PUBLISH_BG = UIManager.getBoolean("laf.dark") ? Color.decode("#133918") : Color.decode("#C5EBCA");
+    private static final boolean DARK_LAF = UIManager.getBoolean("laf.dark");
     private static final String TIME_FORMAT = Configuration.instance().getString(ConfKeys.TIME_FORMAT, DatePattern.NORM_DATETIME_MS_PATTERN);
 
     private MessageTableModel messageModel;
@@ -59,6 +59,9 @@ public class DialogueViewRendererProvider extends ComponentProvider<DialogueBubb
         MessageTable table = (MessageTable) context.getComponent();
         int modelIndex = table.convertRowIndexToModel(context.getRow());
         MqttMessage message = messageModel.get(modelIndex);
+        if (message == null) {
+            return;
+        }
         if (rendererComponent instanceof DialogueBubble) {
             DialogueBubble itemComponent = (DialogueBubble) rendererComponent;
             itemComponent.setTopic(message.getTopic());
@@ -67,9 +70,6 @@ public class DialogueViewRendererProvider extends ComponentProvider<DialogueBubb
             itemComponent.setPayload(message.getPayload());
             if (message instanceof PublishedMqttMessage) {
                 itemComponent.setBodyAlignment("right");
-                Color fgColor = Utils.getReverseForegroundColor(PUBLISH_BG);
-                itemComponent.setBodyBackground(PUBLISH_BG);
-                itemComponent.setBodyForeground(fgColor);
             } else {
                 itemComponent.setBodyAlignment("left");
             }
@@ -80,7 +80,7 @@ public class DialogueViewRendererProvider extends ComponentProvider<DialogueBubb
             }
             Color bgColor = message.getColor();
             if (bgColor != null) {
-                Color fgColor = Utils.getReverseForegroundColor(bgColor);
+                Color fgColor = Utils.getReverseForegroundColor(bgColor, DARK_LAF);
                 itemComponent.setBodyBackground(bgColor);
                 itemComponent.setBodyForeground(fgColor);
             }

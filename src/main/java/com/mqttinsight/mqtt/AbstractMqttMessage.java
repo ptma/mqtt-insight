@@ -2,9 +2,11 @@ package com.mqttinsight.mqtt;
 
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.codec.CodecSupports;
 
+import java.awt.*;
 import java.util.Date;
 
 /**
@@ -24,7 +26,11 @@ public abstract class AbstractMqttMessage implements MqttMessage {
 
     private final Date time;
 
+    private Color color;
+
+    @JsonIgnore
     protected transient String decodeFormat;
+    @JsonIgnore
     protected transient String decodedPayload;
 
     public AbstractMqttMessage(String topic, byte[] payload, int qos, boolean retained, boolean duplicate) {
@@ -46,7 +52,7 @@ public abstract class AbstractMqttMessage implements MqttMessage {
     public String decodePayload(CodecSupport codec, boolean pretty) {
         if (this.decodeFormat == null || !this.decodeFormat.equals(codec.getName()) || decodedPayload == null) {
             this.decodeFormat = codec.getName();
-            decodedPayload = codec.toString(payloadAsBytes());
+            decodedPayload = codec.toString(getTopic(), payloadAsBytes());
         }
         if (pretty) {
             return codec.toPrettyString(decodedPayload);
@@ -97,5 +103,15 @@ public abstract class AbstractMqttMessage implements MqttMessage {
 
     public void setPayload(byte[] payload) {
         this.payload = payload;
+    }
+
+    @Override
+    @JsonIgnore
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
     }
 }

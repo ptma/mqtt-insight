@@ -4,6 +4,7 @@ import cn.hutool.core.util.IdUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mqttinsight.mqtt.MqttProperties;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Comparator;
@@ -14,6 +15,7 @@ import java.util.List;
 /**
  * @author ptma
  */
+@NoArgsConstructor
 public class ConnectionNode {
 
     @Setter
@@ -36,10 +38,6 @@ public class ConnectionNode {
 
     private final Comparator<ConnectionNode> comparator = (o1, o2) -> Boolean.compare(o2.isGroup(), o1.isGroup());
 
-    public ConnectionNode() {
-
-    }
-
     public ConnectionNode(String name) {
         this.id = IdUtil.fastUUID();
         this.group = true;
@@ -61,7 +59,10 @@ public class ConnectionNode {
     }
 
     public void setName(String name) {
-            this.name = name;
+        this.name = name;
+        if (this.properties != null) {
+            this.properties.setName(name);
+        }
     }
 
     @JsonIgnore

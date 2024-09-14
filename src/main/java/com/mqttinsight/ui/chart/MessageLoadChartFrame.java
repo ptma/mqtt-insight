@@ -87,6 +87,11 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
     }
 
     @Override
+    protected String getConfigKeyPrefix() {
+        return "LoadChartFrame_";
+    }
+
+    @Override
     protected void bottomPanelResized(int width, int height) {
         chart.getStyler().setPlotContentSize((width - 40d) / width);
     }
