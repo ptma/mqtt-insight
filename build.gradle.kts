@@ -109,6 +109,7 @@ dependencies {
         exclude(group = "net.minidev", module = "json-smart")
     }
 
+    implementation("commons-codec:commons-codec:1.15")
     implementation("com.google.protobuf:protobuf-java:3.25.1")
     implementation("org.msgpack:jackson-dataformat-msgpack:0.9.6")
     implementation("org.apache.avro:avro:1.11.3") {
