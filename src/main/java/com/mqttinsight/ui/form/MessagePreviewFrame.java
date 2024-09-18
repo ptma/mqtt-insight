@@ -27,8 +27,8 @@ public class MessagePreviewFrame extends StatePersistenceFrame {
 
     private InstanceEventAdapter instanceEventAdapter;
 
-    public static void open(MqttInstance mqttInstance, MqttMessage mqttMessage) {
-        JFrame dialog = new MessagePreviewFrame(mqttInstance, mqttMessage);
+    public static void open(MqttInstance mqttInstance, MqttMessage mqttMessage, String previewFormat) {
+        JFrame dialog = new MessagePreviewFrame(mqttInstance, mqttMessage, previewFormat);
         dialog.setMinimumSize(MIN_DIMENSION);
         dialog.setPreferredSize(DEFAULT_DIMENSION);
         dialog.setResizable(true);
@@ -37,7 +37,7 @@ public class MessagePreviewFrame extends StatePersistenceFrame {
         dialog.setVisible(true);
     }
 
-    protected MessagePreviewFrame(MqttInstance mqttInstance, MqttMessage mqttMessage) {
+    protected MessagePreviewFrame(MqttInstance mqttInstance, MqttMessage mqttMessage, String previewFormat) {
         super();
         setIconImages(Icons.WINDOW_ICON);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -50,6 +50,9 @@ public class MessagePreviewFrame extends StatePersistenceFrame {
         initEventListeners();
 
         SwingUtilities.invokeLater(() -> {
+            if (previewFormat != null) {
+                this.previewPanel.setCurrentPreviewFormat(previewFormat);
+            }
             this.previewPanel.previewMessageDirectly(mqttMessage);
         });
     }
