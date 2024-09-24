@@ -161,6 +161,14 @@ public class BasePreviewPanel extends JPanel {
         }
     }
 
+    public String getCurrentPreviewFormat() {
+        return (String) formatComboBox.getSelectedItem();
+    }
+
+    public void setCurrentPreviewFormat(String format) {
+        formatComboBox.setSelectedItem(format);
+    }
+
     public void updatePreviewMessage() {
         boolean pretty = prettyCheckbox.isSelected();
         if (previewedMessage != null) {
