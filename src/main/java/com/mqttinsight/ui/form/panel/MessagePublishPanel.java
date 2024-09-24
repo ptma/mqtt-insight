@@ -219,9 +219,9 @@ public class MessagePublishPanel extends JPanel {
                     // replace variables
                     replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{timestamp\\}", (p) -> System.currentTimeMillis() + "");
                     replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{uuid\\}", (p) -> UUID.randomUUID().toString());
-                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{int(\\(\\s*(\\d*),?\\s*?(\\d*)\\s*\\))?\\}", (matcher) -> {
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{int(\\(\\s*(\\d*)\\s*,\\s*?(\\d*)\\s*\\))?\\}", (matcher) -> {
                         long min = NumberUtil.isLong(matcher.group(2)) ? Long.parseLong(matcher.group(2)) : 0;
-                        long max = NumberUtil.isInteger(matcher.group(3)) ? Long.parseLong(matcher.group(3)) : 100;
+                        long max = NumberUtil.isLong(matcher.group(3)) ? Long.parseLong(matcher.group(3)) : 100;
                         if (min > max) {
                             long temp = min;
                             min = max;
@@ -231,7 +231,7 @@ public class MessagePublishPanel extends JPanel {
                     });
                     replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{float(\\(\\s*([\\-\\+]?\\d+(\\.?\\d+)?)\\s*,\\s*?([\\-\\+]?\\d+(\\.?\\d+)?)\\s*\\))?\\}", (matcher) -> {
                         float min = NumberUtil.isNumber(matcher.group(2)) ? NumberUtil.toBigDecimal(matcher.group(2)).floatValue() : 0;
-                        float max = NumberUtil.isNumber(matcher.group(3)) ? NumberUtil.toBigDecimal(matcher.group(3)).floatValue() : 1;
+                        float max = NumberUtil.isNumber(matcher.group(4)) ? NumberUtil.toBigDecimal(matcher.group(4)).floatValue() : 1;
                         if (min > max) {
                             float temp = min;
                             min = max;
@@ -239,8 +239,11 @@ public class MessagePublishPanel extends JPanel {
                         }
                         return RandomUtil.randomFloat(min, max) + "";
                     });
-                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{string(\\((\\d*)\\))?\\}", (matcher) -> {
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{string(\\((\\d+)\\))?\\}", (matcher) -> {
                         int length = NumberUtil.isInteger(matcher.group(2)) ? Integer.parseInt(matcher.group(2)) : 4;
+                        if (length <= 0) {
+                            length = 4;
+                        }
                         return RandomUtil.randomString(length);
                     });
                 }
