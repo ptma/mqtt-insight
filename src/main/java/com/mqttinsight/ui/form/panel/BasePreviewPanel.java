@@ -45,6 +45,7 @@ public class BasePreviewPanel extends JPanel {
     private JLabel formatLabel;
     private JComboBox<String> formatComboBox;
     protected JCheckBox prettyCheckbox;
+    protected JCheckBoxMenuItem syntaxEnableMenu;
     private JPanel payloadPanel;
 
     public BasePreviewPanel(MqttInstance mqttInstance) {
@@ -131,6 +132,14 @@ public class BasePreviewPanel extends JPanel {
         payloadEditor.textArea().setEditable(false);
         payloadPanel.add(payloadEditor, BorderLayout.CENTER);
 
+        // Append a menu item to the editor pop-up menu
+        payloadEditor.textArea().getPopupMenu().add(new JPopupMenu.Separator(), 0);
+        syntaxEnableMenu = new JCheckBoxMenuItem(LangUtil.getString("SyntaxHighlighting"), null, true);
+        syntaxEnableMenu.addActionListener(e -> {
+            this.updatePreviewMessage();
+        });
+        payloadEditor.textArea().getPopupMenu().add(syntaxEnableMenu, 0);
+
         toolbarPanel = new JPanel();
         toolbarPanel.setLayout(new BorderLayout(0, 0));
         toolbarPanel.setBorder(new SingleLineBorder(UIManager.getColor("Component.borderColor"), true, true, false, true));
@@ -173,15 +182,15 @@ public class BasePreviewPanel extends JPanel {
         boolean pretty = prettyCheckbox.isSelected();
         if (previewedMessage != null) {
             String format = (String) formatComboBox.getSelectedItem();
+            CodecSupport codec;
             if (CodecSupport.DEFAULT.equals(format)) {
                 payloadEditor.setText(previewedMessage.payloadAsString(pretty));
-                CodecSupport codec = CodecSupports.instance().getByName(previewedMessage.getPayloadFormat());
-                payloadEditor.setSyntax(codec.getSyntax());
+                codec = CodecSupports.instance().getByName(previewedMessage.getPayloadFormat());
             } else {
-                CodecSupport codec = CodecSupports.instance().getByName(format);
+                codec = CodecSupports.instance().getByName(format);
                 payloadEditor.setText(previewedMessage.decodePayload(codec, pretty));
-                payloadEditor.setSyntax(codec.getSyntax());
             }
+            payloadEditor.setSyntax(syntaxEnableMenu.isSelected() ? codec.getSyntax() : null);
         }
     }
 
@@ -212,7 +221,7 @@ public class BasePreviewPanel extends JPanel {
                     timeLabel.setText(previewedMessage.getTime());
                     sizeLabel.setText(DataSizeUtil.format(previewedMessage.payloadSize()));
                     payloadEditor.setText(previewText);
-                    payloadEditor.setSyntax(codec.getSyntax());
+                    payloadEditor.setSyntax(syntaxEnableMenu.isSelected() ? codec.getSyntax() : null);
 
                     if (toolbarPanel.isVisible()) {
                         textSearchToolbar.find(true);

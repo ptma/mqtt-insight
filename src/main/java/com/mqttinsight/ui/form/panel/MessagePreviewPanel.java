@@ -29,13 +29,18 @@ public class MessagePreviewPanel extends BasePreviewPanel {
         });
 
         // Append a menu item to the editor pop-up menu
-        payloadEditor.textArea().getPopupMenu().addSeparator();
-        payloadEditor.textArea().getPopupMenu().add(separateWindowMenuitem).setEnabled(false);
+        payloadEditor.textArea().getPopupMenu().add(new JPopupMenu.Separator(), 0);
+        payloadEditor.textArea().getPopupMenu().add(separateWindowMenuitem, 0).setEnabled(false);
 
         // Load the check status from the option and save it when it changes
         prettyCheckbox.setSelected(mqttInstance.getProperties().isPrettyDuringPreview());
         prettyCheckbox.addActionListener(e -> {
             mqttInstance.getProperties().setPrettyDuringPreview(prettyCheckbox.isSelected());
+            Configuration.instance().changed();
+        });
+        syntaxEnableMenu.setSelected(mqttInstance.getProperties().isSyntaxHighlighting());
+        syntaxEnableMenu.addActionListener(e -> {
+            mqttInstance.getProperties().setSyntaxHighlighting(syntaxEnableMenu.isSelected());
             Configuration.instance().changed();
         });
     }
