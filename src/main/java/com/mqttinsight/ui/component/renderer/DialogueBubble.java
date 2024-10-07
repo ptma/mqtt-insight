@@ -36,7 +36,7 @@ public class DialogueBubble extends JRendererPanel {
         this.maxMessageRows = maxMessageRows;
         setDoubleBuffered(true);
         layout = new MigLayout(
-            "fillx, insets 3 3 3 6, nocache",
+            "fillx, insets 3 3 3 3, nocache",
             "[grow]",
             "[]0[]"
         );

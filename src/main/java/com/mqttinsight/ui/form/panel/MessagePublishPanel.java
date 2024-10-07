@@ -62,7 +62,7 @@ public class MessagePublishPanel extends JPanel {
         payloadPanel = new JPanel(new BorderLayout(0, 0));
         bottomPanel = new JPanel(new MigLayout(
             "insets 0 0 0 0,gap 5",
-            "[][][grow]",
+            "[grow][][]",
             "[]"
         ));
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
@@ -127,11 +127,11 @@ public class MessagePublishPanel extends JPanel {
 
         publishButton = new JButton(LangUtil.getString("PublishMessage") + " (Ctrl + Enter)", Icons.SEND_GREEN);
         publishButton.addActionListener(e -> publishMessage());
-        bottomPanel.add(publishButton);
+        bottomPanel.add(publishButton, "cell 2 0");
         tipsLabel = new JLabel();
         tipsLabel.setIcon(Icons.TIPS);
         tipsLabel.setToolTipText(LangUtil.getString("PublishTips"));
-        bottomPanel.add(tipsLabel);
+        bottomPanel.add(tipsLabel, "cell 1 0");
 
         // Register shortcut
         InputMap inputMap = payloadEditor.textArea().getInputMap();

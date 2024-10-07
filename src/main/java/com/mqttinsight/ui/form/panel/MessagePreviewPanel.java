@@ -38,9 +38,9 @@ public class MessagePreviewPanel extends BasePreviewPanel {
             mqttInstance.getProperties().setPrettyDuringPreview(prettyCheckbox.isSelected());
             Configuration.instance().changed();
         });
-        syntaxEnableMenu.setSelected(mqttInstance.getProperties().isSyntaxHighlighting());
-        syntaxEnableMenu.addActionListener(e -> {
-            mqttInstance.getProperties().setSyntaxHighlighting(syntaxEnableMenu.isSelected());
+        syntaxEnableCheckbox.setSelected(mqttInstance.getProperties().isSyntaxHighlighting());
+        syntaxEnableCheckbox.addActionListener(e -> {
+            mqttInstance.getProperties().setSyntaxHighlighting(syntaxEnableCheckbox.isSelected());
             Configuration.instance().changed();
         });
     }
