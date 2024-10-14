@@ -37,7 +37,8 @@ public class SubscriptionListPanel extends JScrollPane {
     }
 
     private void initComponents() {
-        setHorizontalScrollBarPolicy(31);
+        setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_NEVER);
+        getVerticalScrollBar().setUnitIncrement(30);
         containerPanel = new JPanel();
         containerPanel.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         setViewportView(containerPanel);
