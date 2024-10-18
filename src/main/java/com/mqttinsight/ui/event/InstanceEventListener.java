@@ -5,6 +5,7 @@ import com.mqttinsight.mqtt.Subscription;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 
 import java.io.File;
+import java.util.Set;
 
 public interface InstanceEventListener {
 
@@ -27,6 +28,8 @@ public interface InstanceEventListener {
     void clearAllMessages();
 
     void clearMessages(Subscription subscription);
+
+    void clearMessages(String topicPrefix);
 
     void onMessageRemoved(MqttMessage message);
 
@@ -51,4 +54,6 @@ public interface InstanceEventListener {
     void fireScriptReload(File scriptFile);
 
     void onCodecsChanged();
+
+    void applyFilterTopics(Set<String> topics);
 }

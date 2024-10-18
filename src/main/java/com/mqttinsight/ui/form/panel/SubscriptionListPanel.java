@@ -1,6 +1,5 @@
 package com.mqttinsight.ui.form.panel;
 
-import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.mqttinsight.mqtt.ConnectionStatus;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.ReceivedMqttMessage;
@@ -12,7 +11,6 @@ import lombok.Getter;
 import org.jdesktop.swingx.VerticalLayout;
 
 import javax.swing.*;
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,11 +38,9 @@ public class SubscriptionListPanel extends JScrollPane {
         setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_NEVER);
         getVerticalScrollBar().setUnitIncrement(30);
         containerPanel = new JPanel();
-        containerPanel.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        setViewportView(containerPanel);
-
         containerPanel.setLayout(new VerticalLayout(0));
         containerPanel.setBackground(UIManager.getColor("Table.background"));
+        setViewportView(containerPanel);
     }
 
     private void initEventListeners() {
@@ -166,6 +162,9 @@ public class SubscriptionListPanel extends JScrollPane {
         });
     }
 
+    /**
+     * {@link com.mqttinsight.ui.form.panel.MessageViewPanel#doClearMessages(Subscription)}
+     */
     private void removeItem(SubscriptionItem item) {
         subscriptions.remove(item);
         containerPanel.remove(item);

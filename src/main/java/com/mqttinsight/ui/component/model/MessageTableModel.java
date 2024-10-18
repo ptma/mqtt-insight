@@ -7,6 +7,7 @@ import com.mqttinsight.util.LangUtil;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * @author ptma
@@ -166,13 +167,35 @@ public class MessageTableModel extends AbstractTableModel {
         fireTableRowsDeleted(index, index);
     }
 
-    public synchronized void cleanMessages(Subscription subscription) {
+    public synchronized void cleanMessages(Subscription subscription, Consumer<MqttMessage> removedConsumer) {
         Iterator<MqttMessage> itr = messages.iterator();
         boolean changed = false;
         while (itr.hasNext()) {
             MqttMessage message = itr.next();
             if (message instanceof ReceivedMqttMessage && subscription.equals(((ReceivedMqttMessage) message).getSubscription())) {
                 itr.remove();
+                if (removedConsumer != null) {
+                    removedConsumer.accept(message);
+                }
+                changed = true;
+            }
+        }
+        if (changed) {
+            fireTableDataChanged();
+        }
+        System.gc();
+    }
+
+    public synchronized void cleanMessages(String topicPrefix, Consumer<MqttMessage> removedConsumer) {
+        Iterator<MqttMessage> itr = messages.iterator();
+        boolean changed = false;
+        while (itr.hasNext()) {
+            MqttMessage message = itr.next();
+            if (message.getTopic().startsWith(topicPrefix)) {
+                itr.remove();
+                if (removedConsumer != null) {
+                    removedConsumer.accept(message);
+                }
                 changed = true;
             }
         }

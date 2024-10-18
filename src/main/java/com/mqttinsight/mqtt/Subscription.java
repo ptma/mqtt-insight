@@ -76,7 +76,9 @@ public class Subscription {
     }
 
     public void decrementMessageCount() {
-        this.messageCount.decrementAndGet();
+        if (messageCount.get() > 0) {
+            this.messageCount.decrementAndGet();
+        }
     }
 
     public void resetMessageCount() {
