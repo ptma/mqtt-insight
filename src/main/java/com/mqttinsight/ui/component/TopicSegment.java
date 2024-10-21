@@ -75,7 +75,7 @@ public class TopicSegment extends JPanel {
     }
 
     public Set<String> getInvisibleTopics() {
-        if (!segmentVisible) {
+        if (!isSegmentCompositeVisible()) {
             return Collections.singleton(getFullTopic());
         } else {
             return getChildren().stream()
@@ -233,7 +233,7 @@ public class TopicSegment extends JPanel {
     }
 
     public boolean isSegmentCompositeVisible() {
-        return segmentVisible || getChildren().stream().anyMatch(TopicSegment::isSegmentVisible);
+        return segmentVisible || getChildren().stream().anyMatch(TopicSegment::isSegmentCompositeVisible);
     }
 
     public void updateSegmentCompositeVisibleStatus(boolean updateParentCompositeVisibleStatus) {
