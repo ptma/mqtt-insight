@@ -504,7 +504,16 @@ public class MessageTable extends JXTable {
         public boolean include(Entry<? extends TableModel, ? extends Integer> entry) {
             MessageTableModel tableModel = (MessageTableModel) entry.getModel();
             MqttMessage message = tableModel.get(entry.getIdentifier());
-            return topics.stream().noneMatch(topic -> message.getTopic().startsWith(topic));
+            String messageTopic = message.getTopic();
+            return topics.stream().noneMatch(filterTopic -> messageTopic.equals(filterTopic) || isStartsWith(filterTopic, messageTopic));
+        }
+
+        private boolean isStartsWith(String filterTopic, String messageTopic) {
+            if (filterTopic.endsWith("/")) {
+                return messageTopic.startsWith(filterTopic);
+            } else {
+                return messageTopic.startsWith(filterTopic + "/");
+            }
         }
     }
 }
