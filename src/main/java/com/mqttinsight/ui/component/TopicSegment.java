@@ -76,7 +76,7 @@ public class TopicSegment extends JPanel {
 
     public Set<String> getInvisibleTopics() {
         if (!isSegmentCompositeVisible()) {
-            return Collections.singleton(getFullTopic());
+            return new HashSet<>(Collections.singletonList(getFullTopic()));
         } else {
             return getChildren().stream()
                 .map(TopicSegment::getInvisibleTopics)
@@ -319,7 +319,7 @@ public class TopicSegment extends JPanel {
             setBackground(UIManager.getColor("Tree.background"));
             iconLabel = new JXLabel(ICON_COLLAPSED);
             iconLabel.setOpaque(false);
-            add(iconLabel, "cell 0 0");
+            add(iconLabel, "cell 0 0,hmin 26px");
             nameLabel = new JXLabel(segment.getName());
             nameLabel.setOpaque(false);
             nameLabel.putClientProperty("FlatLaf.styleClass", "h4");
@@ -345,7 +345,7 @@ public class TopicSegment extends JPanel {
             visibleButton.addActionListener((e) -> segment.toggleSegmentVisible(!segmentVisible, true, true));
             toolBar.add(visibleButton);
 
-            add(toolBar, "cell 3 0");
+            add(toolBar, "cell 3 0, hidemode 2");
 
             addMouseListener(this);
             initActions();
