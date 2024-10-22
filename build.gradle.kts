@@ -22,7 +22,7 @@ buildscript {
             // ********* package with gradle 7.6.2 *********
             // @see https://githubfast.com/fvarrui/JavaPackager/issues/315
             // classpath("io.github.fvarrui:javapackager:1.6.7")
-            classpath("io.github.fvarrui:javapackager:1.7.3")
+            classpath("io.github.fvarrui:javapackager:1.7.6")
         }
     }
 }
@@ -34,7 +34,7 @@ val versionJson = JsonSlurper().parse(File(versionConfig)) as Map<String, String
 val appliactionVersion = versionJson.get("version")
 val applicationName: String = "MqttInsight"
 val organization: String = "ptma@163.com"
-val copyright: String = "Copyright 2023 ptma@163.com"
+val copyrightVal: String = "Copyright (C) ptma@163.com"
 val supportUrl: String = "https://github.com/ptma/mqtt-insight"
 
 val flatlafVersion = "3.4"
@@ -146,7 +146,7 @@ tasks.jar {
     manifest {
         attributes("Main-Class" to "com.mqttinsight.MqttInsightApplication")
         attributes("Implementation-Vendor" to "https://github.com/ptma/mqtt-insight")
-        attributes("Implementation-Copyright" to copyright)
+        attributes("Implementation-Copyright" to copyrightVal)
         attributes("Implementation-Version" to appliactionVersion)
         attributes("Multi-Release" to "true")
     }
@@ -287,7 +287,7 @@ tasks.register<PackageTask>("packageForWindows") {
         icoFile = getIconFile("MqttInsight.ico")
         headerType = HeaderType.gui
         originalFilename = applicationName
-        copyright = copyright
+        copyright = copyrightVal
         productName = applicationName
         productVersion = version
         fileVersion = version
