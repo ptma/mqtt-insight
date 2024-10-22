@@ -17,6 +17,7 @@ import com.mqttinsight.ui.form.MainWindowForm;
 import com.mqttinsight.ui.form.NewSubscriptionForm;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
+import com.mqttinsight.util.TopicUtil;
 import com.mqttinsight.util.Utils;
 import lombok.Getter;
 import net.miginfocom.swing.MigLayout;
@@ -32,6 +33,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -430,6 +432,14 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             }
         }
         return this.doSubscribe(subscription);
+    }
+
+    public Optional<Subscription> matchAnySubscription(String topic) {
+        return subscriptionListPanel.getSubscriptions()
+            .stream()
+            .map(SubscriptionItem::getSubscription)
+            .filter(subscription -> TopicUtil.match(subscription.getTopic(), topic))
+            .findAny();
     }
 
     @Override
