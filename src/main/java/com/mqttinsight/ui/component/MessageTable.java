@@ -450,8 +450,10 @@ public class MessageTable extends JXTable {
     }
 
     public void doApplyFilterTopics(Set<String> topics) {
-        topicSegmentFilter.applyTopics(topics);
-        getTableModel().fireTableDataChanged();
+        boolean changed = topicSegmentFilter.applyTopics(topics);
+        if (changed) {
+            getTableModel().fireTableDataChanged();
+        }
     }
 
     @Override
@@ -495,9 +497,13 @@ public class MessageTable extends JXTable {
         protected TopicSegmentFilter() {
         }
 
-        public void applyTopics(Set<String> topics) {
-            this.topics.clear();
-            this.topics.addAll(topics);
+        public boolean applyTopics(Set<String> topics) {
+            boolean changed = this.topics.size() != topics.size() || !this.topics.containsAll(topics);
+            if (changed) {
+                this.topics.clear();
+                this.topics.addAll(topics);
+            }
+            return changed;
         }
 
         @Override
@@ -505,11 +511,11 @@ public class MessageTable extends JXTable {
             MessageTableModel tableModel = (MessageTableModel) entry.getModel();
             MqttMessage message = tableModel.get(entry.getIdentifier());
             String messageTopic = message.getTopic();
-            return topics.stream().noneMatch(filterTopic -> messageTopic.equals(filterTopic) || isStartsWith(filterTopic, messageTopic));
+            return topics.isEmpty() || topics.stream().noneMatch(filterTopic -> messageTopic.equals(filterTopic) || isStartsWith(filterTopic, messageTopic));
         }
 
         private boolean isStartsWith(String filterTopic, String messageTopic) {
-            if (filterTopic.endsWith("/")) {
+            if (filterTopic.equals("/")) {
                 return messageTopic.startsWith(filterTopic);
             } else {
                 return messageTopic.startsWith(filterTopic + "/");

@@ -5,7 +5,6 @@ import com.mqttinsight.ui.form.panel.TopicTreePanel;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.swingx.JXLabel;
 import org.jdesktop.swingx.VerticalLayout;
@@ -23,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author ptma
  */
-@Slf4j
 public class TopicSegment extends JPanel {
 
     private static final Color HOVER_BG_COLOR = UIManager.getColor("Button.default.hoverBackground");
@@ -41,6 +39,8 @@ public class TopicSegment extends JPanel {
 
     @Getter
     private final String name;
+    @Getter
+    private final String fullTopic;
 
     private boolean expanded = false;
     @Getter
@@ -48,7 +48,7 @@ public class TopicSegment extends JPanel {
 
     private final AtomicInteger messageCount = new AtomicInteger(0);
 
-    public TopicSegment(MqttInstance mqttInstance, JComponent parent, String name) {
+    public TopicSegment(MqttInstance mqttInstance, JComponent parent, String name, boolean expanded) {
         super();
         setOpaque(false);
         setLayout(new VerticalLayout(0));
@@ -56,6 +56,17 @@ public class TopicSegment extends JPanel {
         this.mqttInstance = mqttInstance;
         this.parent = parent;
         this.name = name;
+        this.expanded = expanded;
+        this.fullTopic = (parent instanceof TopicSegment parentSegment) ?
+            (
+                // Root segment, topic start with /
+                parentSegment.getName().equals("/") ?
+                    parentSegment.getFullTopic() + name
+                    :
+                    parentSegment.getFullTopic() + "/" + name
+            )
+            :
+            name;
 
         nodePanel = new SegmentNodePanel(this);
         add(nodePanel);
@@ -64,7 +75,9 @@ public class TopicSegment extends JPanel {
         childrenPanel.setLayout(new VerticalLayout(0));
         childrenPanel.setOpaque(false);
         childrenPanel.setBorder(new EmptyBorder(0, 10, 0, 0));
-        childrenPanel.setPreferredSize(new Dimension(0, 0));
+        if (!expanded) {
+            childrenPanel.setPreferredSize(new Dimension(0, 0));
+        }
         add(childrenPanel);
 
         if (parent instanceof TopicSegment parentSegment) {
@@ -137,9 +150,9 @@ public class TopicSegment extends JPanel {
         String segment = topicSegments.get(0);
 
         TopicSegment child = getChild(segment).orElseGet(() -> {
-            TopicSegment newChild = new TopicSegment(mqttInstance, this, segment);
+            TopicSegment newChild = new TopicSegment(mqttInstance, this, segment, false);
             childrenPanel.add(newChild);
-            updateSegmentCompositeVisibleStatus(true);
+            updateSegmentCompositeVisibleStatus(true, false);
             return newChild;
         });
         if (topicSegments.size() > 1) {
@@ -236,12 +249,12 @@ public class TopicSegment extends JPanel {
         return segmentVisible || getChildren().stream().anyMatch(TopicSegment::isSegmentCompositeVisible);
     }
 
-    public void updateSegmentCompositeVisibleStatus(boolean updateParentCompositeVisibleStatus) {
+    public void updateSegmentCompositeVisibleStatus(boolean updateParent, boolean notify) {
         nodePanel.changeSegmentVisibleStatus(isSegmentCompositeVisible());
-        if (updateParentCompositeVisibleStatus && parent instanceof TopicSegment parentSegment) {
-            parentSegment.updateSegmentCompositeVisibleStatus(true);
+        if (updateParent && parent instanceof TopicSegment parentSegment) {
+            parentSegment.updateSegmentCompositeVisibleStatus(true, notify);
         }
-        if (parent instanceof TopicTreePanel topicTree) {
+        if (notify && parent instanceof TopicTreePanel topicTree) {
             topicTree.notifyTopicSegmentsVisibleChange();
         }
     }
@@ -259,7 +272,7 @@ public class TopicSegment extends JPanel {
         nodePanel.changeSegmentVisibleStatus(this.segmentVisible);
 
         if (updateParentCompositeVisibleStatus) {
-            updateSegmentCompositeVisibleStatus(true);
+            updateSegmentCompositeVisibleStatus(true, true);
         }
     }
 
@@ -290,10 +303,6 @@ public class TopicSegment extends JPanel {
                 ((TopicSegment) parent).updateComponent();
             }
         });
-    }
-
-    public String getFullTopic() {
-        return (parent instanceof TopicSegment parentSegment) ? parentSegment.getFullTopic() + "/" + name : name;
     }
 
     public static class SegmentNodePanel extends JPanel implements MouseListener {
