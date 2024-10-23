@@ -17,6 +17,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -26,12 +27,16 @@ public class TopicSegment extends JPanel {
 
     private static final Color HOVER_BG_COLOR = UIManager.getColor("Button.default.hoverBackground");
     private static final Color NORMAL_BG_COLOR = UIManager.getColor("Tree.background");
+    private static final Color SELECTED_BG_COLOR = UIManager.getColor("Table.selectionInactiveBackground");
+
     private static final Color TEXT_VISIBLE_COLOR = UIManager.getColor("Label.foreground");
     private static final Color TEXT_INVISIBLE_COLOR = UIManager.getColor("Label.disabledForeground");
     private static final Icon ICON_COLLAPSED = UIManager.getIcon("Tree.collapsedIcon");
     private static final Icon ICON_EXPANDED = UIManager.getIcon("Tree.expandedIcon");
+    private static final Icon ICON_EMPTY = new EmptyIcon();
 
     private final MqttInstance mqttInstance;
+    private final TopicTreePanel topicTree;
     private final JComponent parent;
 
     private final SegmentNodePanel nodePanel;
@@ -41,19 +46,22 @@ public class TopicSegment extends JPanel {
     private final String name;
     @Getter
     private final String fullTopic;
-
+    @Getter
     private boolean expanded = false;
     @Getter
     private boolean segmentVisible = true;
 
+    private boolean selected = false;
+
     private final AtomicInteger messageCount = new AtomicInteger(0);
 
-    public TopicSegment(MqttInstance mqttInstance, JComponent parent, String name, boolean expanded) {
+    public TopicSegment(MqttInstance mqttInstance, TopicTreePanel topicTree, JComponent parent, String name, boolean expanded) {
         super();
         setOpaque(false);
         setLayout(new VerticalLayout(0));
 
         this.mqttInstance = mqttInstance;
+        this.topicTree = topicTree;
         this.parent = parent;
         this.name = name;
         this.expanded = expanded;
@@ -120,6 +128,7 @@ public class TopicSegment extends JPanel {
     public void removeSelf() {
         if (parent instanceof TopicSegment parentSegment) {
             parentSegment.removeChildSegment(this);
+            parentSegment.updateSize();
         } else if (parent instanceof TopicTreePanel topicTree) {
             topicTree.removeRootSegment(this);
         }
@@ -127,20 +136,14 @@ public class TopicSegment extends JPanel {
 
     private void removeChildSegment(TopicSegment child) {
         childrenPanel.remove(child);
-        checkChildSegment();
-    }
-
-    private void checkChildSegment() {
         if (getTopicCount() == 0) {
             removeSelf();
-        } else {
-            updateComponent();
         }
     }
 
     public void incrementMessages() {
         messageCount.incrementAndGet();
-        updateComponent();
+        updateNode();
     }
 
     public void incrementMessages(List<String> topicSegments) {
@@ -149,10 +152,12 @@ public class TopicSegment extends JPanel {
         }
         String segment = topicSegments.get(0);
 
+        AtomicBoolean childAppended = new AtomicBoolean(false);
         TopicSegment child = getChild(segment).orElseGet(() -> {
-            TopicSegment newChild = new TopicSegment(mqttInstance, this, segment, false);
-            childrenPanel.add(newChild);
+            TopicSegment newChild = new TopicSegment(mqttInstance, topicTree, this, segment, false);
+            addSegment(newChild);
             updateSegmentCompositeVisibleStatus(true, false);
+            childAppended.set(true);
             return newChild;
         });
         if (topicSegments.size() > 1) {
@@ -160,35 +165,48 @@ public class TopicSegment extends JPanel {
         } else {
             child.incrementMessages();
         }
+        if (childAppended.get()) {
+            updateSize();
+        }
     }
 
-    public void decrementMessages() {
-        if (messageCount.get() > 0) {
-            messageCount.decrementAndGet();
-        }
-        updateComponent();
-    }
-
-    public void decrementMessages(List<String> topicSegments) {
-        if (topicSegments.isEmpty()) {
-            return;
-        }
-        String segment = topicSegments.get(0);
-        getChild(segment).ifPresent(child -> {
-            if (topicSegments.size() > 1) {
-                child.decrementMessages(topicSegments.subList(1, topicSegments.size()));
-            } else {
-                child.decrementMessages();
-                if (child.getTopicCount() == 0) {
-                    child.removeSelf();
-                }
+    private void addSegment(TopicSegment segment) {
+        List<TopicSegment> segments = getChildren();
+        for (int i = 0; i < segments.size(); i++) {
+            TopicSegment existingSegment = segments.get(i);
+            if (segment.getName().compareTo(existingSegment.getName()) <= 0) {
+                childrenPanel.add(segment, i);
+                return;
             }
-        });
+        }
+        childrenPanel.add(segment);
     }
 
-    public void toogleExpanded() {
+    public void decrementMessages(String topic) {
+        if (fullTopic.equals(topic)) {
+            messageCount.decrementAndGet();
+            if (getTopicCount() == 0) {
+                removeSelf();
+            } else {
+                updateNode();
+            }
+        } else if (topic.startsWith(fullTopic)) {
+            getChildren().forEach(segment -> segment.decrementMessages(topic));
+        }
+    }
+
+    public void toggleExpanded() {
         this.expanded = !this.expanded;
-        updateComponent();
+        updateNode();
+        updateSize();
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+        nodePanel.selected(selected);
+        if (selected) {
+            topicTree.changeSelectedSegment(this);
+        }
     }
 
     public int getSelfMessageCount() {
@@ -220,6 +238,27 @@ public class TopicSegment extends JPanel {
         return new Dimension(width, height);
     }
 
+    public int calcSegmentScrollHeight(List<String> topicSegments) {
+        int height = 0;
+        for (TopicSegment segment : getChildren()) {
+            if (segment.getName().equals(topicSegments.get(0))) {
+                height += segment.nodePanel.getHeight();
+                if (topicSegments.size() > 1) {
+                    if (!segment.isExpanded()) {
+                        segment.toggleExpanded();
+                    }
+                    height += segment.calcSegmentScrollHeight(topicSegments.subList(1, topicSegments.size()));
+                } else {
+                    segment.setSelected(true);
+                }
+                return height;
+            } else {
+                height += segment.getHeight();
+            }
+        }
+        return height;
+    }
+
     private void resizeChildrenPanel() {
         int width = nodePanel.getPreferredSize().width;
         int height = 0;
@@ -238,11 +277,12 @@ public class TopicSegment extends JPanel {
      * During the clearing process, the number of messages in this segment will be updated synchronously.
      * When the number is 0, this segment will be removed
      * <p>
-     * {@link #decrementMessages(List)}
-     * {@link com.mqttinsight.ui.form.panel.MessageViewPanel#doClearMessages(String)} (String)}
+     * {@link com.mqttinsight.ui.form.panel.MessageViewPanel#doClearMessages(String, Runnable)} (String)}
      */
     public void removeSegmentMessages() {
-        mqttInstance.applyEvent(l -> l.clearMessages(getFullTopic()));
+        SwingUtilities.invokeLater(() -> {
+            mqttInstance.applyEvent(l -> l.clearMessages(getFullTopic(), this::removeSelf));
+        });
     }
 
     public boolean isSegmentCompositeVisible() {
@@ -276,9 +316,9 @@ public class TopicSegment extends JPanel {
         }
     }
 
-    public void updateComponent() {
+    public void updateNode() {
         SwingUtilities.invokeLater(() -> {
-            nodePanel.setIcon(getChildrenCount() > 0 ? (this.expanded ? ICON_EXPANDED : ICON_COLLAPSED) : null);
+            nodePanel.setIcon(getChildrenCount() > 0 ? (this.expanded ? ICON_EXPANDED : ICON_COLLAPSED) : ICON_EMPTY);
 
             String topicsDescription, messagesDescription;
             int topicsCount = getTopicCount();
@@ -295,12 +335,22 @@ public class TopicSegment extends JPanel {
             }
             String descriptionTemplate = String.format("(%s, %s)", topicsDescription, messagesDescription);
             nodePanel.description(String.format(descriptionTemplate, topicsCount, messagesCount));
+            this.revalidate();
+            this.repaint();
 
+            if (parent instanceof TopicSegment) {
+                ((TopicSegment) parent).updateNode();
+            }
+        });
+    }
+
+    public void updateSize() {
+        SwingUtilities.invokeLater(() -> {
             this.setPreferredSize(getComponentSize());
             this.revalidate();
             this.repaint();
             if (parent instanceof TopicSegment) {
-                ((TopicSegment) parent).updateComponent();
+                ((TopicSegment) parent).updateSize();
             }
         });
     }
@@ -332,6 +382,7 @@ public class TopicSegment extends JPanel {
             nameLabel = new JXLabel(segment.getName());
             nameLabel.setOpaque(false);
             nameLabel.putClientProperty("FlatLaf.styleClass", "h4");
+            nameLabel.setToolTipText(segment.getFullTopic());
             add(nameLabel, "cell 1 0");
             descriptionLabel = new JXLabel();
             descriptionLabel.setOpaque(false);
@@ -364,7 +415,7 @@ public class TopicSegment extends JPanel {
             iconLabel.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    segment.toogleExpanded();
+                    segment.toggleExpanded();
                 }
 
                 @Override
@@ -379,6 +430,8 @@ public class TopicSegment extends JPanel {
             });
             clearButton.addMouseListener(this);
             visibleButton.addMouseListener(this);
+            nameLabel.addMouseListener(this);
+            descriptionLabel.addMouseListener(this);
         }
 
         public void setIcon(Icon icon) {
@@ -400,8 +453,12 @@ public class TopicSegment extends JPanel {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 2) {
-                segment.toogleExpanded();
+            if (e.getButton() == MouseEvent.BUTTON1) {
+                if (e.getClickCount() == 2) {
+                    segment.toggleExpanded();
+                } else {
+                    segment.setSelected(true);
+                }
             }
         }
 
@@ -417,15 +474,46 @@ public class TopicSegment extends JPanel {
 
         @Override
         public void mouseEntered(MouseEvent e) {
-            this.setBackground(HOVER_BG_COLOR);
+            if (!segment.selected) {
+                this.setBackground(HOVER_BG_COLOR);
+            }
             toolBar.setVisible(true);
         }
 
         @Override
         public void mouseExited(MouseEvent e) {
-            this.setBackground(NORMAL_BG_COLOR);
+            if (!segment.selected) {
+                this.setBackground(NORMAL_BG_COLOR);
+            }
             toolBar.setVisible(false);
         }
 
+        public void selected(boolean selected) {
+            if (selected) {
+                this.setBackground(SELECTED_BG_COLOR);
+            } else {
+                this.setBackground(NORMAL_BG_COLOR);
+            }
+            this.revalidate();
+            this.repaint();
+        }
     }
+
+    private static class EmptyIcon implements Icon {
+        int height = 13;
+        int width = 13;
+
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+        }
+
+        public int getIconWidth() {
+            return width;
+        }
+
+        public int getIconHeight() {
+            return height;
+        }
+    }
+
+    ;
 }

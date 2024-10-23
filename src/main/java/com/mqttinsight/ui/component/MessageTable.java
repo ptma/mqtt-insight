@@ -40,10 +40,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author ptma
@@ -83,7 +81,6 @@ public class MessageTable extends JXTable {
         setRowSelectionAllowed(true);
         setColumnSelectionAllowed(false);
         putClientProperty(AbstractSearchable.MATCH_HIGHLIGHTER, Boolean.TRUE);
-
         boolean darkLaf = UIManager.getBoolean("laf.dark");
         if (tableModel.getViewMode() == MessageViewMode.TABLE) {
             tableRenderer = new DefaultTableRenderer(new TableViewRendererProvider(tableModel));
@@ -447,6 +444,15 @@ public class MessageTable extends JXTable {
 
     public List<MqttMessage> getMessage() {
         return tableModel.getMessages();
+    }
+
+    public Optional<MqttMessage> getSelectedMessage() {
+        int selectedRow = this.getSelectedRow();
+        if (selectedRow >= 0) {
+            return Optional.of(tableModel.get(selectedRow));
+        } else {
+            return Optional.empty();
+        }
     }
 
     public void doApplyFilterTopics(Set<String> topics) {

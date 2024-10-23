@@ -324,7 +324,12 @@ public class MessageToolbar extends JToolBar {
             }
 
             @Override
-            public void clearMessages(Subscription subscription) {
+            public void clearMessages(Subscription subscription, Runnable done) {
+                updateMessageNavigation();
+            }
+
+            @Override
+            public void clearMessages(String topicPrefix, Runnable done) {
                 updateMessageNavigation();
             }
 

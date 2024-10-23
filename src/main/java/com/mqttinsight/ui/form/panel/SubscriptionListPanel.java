@@ -163,18 +163,19 @@ public class SubscriptionListPanel extends JScrollPane {
     }
 
     /**
-     * {@link com.mqttinsight.ui.form.panel.MessageViewPanel#doClearMessages(Subscription)}
+     * {@link com.mqttinsight.ui.form.panel.MessageViewPanel#doClearMessages(Subscription, Runnable)}
      */
     private void removeItem(SubscriptionItem item) {
-        subscriptions.remove(item);
-        containerPanel.remove(item);
         if (mqttInstance.getProperties().isClearUnsubMessage()) {
             mqttInstance.applyEvent(eventListener -> {
-                eventListener.clearMessages(item.getSubscription());
+                eventListener.clearMessages(item.getSubscription(), () -> {
+                    subscriptions.remove(item);
+                    containerPanel.remove(item);
+                    containerPanel.revalidate();
+                    containerPanel.repaint();
+                });
             });
         }
-        containerPanel.revalidate();
-        containerPanel.repaint();
     }
 
 }

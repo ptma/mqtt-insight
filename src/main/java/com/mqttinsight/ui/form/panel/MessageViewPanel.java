@@ -131,13 +131,13 @@ public class MessageViewPanel extends JScrollPane {
             }
 
             @Override
-            public void clearMessages(Subscription subscription) {
-                MessageViewPanel.this.doClearMessages(subscription);
+            public void clearMessages(Subscription subscription, Runnable done) {
+                MessageViewPanel.this.doClearMessages(subscription, done);
             }
 
             @Override
-            public void clearMessages(String topicPrefix) {
-                MessageViewPanel.this.doClearMessages(topicPrefix);
+            public void clearMessages(String topicPrefix, Runnable done) {
+                MessageViewPanel.this.doClearMessages(topicPrefix, done);
             }
 
             @Override
@@ -213,19 +213,25 @@ public class MessageViewPanel extends JScrollPane {
         });
     }
 
-    public void doClearMessages(Subscription subscription) {
+    public void doClearMessages(Subscription subscription, Runnable done) {
         SwingUtilities.invokeLater(() -> {
             messageTableModel.cleanMessages(subscription, (msg) -> {
                 mqttInstance.applyEvent(l -> l.onMessageRemoved(msg));
             });
+            if (done != null) {
+                done.run();
+            }
         });
     }
 
-    public void doClearMessages(String topicPrefix) {
+    public void doClearMessages(String topicPrefix, Runnable done) {
         SwingUtilities.invokeLater(() -> {
             messageTableModel.cleanMessages(topicPrefix, (msg) -> {
                 mqttInstance.applyEvent(l -> l.onMessageRemoved(msg));
             });
+            if (done != null) {
+                done.run();
+            }
         });
     }
 

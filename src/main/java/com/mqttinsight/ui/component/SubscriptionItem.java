@@ -297,11 +297,14 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     }
 
     /**
-     * {@link com.mqttinsight.ui.form.panel.MessageViewPanel#doClearMessages(Subscription)}
+     * {@link com.mqttinsight.ui.form.panel.MessageViewPanel#doClearMessages(Subscription, Runnable)}
      */
     private void clearMessages(ActionEvent e) {
         mqttInstance.applyEvent(eventListener -> {
-            eventListener.clearMessages(subscription);
+            subscription.setClearing(true);
+            eventListener.clearMessages(subscription, () -> {
+                subscription.setClearing(false);
+            });
         });
     }
 

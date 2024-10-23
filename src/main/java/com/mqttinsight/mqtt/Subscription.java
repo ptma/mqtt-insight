@@ -44,6 +44,9 @@ public class Subscription {
     @Setter
     private boolean visible = true;
 
+    private boolean clearing = false;
+
+    private final AtomicInteger countDuringClearing;
     /**
      * 开始订阅的时间
      */
@@ -57,6 +60,7 @@ public class Subscription {
         this.subscribeTime = new Date();
         this.payloadFormat = payloadFormat;
         messageCount = new AtomicInteger(0);
+        countDuringClearing = new AtomicInteger(0);
     }
 
     public void setPayloadFormat(String payloadFormat) {
@@ -71,18 +75,31 @@ public class Subscription {
         return (payloadFormat == null || CodecSupport.DEFAULT.equals(payloadFormat)) ? mqttInstance.getPayloadFormat() : payloadFormat;
     }
 
+    public void setClearing(boolean clearing) {
+        this.clearing = clearing;
+        if (this.clearing) {
+            countDuringClearing.set(0);
+        } else {
+            messageCount.set(countDuringClearing.get());
+        }
+    }
+
     public void incrementMessageCount() {
-        this.messageCount.incrementAndGet();
+        if (clearing) {
+            countDuringClearing.incrementAndGet();
+        } else {
+            messageCount.incrementAndGet();
+        }
     }
 
     public void decrementMessageCount() {
         if (messageCount.get() > 0) {
-            this.messageCount.decrementAndGet();
+            messageCount.decrementAndGet();
         }
     }
 
     public void resetMessageCount() {
-        this.messageCount.set(0);
+        messageCount.set(0);
     }
 
     public void setColor(Color color) {

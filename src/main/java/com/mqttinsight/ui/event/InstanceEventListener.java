@@ -27,9 +27,9 @@ public interface InstanceEventListener {
 
     void clearAllMessages();
 
-    void clearMessages(Subscription subscription);
+    void clearMessages(Subscription subscription, Runnable done);
 
-    void clearMessages(String topicPrefix);
+    void clearMessages(String topicPrefix, Runnable done);
 
     void onMessageRemoved(MqttMessage message);
 

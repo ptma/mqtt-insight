@@ -1,5 +1,6 @@
 package com.mqttinsight.ui.form.panel;
 
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.ui.component.TopicSegment;
@@ -7,6 +8,8 @@ import com.mqttinsight.ui.event.InstanceEventAdapter;
 import org.jdesktop.swingx.VerticalLayout;
 
 import javax.swing.*;
+import java.awt.*;
+import java.util.List;
 import java.util.*;
 import java.util.function.BiConsumer;
 
@@ -18,6 +21,8 @@ public class TopicTreePanel extends JScrollPane {
     private final MqttInstance mqttInstance;
 
     private final JPanel segmentsContainer;
+
+    private TopicSegment selectedSegment;
 
     public TopicTreePanel(final MqttInstance mqttInstance) {
         super();
@@ -49,11 +54,28 @@ public class TopicTreePanel extends JScrollPane {
 
             @Override
             public void onMessageRemoved(MqttMessage message) {
-                SwingUtilities.invokeLater(() -> {
+                ThreadUtil.execute(() -> {
                     removeTopicSegments(message.getTopic());
                 });
             }
+
+            @Override
+            public void requestFocusPreview() {
+                SwingUtilities.invokeLater(() -> {
+                    mqttInstance.getMessageTable().getSelectedMessage()
+                        .ifPresent(message -> {
+                            activeSegments(message.getTopic());
+                        });
+                });
+            }
         });
+    }
+
+    public void changeSelectedSegment(TopicSegment segment) {
+        if (selectedSegment != null && selectedSegment != segment) {
+            selectedSegment.setSelected(false);
+        }
+        selectedSegment = segment;
     }
 
     public void notifyTopicSegmentsVisibleChange() {
@@ -95,16 +117,16 @@ public class TopicTreePanel extends JScrollPane {
                 .findFirst()
                 .orElse(null);
             if (rootSegment == null) {
-                rootSegment = new TopicSegment(mqttInstance, this, segment, true);
+                rootSegment = new TopicSegment(mqttInstance, this, this, segment, true);
                 addRootSegment(rootSegment);
+                segmentsContainer.revalidate();
+                segmentsContainer.repaint();
             }
             if (remainTopic != null) {
                 rootSegment.incrementMessages(StrUtil.split(remainTopic, '/'));
             } else {
                 rootSegment.incrementMessages();
             }
-            segmentsContainer.revalidate();
-            segmentsContainer.repaint();
         });
 
     }
@@ -121,18 +143,29 @@ public class TopicTreePanel extends JScrollPane {
                 .filter(item -> item.getName().equals(segment))
                 .findFirst();
             rootSegment.ifPresent((topicSegment) -> {
-                if (remainTopic != null) {
-                    topicSegment.decrementMessages(StrUtil.split(remainTopic, '/'));
-                } else {
-                    topicSegment.decrementMessages();
-                }
-                if (topicSegment.getTopicCount() == 0) {
-                    removeRootSegment(topicSegment);
-                }
-                segmentsContainer.revalidate();
-                segmentsContainer.repaint();
+                topicSegment.decrementMessages(topic);
             });
         });
+    }
+
+    private void activeSegments(String topic) {
+        extractSegmentAndHandle(topic, (segment, remainTopic) -> {
+            int height = 0;
+            for (TopicSegment rootSegment : getRootSegments()) {
+                if (rootSegment.getName().equals(segment)) {
+                    if (!rootSegment.isExpanded()) {
+                        rootSegment.toggleExpanded();
+                    }
+                    height += rootSegment.calcSegmentScrollHeight(StrUtil.split(remainTopic, '/'));
+                    getViewport().setViewPosition(new Point(0, height));
+                    updateUI();
+                    break;
+                } else {
+                    height += rootSegment.getComponentSize().height;
+                }
+            }
+        });
+
     }
 
     public List<TopicSegment> getRootSegments() {
@@ -142,10 +175,20 @@ public class TopicTreePanel extends JScrollPane {
     }
 
     private void addRootSegment(TopicSegment segment) {
+        List<TopicSegment> segments = getRootSegments();
+        for (int i = 0; i < segments.size(); i++) {
+            TopicSegment existingSegment = segments.get(i);
+            if (segment.getName().compareTo(existingSegment.getName()) <= 0) {
+                segmentsContainer.add(segment, i);
+                return;
+            }
+        }
         segmentsContainer.add(segment);
     }
 
     public void removeRootSegment(TopicSegment segment) {
         segmentsContainer.remove(segment);
+        segmentsContainer.revalidate();
+        segmentsContainer.repaint();
     }
 }
