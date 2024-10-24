@@ -29,10 +29,6 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
     }
 
     @Override
-    public void onMessage(MqttMessage message) {
-    }
-
-    @Override
     public void onMessage(MqttMessage message, MqttMessage parent) {
     }
 
@@ -53,7 +49,7 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
     }
 
     @Override
-    public void clearMessages(String topicPrefix, Runnable done) {
+    public void clearMessages(String topicPrefix) {
 
     }
 

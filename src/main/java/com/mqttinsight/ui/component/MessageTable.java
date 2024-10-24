@@ -351,9 +351,7 @@ public class MessageTable extends JXTable {
         int selRow = getSelectedRow();
         if (selRow >= 0 && selRow < getRowCount()) {
             int modelIndex = convertRowIndexToModel(selRow);
-            MqttMessage message = tableModel.get(modelIndex);
             tableModel.remove(modelIndex);
-            mqttInstance.applyEvent(listener -> listener.onMessageRemoved(message));
             if (getRowCount() > selRow) {
                 setRowSelectionInterval(selRow, selRow);
             } else if (selRow > 0) {
@@ -366,9 +364,7 @@ public class MessageTable extends JXTable {
     public void clearVisibleMessages() {
         for (int row = getRowCount() - 1; row >= 0; row--) {
             int modelIndex = convertRowIndexToModel(row);
-            MqttMessage message = tableModel.get(modelIndex);
             tableModel.remove(modelIndex);
-            mqttInstance.applyEvent(listener -> listener.onMessageRemoved(message));
         }
         System.gc();
     }

@@ -1,6 +1,5 @@
 package com.mqttinsight.ui.form.panel;
 
-import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.ui.component.TopicSegment;
@@ -34,27 +33,21 @@ public class TopicTreePanel extends JScrollPane {
         setViewportView(segmentsContainer);
 
         initEventListeners();
+
     }
 
     private void initEventListeners() {
         mqttInstance.addEventListener(new InstanceEventAdapter() {
             @Override
-            public void onMessage(MqttMessage message) {
+            public void onMessage(MqttMessage message, MqttMessage parent) {
                 SwingUtilities.invokeLater(() -> {
                     updateSegments(message.getTopic());
                 });
             }
 
             @Override
-            public void clearAllMessages() {
-                SwingUtilities.invokeLater(() -> {
-                    clearSegments();
-                });
-            }
-
-            @Override
             public void onMessageRemoved(MqttMessage message) {
-                ThreadUtil.execute(() -> {
+                SwingUtilities.invokeLater(() -> {
                     removeTopicSegments(message.getTopic());
                 });
             }
@@ -64,7 +57,7 @@ public class TopicTreePanel extends JScrollPane {
                 SwingUtilities.invokeLater(() -> {
                     mqttInstance.getMessageTable().getSelectedMessage()
                         .ifPresent(message -> {
-                            activeSegments(message.getTopic());
+                            locateSegments(message.getTopic());
                         });
                 });
             }
@@ -131,12 +124,6 @@ public class TopicTreePanel extends JScrollPane {
 
     }
 
-    private void clearSegments() {
-        segmentsContainer.removeAll();
-        segmentsContainer.revalidate();
-        segmentsContainer.repaint();
-    }
-
     private void removeTopicSegments(String topic) {
         extractSegmentAndHandle(topic, (segment, remainTopic) -> {
             Optional<TopicSegment> rootSegment = getRootSegments().stream()
@@ -148,7 +135,12 @@ public class TopicTreePanel extends JScrollPane {
         });
     }
 
-    private void activeSegments(String topic) {
+    /**
+     * When double clicking a message in the message table, locate the topic segment node
+     *
+     * @param topic segment
+     */
+    private void locateSegments(String topic) {
         extractSegmentAndHandle(topic, (segment, remainTopic) -> {
             int height = 0;
             for (TopicSegment rootSegment : getRootSegments()) {

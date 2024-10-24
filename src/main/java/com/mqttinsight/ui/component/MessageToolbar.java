@@ -309,11 +309,6 @@ public class MessageToolbar extends JToolBar {
             }
 
             @Override
-            public void onMessage(MqttMessage message) {
-                updateMessageNavigation();
-            }
-
-            @Override
             public void onMessage(MqttMessage message, MqttMessage parent) {
                 updateMessageNavigation();
             }
@@ -329,7 +324,7 @@ public class MessageToolbar extends JToolBar {
             }
 
             @Override
-            public void clearMessages(String topicPrefix, Runnable done) {
+            public void clearMessages(String topicPrefix) {
                 updateMessageNavigation();
             }
 

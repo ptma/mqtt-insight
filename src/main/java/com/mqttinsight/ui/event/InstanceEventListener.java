@@ -17,8 +17,6 @@ public interface InstanceEventListener {
 
     void onUnsubscribe(Subscription subscription, boolean closable);
 
-    void onMessage(MqttMessage message);
-
     void onMessage(MqttMessage message, MqttMessage parent);
 
     void payloadFormatChanged();
@@ -29,7 +27,7 @@ public interface InstanceEventListener {
 
     void clearMessages(Subscription subscription, Runnable done);
 
-    void clearMessages(String topicPrefix, Runnable done);
+    void clearMessages(String topicPrefix);
 
     void onMessageRemoved(MqttMessage message);
 

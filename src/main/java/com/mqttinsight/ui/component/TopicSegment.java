@@ -1,5 +1,6 @@
 package com.mqttinsight.ui.component;
 
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.ui.form.panel.TopicTreePanel;
 import com.mqttinsight.util.Icons;
@@ -17,8 +18,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * @author ptma
@@ -33,10 +36,10 @@ public class TopicSegment extends JPanel {
     private static final Color TEXT_INVISIBLE_COLOR = UIManager.getColor("Label.disabledForeground");
     private static final Icon ICON_COLLAPSED = UIManager.getIcon("Tree.collapsedIcon");
     private static final Icon ICON_EXPANDED = UIManager.getIcon("Tree.expandedIcon");
-    private static final Icon ICON_EMPTY = new EmptyIcon();
+    private static final Icon ICON_EMPTY = new FlatSVGIcon("svg/icons/dot.svg", 13, 13);
 
     private final MqttInstance mqttInstance;
-    private final TopicTreePanel topicTree;
+    private final TopicTreePanel topicTreePanel;
     private final JComponent parent;
 
     private final SegmentNodePanel nodePanel;
@@ -47,7 +50,7 @@ public class TopicSegment extends JPanel {
     @Getter
     private final String fullTopic;
     @Getter
-    private boolean expanded = false;
+    private boolean expanded;
     @Getter
     private boolean segmentVisible = true;
 
@@ -55,13 +58,13 @@ public class TopicSegment extends JPanel {
 
     private final AtomicInteger messageCount = new AtomicInteger(0);
 
-    public TopicSegment(MqttInstance mqttInstance, TopicTreePanel topicTree, JComponent parent, String name, boolean expanded) {
+    public TopicSegment(MqttInstance mqttInstance, TopicTreePanel topicTreePanel, JComponent parent, String name, boolean expanded) {
         super();
         setOpaque(false);
         setLayout(new VerticalLayout(0));
 
         this.mqttInstance = mqttInstance;
-        this.topicTree = topicTree;
+        this.topicTreePanel = topicTreePanel;
         this.parent = parent;
         this.name = name;
         this.expanded = expanded;
@@ -116,7 +119,7 @@ public class TopicSegment extends JPanel {
     public List<TopicSegment> getChildren() {
         return Arrays.stream(childrenPanel.getComponents())
             .map(c -> (TopicSegment) c)
-            .toList();
+            .collect(Collectors.toCollection(CopyOnWriteArrayList::new));
     }
 
     public Optional<TopicSegment> getChild(String segment) {
@@ -128,7 +131,6 @@ public class TopicSegment extends JPanel {
     public void removeSelf() {
         if (parent instanceof TopicSegment parentSegment) {
             parentSegment.removeChildSegment(this);
-            parentSegment.updateSize();
         } else if (parent instanceof TopicTreePanel topicTree) {
             topicTree.removeRootSegment(this);
         }
@@ -136,6 +138,10 @@ public class TopicSegment extends JPanel {
 
     private void removeChildSegment(TopicSegment child) {
         childrenPanel.remove(child);
+        updateNode();
+        if (isExpanded()) {
+            updateSize();
+        }
         if (getTopicCount() == 0) {
             removeSelf();
         }
@@ -154,8 +160,8 @@ public class TopicSegment extends JPanel {
 
         AtomicBoolean childAppended = new AtomicBoolean(false);
         TopicSegment child = getChild(segment).orElseGet(() -> {
-            TopicSegment newChild = new TopicSegment(mqttInstance, topicTree, this, segment, false);
-            addSegment(newChild);
+            TopicSegment newChild = new TopicSegment(mqttInstance, topicTreePanel, this, segment, false);
+            addChildSegment(newChild);
             updateSegmentCompositeVisibleStatus(true, false);
             childAppended.set(true);
             return newChild;
@@ -165,12 +171,12 @@ public class TopicSegment extends JPanel {
         } else {
             child.incrementMessages();
         }
-        if (childAppended.get()) {
+        if (childAppended.get() && isExpanded()) {
             updateSize();
         }
     }
 
-    private void addSegment(TopicSegment segment) {
+    private void addChildSegment(TopicSegment segment) {
         List<TopicSegment> segments = getChildren();
         for (int i = 0; i < segments.size(); i++) {
             TopicSegment existingSegment = segments.get(i);
@@ -184,7 +190,9 @@ public class TopicSegment extends JPanel {
 
     public void decrementMessages(String topic) {
         if (fullTopic.equals(topic)) {
-            messageCount.decrementAndGet();
+            if (messageCount.get() > 0) {
+                messageCount.decrementAndGet();
+            }
             if (getTopicCount() == 0) {
                 removeSelf();
             } else {
@@ -205,7 +213,7 @@ public class TopicSegment extends JPanel {
         this.selected = selected;
         nodePanel.selected(selected);
         if (selected) {
-            topicTree.changeSelectedSegment(this);
+            topicTreePanel.changeSelectedSegment(this);
         }
     }
 
@@ -223,7 +231,8 @@ public class TopicSegment extends JPanel {
         if (getSelfMessageCount() > 0) {
             count++;
         }
-        count += getChildren().stream().map(TopicSegment::getTopicCount)
+        count += getChildren().stream()
+            .map(TopicSegment::getTopicCount)
             .reduce(0, Integer::sum);
         return count;
     }
@@ -277,11 +286,11 @@ public class TopicSegment extends JPanel {
      * During the clearing process, the number of messages in this segment will be updated synchronously.
      * When the number is 0, this segment will be removed
      * <p>
-     * {@link com.mqttinsight.ui.form.panel.MessageViewPanel#doClearMessages(String, Runnable)} (String)}
+     * {@link com.mqttinsight.ui.form.panel.MessageViewPanel#doClearMessages(String)} (String)}
      */
     public void removeSegmentMessages() {
         SwingUtilities.invokeLater(() -> {
-            mqttInstance.applyEvent(l -> l.clearMessages(getFullTopic(), this::removeSelf));
+            mqttInstance.applyEvent(l -> l.clearMessages(getFullTopic()));
         });
     }
 
@@ -499,21 +508,4 @@ public class TopicSegment extends JPanel {
         }
     }
 
-    private static class EmptyIcon implements Icon {
-        int height = 13;
-        int width = 13;
-
-        public void paintIcon(Component c, Graphics g, int x, int y) {
-        }
-
-        public int getIconWidth() {
-            return width;
-        }
-
-        public int getIconHeight() {
-            return height;
-        }
-    }
-
-    ;
 }

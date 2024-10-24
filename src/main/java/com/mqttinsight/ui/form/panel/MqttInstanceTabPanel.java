@@ -396,7 +396,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     @Override
     public void messageReceived(MqttMessage message) {
-        applyEvent(l -> l.onMessage(message));
+        applyEvent(l -> l.onMessage(message, null));
         if (scriptLoader != null && message instanceof ReceivedMqttMessage receivedMessage) {
             SwingUtilities.invokeLater(() -> {
                 try {
@@ -446,7 +446,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     public void publishMessage(PublishedMqttMessage message) {
         ThreadUtil.execute(() -> {
             if (doPublishMessage(message)) {
-                applyEvent(l -> l.onMessage(message));
+                applyEvent(l -> l.onMessage(message, null));
             }
         });
     }

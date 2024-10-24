@@ -57,17 +57,8 @@ public class SubscriptionListPanel extends JScrollPane {
             }
 
             @Override
-            public void onMessage(MqttMessage message) {
+            public void onMessage(MqttMessage message, MqttMessage parent) {
                 onMessageReceived(message);
-            }
-
-            @Override
-            public void clearAllMessages() {
-                SwingUtilities.invokeLater(() -> {
-                    for (SubscriptionItem listItem : subscriptions) {
-                        listItem.resetMessageCount();
-                    }
-                });
             }
 
             @Override

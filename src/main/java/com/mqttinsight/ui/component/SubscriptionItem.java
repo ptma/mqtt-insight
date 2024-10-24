@@ -291,19 +291,12 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         return this.subscription.getTopic().equals(topic);
     }
 
-    public void resetMessageCount() {
-        subscription.resetMessageCount();
-        updateMessageCounter();
-    }
-
     /**
      * {@link com.mqttinsight.ui.form.panel.MessageViewPanel#doClearMessages(Subscription, Runnable)}
      */
     private void clearMessages(ActionEvent e) {
         mqttInstance.applyEvent(eventListener -> {
-            subscription.setClearing(true);
             eventListener.clearMessages(subscription, () -> {
-                subscription.setClearing(false);
             });
         });
     }

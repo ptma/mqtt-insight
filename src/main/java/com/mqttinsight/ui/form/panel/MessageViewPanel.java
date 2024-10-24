@@ -60,7 +60,7 @@ public class MessageViewPanel extends JScrollPane {
 
     private void initComponents(MessageViewMode viewMode) {
         Integer maxMessageStored = mqttInstance.getProperties().getMaxMessageStored();
-        messageTableModel = new MessageTableModel(maxMessageStored == null ? Const.MESSAGES_STORED_MAX_SIZE : maxMessageStored);
+        messageTableModel = new MessageTableModel(mqttInstance, maxMessageStored == null ? Const.MESSAGES_STORED_MAX_SIZE : maxMessageStored);
         messageTableModel.setViewMode(viewMode);
         Border scrollPanelBorder = new SingleLineBorder(UIManager.getColor("Component.borderColor"), true, true, true, true);
         setBorder(scrollPanelBorder);
@@ -111,11 +111,6 @@ public class MessageViewPanel extends JScrollPane {
             }
 
             @Override
-            public void onMessage(MqttMessage message) {
-                MessageViewPanel.this.messageReceived(message, null);
-            }
-
-            @Override
             public void onMessage(MqttMessage message, MqttMessage parent) {
                 MessageViewPanel.this.messageReceived(message, parent);
             }
@@ -136,8 +131,8 @@ public class MessageViewPanel extends JScrollPane {
             }
 
             @Override
-            public void clearMessages(String topicPrefix, Runnable done) {
-                MessageViewPanel.this.doClearMessages(topicPrefix, done);
+            public void clearMessages(String topicPrefix) {
+                MessageViewPanel.this.doClearMessages(topicPrefix);
             }
 
             @Override
@@ -215,23 +210,16 @@ public class MessageViewPanel extends JScrollPane {
 
     public void doClearMessages(Subscription subscription, Runnable done) {
         SwingUtilities.invokeLater(() -> {
-            messageTableModel.cleanMessages(subscription, (msg) -> {
-                mqttInstance.applyEvent(l -> l.onMessageRemoved(msg));
-            });
+            messageTableModel.cleanMessages(subscription);
             if (done != null) {
                 done.run();
             }
         });
     }
 
-    public void doClearMessages(String topicPrefix, Runnable done) {
+    public void doClearMessages(String topicPrefix) {
         SwingUtilities.invokeLater(() -> {
-            messageTableModel.cleanMessages(topicPrefix, (msg) -> {
-                mqttInstance.applyEvent(l -> l.onMessageRemoved(msg));
-            });
-            if (done != null) {
-                done.run();
-            }
+            messageTableModel.cleanMessages(topicPrefix);
         });
     }
 
