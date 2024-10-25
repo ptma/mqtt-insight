@@ -110,7 +110,7 @@ public class TopicTreePanel extends JScrollPane {
                 .findFirst()
                 .orElse(null);
             if (rootSegment == null) {
-                rootSegment = new TopicSegment(mqttInstance, this, this, segment, true);
+                rootSegment = new TopicSegment(mqttInstance, this, this, segment, 0, true);
                 addRootSegment(rootSegment);
                 segmentsContainer.revalidate();
                 segmentsContainer.repaint();

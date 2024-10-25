@@ -36,7 +36,7 @@ public class TopicSegment extends JPanel {
     private static final Color TEXT_INVISIBLE_COLOR = UIManager.getColor("Label.disabledForeground");
     private static final Icon ICON_COLLAPSED = UIManager.getIcon("Tree.collapsedIcon");
     private static final Icon ICON_EXPANDED = UIManager.getIcon("Tree.expandedIcon");
-    private static final Icon ICON_EMPTY = new FlatSVGIcon("svg/icons/dot.svg", 13, 13);
+    private static final Icon ICON_EMPTY = new FlatSVGIcon("svg/icons/dot.svg", ICON_EXPANDED.getIconWidth(), ICON_EXPANDED.getIconHeight());
 
     private final MqttInstance mqttInstance;
     private final TopicTreePanel topicTreePanel;
@@ -55,10 +55,11 @@ public class TopicSegment extends JPanel {
     private boolean segmentVisible = true;
 
     private boolean selected = false;
+    private int level;
 
     private final AtomicInteger messageCount = new AtomicInteger(0);
 
-    public TopicSegment(MqttInstance mqttInstance, TopicTreePanel topicTreePanel, JComponent parent, String name, boolean expanded) {
+    public TopicSegment(MqttInstance mqttInstance, TopicTreePanel topicTreePanel, JComponent parent, String name, int level, boolean expanded) {
         super();
         setOpaque(false);
         setLayout(new VerticalLayout(0));
@@ -68,6 +69,7 @@ public class TopicSegment extends JPanel {
         this.parent = parent;
         this.name = name;
         this.expanded = expanded;
+        this.level = level;
         this.fullTopic = (parent instanceof TopicSegment parentSegment) ?
             (
                 // Root segment, topic start with /
@@ -85,7 +87,7 @@ public class TopicSegment extends JPanel {
         childrenPanel = new JPanel();
         childrenPanel.setLayout(new VerticalLayout(0));
         childrenPanel.setOpaque(false);
-        childrenPanel.setBorder(new EmptyBorder(0, 10, 0, 0));
+        childrenPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
         if (!expanded) {
             childrenPanel.setPreferredSize(new Dimension(0, 0));
         }
@@ -160,7 +162,7 @@ public class TopicSegment extends JPanel {
 
         AtomicBoolean childAppended = new AtomicBoolean(false);
         TopicSegment child = getChild(segment).orElseGet(() -> {
-            TopicSegment newChild = new TopicSegment(mqttInstance, topicTreePanel, this, segment, false);
+            TopicSegment newChild = new TopicSegment(mqttInstance, topicTreePanel, this, segment, level + 1, false);
             addChildSegment(newChild);
             updateSegmentCompositeVisibleStatus(true, false);
             childAppended.set(true);
@@ -380,7 +382,7 @@ public class TopicSegment extends JPanel {
             super();
             this.segment = segment;
             setLayout(new MigLayout(
-                "insets 0 5 0 0",
+                String.format("insets 0 %d 0 0", segment.level * 10 + 5),
                 "[]5[]5[grow]5[]",
                 "[]"
             ));
