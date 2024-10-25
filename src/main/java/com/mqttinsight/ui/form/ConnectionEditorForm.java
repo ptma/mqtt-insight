@@ -242,6 +242,7 @@ public class ConnectionEditorForm extends JDialog {
 
     private void initUserPropertiesTable() {
         userPropertiesTable.setModel(propertiesTableModel);
+        userPropertiesTable.setRowHeight(25);
         userPropertiesTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
 
         ListSelectionModel cellSelectionModel = userPropertiesTable.getSelectionModel();

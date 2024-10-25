@@ -58,6 +58,7 @@ public class SecurePropertiesPanel extends SecurePanel {
     private void initPropertiesTable() {
         propertiesTableModel = new PropertiesTableModel();
         propertiesTable.setModel(propertiesTableModel);
+        propertiesTable.setRowHeight(25);
         propertiesTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
         propertiesTable.repaint();
 

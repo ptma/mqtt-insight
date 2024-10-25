@@ -72,6 +72,7 @@ public class DynamicCodecForm extends JDialog {
         codecTableModel = new CodecTableModel();
         codecsTable.setModel(codecTableModel);
         codecsTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        codecsTable.setRowHeight(25);
         codecsTable.getColumnExt(0).setPreferredWidth(50);
         codecsTable.getColumnExt(1).setPreferredWidth(80);
         codecsTable.getColumnExt(2).setPreferredWidth(300);
