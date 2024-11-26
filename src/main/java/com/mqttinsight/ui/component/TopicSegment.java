@@ -240,10 +240,10 @@ public class TopicSegment extends JPanel {
     }
 
     public Dimension getComponentSize() {
-        resizeChildrenPanel();
         int width = nodePanel.getPreferredSize().width;
         int height = nodePanel.getPreferredSize().height;
         if (this.expanded) {
+            resizeChildrenPanel();
             height += childrenPanel.getPreferredSize().height;
         }
         return new Dimension(width, height);
@@ -328,31 +328,29 @@ public class TopicSegment extends JPanel {
     }
 
     public void updateNode() {
-        SwingUtilities.invokeLater(() -> {
-            nodePanel.setIcon(getChildrenCount() > 0 ? (this.expanded ? ICON_EXPANDED : ICON_COLLAPSED) : ICON_EMPTY);
+        nodePanel.setIcon(getChildrenCount() > 0 ? (this.expanded ? ICON_EXPANDED : ICON_COLLAPSED) : ICON_EMPTY);
 
-            String topicsDescription, messagesDescription;
-            int topicsCount = getTopicCount();
-            if (topicsCount > 1) {
-                topicsDescription = LangUtil.getString("SegmentTopicsDescription");
-            } else {
-                topicsDescription = LangUtil.getString("SegmentTopicDescription");
-            }
-            int messagesCount = getTotalMessageCount();
-            if (messagesCount > 1) {
-                messagesDescription = LangUtil.getString("SegmentMessagesDescription");
-            } else {
-                messagesDescription = LangUtil.getString("SegmentMessageDescription");
-            }
-            String descriptionTemplate = String.format("(%s, %s)", topicsDescription, messagesDescription);
-            nodePanel.description(String.format(descriptionTemplate, topicsCount, messagesCount));
-            this.revalidate();
-            this.repaint();
+        String topicsDescription, messagesDescription;
+        int topicsCount = getTopicCount();
+        if (topicsCount > 1) {
+            topicsDescription = LangUtil.getString("SegmentTopicsDescription");
+        } else {
+            topicsDescription = LangUtil.getString("SegmentTopicDescription");
+        }
+        int messagesCount = getTotalMessageCount();
+        if (messagesCount > 1) {
+            messagesDescription = LangUtil.getString("SegmentMessagesDescription");
+        } else {
+            messagesDescription = LangUtil.getString("SegmentMessageDescription");
+        }
+        String descriptionTemplate = String.format("(%s, %s)", topicsDescription, messagesDescription);
+        nodePanel.description(String.format(descriptionTemplate, topicsCount, messagesCount));
+        this.revalidate();
+        this.repaint();
 
-            if (parent instanceof TopicSegment) {
-                ((TopicSegment) parent).updateNode();
-            }
-        });
+        if (parent instanceof TopicSegment) {
+            ((TopicSegment) parent).updateNode();
+        }
     }
 
     public void updateSize() {
@@ -464,18 +462,18 @@ public class TopicSegment extends JPanel {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (e.getButton() == MouseEvent.BUTTON1) {
-                if (e.getClickCount() == 2) {
-                    segment.toggleExpanded();
-                } else {
-                    segment.setSelected(true);
-                }
+            if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 2) {
+                SwingUtilities.invokeLater(segment::toggleExpanded);
             }
         }
 
         @Override
         public void mousePressed(MouseEvent e) {
-
+            if (e.getButton() == MouseEvent.BUTTON1) {
+                SwingUtilities.invokeLater(() -> {
+                    segment.setSelected(true);
+                });
+            }
         }
 
         @Override
@@ -485,18 +483,22 @@ public class TopicSegment extends JPanel {
 
         @Override
         public void mouseEntered(MouseEvent e) {
-            if (!segment.selected) {
-                this.setBackground(HOVER_BG_COLOR);
-            }
-            toolBar.setVisible(true);
+            SwingUtilities.invokeLater(() -> {
+                if (!segment.selected) {
+                    this.setBackground(HOVER_BG_COLOR);
+                }
+                toolBar.setVisible(true);
+            });
         }
 
         @Override
         public void mouseExited(MouseEvent e) {
-            if (!segment.selected) {
-                this.setBackground(NORMAL_BG_COLOR);
-            }
-            toolBar.setVisible(false);
+            SwingUtilities.invokeLater(() -> {
+                if (!segment.selected) {
+                    this.setBackground(NORMAL_BG_COLOR);
+                }
+                toolBar.setVisible(false);
+            });
         }
 
         public void selected(boolean selected) {

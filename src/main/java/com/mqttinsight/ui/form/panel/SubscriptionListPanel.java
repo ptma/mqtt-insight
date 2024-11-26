@@ -166,6 +166,11 @@ public class SubscriptionListPanel extends JScrollPane {
                     containerPanel.repaint();
                 });
             });
+        } else {
+            subscriptions.remove(item);
+            containerPanel.remove(item);
+            containerPanel.revalidate();
+            containerPanel.repaint();
         }
     }
 

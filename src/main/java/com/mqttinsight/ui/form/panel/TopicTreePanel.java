@@ -112,8 +112,6 @@ public class TopicTreePanel extends JScrollPane {
             if (rootSegment == null) {
                 rootSegment = new TopicSegment(mqttInstance, this, this, segment, 0, true);
                 addRootSegment(rootSegment);
-                segmentsContainer.revalidate();
-                segmentsContainer.repaint();
             }
             if (remainTopic != null) {
                 rootSegment.incrementMessages(StrUtil.split(remainTopic, '/'));
@@ -176,6 +174,8 @@ public class TopicTreePanel extends JScrollPane {
             }
         }
         segmentsContainer.add(segment);
+        segmentsContainer.revalidate();
+        segmentsContainer.repaint();
     }
 
     public void removeRootSegment(TopicSegment segment) {
