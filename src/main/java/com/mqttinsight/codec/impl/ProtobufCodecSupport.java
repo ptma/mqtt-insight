@@ -2,13 +2,15 @@ package com.mqttinsight.codec.impl;
 
 import com.mqttinsight.codec.DynamicCodecSupport;
 import com.mqttinsight.codec.proto.DynamicProtoSchema;
+import com.mqttinsight.codec.proto.MappingField;
 import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.exception.SchemaLoadException;
+import com.mqttinsight.util.TopicUtil;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author ptma
@@ -17,27 +19,34 @@ import java.util.Map;
 public class ProtobufCodecSupport extends JsonCodecSupport implements DynamicCodecSupport {
 
     private final static String[] SCHEMA_FILE_EXTENSIONS = new String[]{"proto"};
+    private final static List<MappingField> MAPPING_FIELDS = List.of(
+        MappingField.of("topic", "MappingFieldTopic", 75),
+        MappingField.of("name", "ProtobufMessageName", 25)
+    );
 
     private final String name;
     private final boolean instantiated;
+    private final List<Map<String, String>> mappings;
     private String protoFile = null;
     private DynamicProtoSchema dynamicProtoSchema;
 
     public ProtobufCodecSupport() {
         this.name = "Protobuf";
+        this.mappings = Collections.emptyList();
         this.instantiated = false;
     }
 
-    public ProtobufCodecSupport(String name, String protoFile) throws SchemaLoadException {
+    ProtobufCodecSupport(String name, String protoFile, List<Map<String, String>> mappings) throws SchemaLoadException {
         this.name = name;
         this.protoFile = protoFile;
+        this.mappings = mappings;
         this.dynamicProtoSchema = new DynamicProtoSchema(this.protoFile);
         this.instantiated = true;
     }
 
     @Override
-    public ProtobufCodecSupport newDynamicInstance(String name, String schemaFile) throws SchemaLoadException {
-        return new ProtobufCodecSupport(name, schemaFile);
+    public ProtobufCodecSupport newDynamicInstance(String name, String schemaFile, List<Map<String, String>> mappings) throws SchemaLoadException {
+        return new ProtobufCodecSupport(name, schemaFile, mappings);
     }
 
     @Override
@@ -61,9 +70,28 @@ public class ProtobufCodecSupport extends JsonCodecSupport implements DynamicCod
     }
 
     @Override
+    public boolean mappable() {
+        return true;
+    }
+
+    @Override
+    public List<MappingField> getMappings() {
+        return MAPPING_FIELDS;
+    }
+
+    @Override
     public String toString(String topic, byte[] payload) {
         try {
-            Map<String, Object> msg = dynamicProtoSchema.parse(payload);
+            Map<String, Object> msg;
+            if (mappings != null && !mappings.isEmpty()) {
+                String mappingMessage = mappings.stream().filter(map -> TopicUtil.match(map.get("topic"), topic))
+                    .map(map -> map.get("name"))
+                    .findFirst()
+                    .orElse(null);
+                msg = dynamicProtoSchema.parse(payload, mappingMessage);
+            } else {
+                msg = dynamicProtoSchema.parse(payload, null);
+            }
             return Utils.JSON.toString(msg);
         } catch (Exception e) {
             log.error(e.getMessage());

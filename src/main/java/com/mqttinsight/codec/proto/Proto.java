@@ -73,4 +73,12 @@ public class Proto {
             .sorted(Comparator.comparingInt(MessageElement::getHitCount).reversed())
             .toList();
     }
+
+    public Optional<MessageElement> getMessage(String name) {
+        return types.stream()
+            .filter(e -> e instanceof MessageElement)
+            .map(e -> (MessageElement) e)
+            .filter(element -> element.getName().equals(name))
+            .findFirst();
+    }
 }

@@ -148,7 +148,7 @@ public class TopicTreePanel extends JScrollPane {
                     }
                     height += rootSegment.calcSegmentScrollHeight(StrUtil.split(remainTopic, '/'));
                     getViewport().setViewPosition(new Point(0, height));
-                    updateUI();
+                    //updateUI();
                     break;
                 } else {
                     height += rootSegment.getComponentSize().height;
@@ -175,12 +175,12 @@ public class TopicTreePanel extends JScrollPane {
         }
         segmentsContainer.add(segment);
         segmentsContainer.revalidate();
-        segmentsContainer.repaint();
+        //segmentsContainer.repaint();
     }
 
     public void removeRootSegment(TopicSegment segment) {
         segmentsContainer.remove(segment);
         segmentsContainer.revalidate();
-        segmentsContainer.repaint();
+        //segmentsContainer.repaint();
     }
 }

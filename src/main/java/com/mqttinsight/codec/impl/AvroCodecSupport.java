@@ -1,8 +1,10 @@
 package com.mqttinsight.codec.impl;
 
 import com.mqttinsight.codec.DynamicCodecSupport;
+import com.mqttinsight.codec.proto.MappingField;
 import com.mqttinsight.exception.CodecException;
 import com.mqttinsight.exception.SchemaLoadException;
+import com.mqttinsight.util.TopicUtil;
 import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -16,9 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author ptma
@@ -27,20 +27,28 @@ import java.util.Set;
 public class AvroCodecSupport extends JsonCodecSupport implements DynamicCodecSupport {
 
     private final static String[] SCHEMA_FILE_EXTENSIONS = new String[]{"avsc"};
+    private final static List<MappingField> MAPPING_FIELDS = List.of(
+        MappingField.of("topic", "MappingFieldTopic", 50),
+        MappingField.of("namespace", "AvroNamespace", 35),
+        MappingField.of("name", "AvroName", 15)
+    );
 
     private final String name;
     private final boolean instantiated;
+    private final List<Map<String, String>> mappings;
     private String schemaFile = null;
     private Schema schema;
 
     public AvroCodecSupport() {
         this.name = "Avro";
+        this.mappings = Collections.emptyList();
         this.instantiated = false;
     }
 
-    public AvroCodecSupport(String name, String schemaFile) throws SchemaLoadException {
+    AvroCodecSupport(String name, String schemaFile, List<Map<String, String>> mappings) throws SchemaLoadException {
         this.name = name;
         this.schemaFile = schemaFile;
+        this.mappings = mappings;
         try {
             schema = new Schema.Parser().parse(new File(schemaFile));
             this.instantiated = true;
@@ -50,8 +58,8 @@ public class AvroCodecSupport extends JsonCodecSupport implements DynamicCodecSu
     }
 
     @Override
-    public AvroCodecSupport newDynamicInstance(String name, String schemaFile) throws SchemaLoadException {
-        return new AvroCodecSupport(name, schemaFile);
+    public AvroCodecSupport newDynamicInstance(String name, String schemaFile, List<Map<String, String>> mappings) throws SchemaLoadException {
+        return new AvroCodecSupport(name, schemaFile, mappings);
     }
 
     @Override
@@ -80,9 +88,39 @@ public class AvroCodecSupport extends JsonCodecSupport implements DynamicCodecSu
     }
 
     @Override
+    public boolean mappable() {
+        return true;
+    }
+
+    @Override
+    public List<MappingField> getMappings() {
+        return MAPPING_FIELDS;
+    }
+
+    @Override
     public String toString(String topic, byte[] payload) {
         try {
             if (schema.getType().equals(Schema.Type.UNION)) {
+                if (mappings != null && !mappings.isEmpty()) {
+                    Map<String, String> matchedMapping = mappings.stream()
+                        .filter(map -> TopicUtil.match(map.get("topic"), topic))
+                        .findFirst()
+                        .orElse(null);
+                    if (matchedMapping != null) {
+                        Schema matchedSchema = schema.getTypes()
+                            .stream()
+                            .filter(s -> s.getNamespace().equals(matchedMapping.get("namespace")) && s.getName().equals(matchedMapping.get("name")))
+                            .findFirst()
+                            .orElse(null);
+                        if (matchedSchema != null) {
+                            try {
+                                return tryDecodeWithSchema(payload, matchedSchema);
+                            } catch (Exception ignore) {
+
+                            }
+                        }
+                    }
+                }
                 for (Schema s : schema.getTypes()) {
                     try {
                         return tryDecodeWithSchema(payload, s);
@@ -115,6 +153,26 @@ public class AvroCodecSupport extends JsonCodecSupport implements DynamicCodecSu
         try {
             Map<String, Object> objectMap = Utils.JSON.toObject(json, HashMap.class);
             if (schema.getType().equals(Schema.Type.UNION)) {
+                if (mappings != null && !mappings.isEmpty()) {
+                    Map<String, String> matchedMapping = mappings.stream()
+                        .filter(map -> TopicUtil.match(map.get("topic"), topic))
+                        .findFirst()
+                        .orElse(null);
+                    if (matchedMapping != null) {
+                        Schema matchedSchema = schema.getTypes()
+                            .stream()
+                            .filter(s -> s.getNamespace().equals(matchedMapping.get("namespace")) && s.getName().equals(matchedMapping.get("name")))
+                            .findFirst()
+                            .orElse(null);
+                        if (matchedSchema != null) {
+                            try {
+                                return tryEncodeWithSchema(objectMap, matchedSchema);
+                            } catch (Exception ignore) {
+
+                            }
+                        }
+                    }
+                }
                 for (Schema s : schema.getTypes()) {
                     try {
                         return tryEncodeWithSchema(objectMap, s);

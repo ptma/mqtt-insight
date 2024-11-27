@@ -13,6 +13,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author ptma
@@ -43,7 +45,7 @@ public class ScriptingCodecSupport extends JsonCodecSupport implements DynamicCo
     }
 
     @Override
-    public ScriptingCodecSupport newDynamicInstance(String name, String schemaFile) throws SchemaLoadException, CodecException {
+    public ScriptingCodecSupport newDynamicInstance(String name, String schemaFile, List<Map<String, String>> mappings) throws SchemaLoadException, CodecException {
         ScriptingCodecSupport newInstance = new ScriptingCodecSupport(name, this.options);
         newInstance.schemaFile = schemaFile;
         if (newInstance.options.getLoadSchema() != null) {

@@ -18,6 +18,7 @@ import org.jdesktop.swingx.JXTable;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Collections;
 
 @Slf4j
 public class DynamicCodecForm extends JDialog {
@@ -122,7 +123,7 @@ public class DynamicCodecForm extends JDialog {
                         Utils.Toast.warn(LangUtil.getString("CodecExists"));
                         return false;
                     }
-                    DynamicCodecSupport dynamicInstance = codecSupport.newDynamicInstance(newItem.getName(), newItem.getSchemaFile());
+                    DynamicCodecSupport dynamicInstance = codecSupport.newDynamicInstance(newItem.getName(), newItem.getSchemaFile(), Collections.emptyList());
                     CodecSupports.instance().register(dynamicInstance);
                     Configuration.instance().getDynamicCodecs().add(newItem);
                     Configuration.instance().changed();
@@ -157,7 +158,7 @@ public class DynamicCodecForm extends JDialog {
                             Utils.Toast.warn(LangUtil.getString("CodecExists"));
                             return false;
                         }
-                        DynamicCodecSupport dynamicInstance = codecSupport.newDynamicInstance(newItem.getName(), newItem.getSchemaFile());
+                        DynamicCodecSupport dynamicInstance = codecSupport.newDynamicInstance(newItem.getName(), newItem.getSchemaFile(), Collections.emptyList());
                         int oldIndex = Configuration.instance().getDynamicCodecs().indexOf(oldItem);
                         CodecSupports.instance().remove(oldItem.getName());
                         CodecSupports.instance().register(dynamicInstance);

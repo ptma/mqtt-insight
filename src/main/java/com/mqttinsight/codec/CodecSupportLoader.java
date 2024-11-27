@@ -40,7 +40,7 @@ public class CodecSupportLoader {
                     log.error("Cannot find the codec support {}", dynamicCodec.getType());
                 } else {
                     if (FileUtil.exist(dynamicCodec.getSchemaFile())) {
-                        CodecSupports.instance().register(codecSupport.newDynamicInstance(dynamicCodec.getName(), dynamicCodec.getSchemaFile()));
+                        CodecSupports.instance().register(codecSupport.newDynamicInstance(dynamicCodec.getName(), dynamicCodec.getSchemaFile(), dynamicCodec.getMappings()));
                     } else {
                         log.warn("The schema file \"{}\" of dynamic codec \"{}\" does not exist.", dynamicCodec.getSchemaFile(), dynamicCodec.getName());
                     }

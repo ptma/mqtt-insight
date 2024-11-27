@@ -281,7 +281,7 @@ public class TopicSegment extends JPanel {
         }
         childrenPanel.setPreferredSize(new Dimension(width, height));
         childrenPanel.revalidate();
-        childrenPanel.repaint();
+        //childrenPanel.repaint();
     }
 
     /**
@@ -346,7 +346,7 @@ public class TopicSegment extends JPanel {
         String descriptionTemplate = String.format("(%s, %s)", topicsDescription, messagesDescription);
         nodePanel.description(String.format(descriptionTemplate, topicsCount, messagesCount));
         this.revalidate();
-        this.repaint();
+        //this.repaint();
 
         if (parent instanceof TopicSegment) {
             ((TopicSegment) parent).updateNode();
@@ -357,7 +357,7 @@ public class TopicSegment extends JPanel {
         SwingUtilities.invokeLater(() -> {
             this.setPreferredSize(getComponentSize());
             this.revalidate();
-            this.repaint();
+            //this.repaint();
             if (parent instanceof TopicSegment) {
                 ((TopicSegment) parent).updateSize();
             }
@@ -508,7 +508,7 @@ public class TopicSegment extends JPanel {
                 this.setBackground(NORMAL_BG_COLOR);
             }
             this.revalidate();
-            this.repaint();
+            //this.repaint();
         }
     }
 
