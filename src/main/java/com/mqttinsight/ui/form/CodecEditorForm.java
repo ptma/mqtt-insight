@@ -15,19 +15,16 @@ import com.mqttinsight.codec.proto.MappingField;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.exception.VerificationException;
-import com.mqttinsight.mqtt.Property;
 import com.mqttinsight.ui.component.FileExtensionsFilter;
 import com.mqttinsight.ui.component.model.CodecMappingTableModel;
 import com.mqttinsight.ui.component.model.DynaminCodecComboModel;
+import com.mqttinsight.ui.component.renderer.EmptyPlaceholderTableCellRenderer;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import com.mqttinsight.util.Validator;
-import org.jdesktop.swingx.JXTable;
-import org.jdesktop.swingx.table.TableColumnExt;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -35,10 +32,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -114,6 +109,7 @@ public class CodecEditorForm extends JDialog {
         if (editingItem != null) {
             this.setTitle(LangUtil.getString("EditCodec"));
             nameField.setText(editingItem.getName());
+            nameField.setEnabled(false);
             typeComboBox.setSelectedItem(editingItem.getType());
             typeComboBox.setEnabled(false);
             schemaFileField.setText(editingItem.getSchemaFile());
@@ -132,6 +128,7 @@ public class CodecEditorForm extends JDialog {
         mappingTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
         mappingTable.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
         mappingTable.setCellEditor(new DefaultCellEditor(new JTextField()));
+        mappingTable.setDefaultRenderer(String.class, new EmptyPlaceholderTableCellRenderer());
 
         initTableActions();
     }

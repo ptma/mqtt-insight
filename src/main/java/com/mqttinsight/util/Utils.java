@@ -323,10 +323,11 @@ public class Utils {
         int b = color.getBlue();
         int alpha = color.getAlpha();
 
-        int threshold = (int) (1.0 / (1.0 - factor));
+        float threshold = 1.0f - factor;
 
         if (r == 0 && g == 0 && b == 0) {
-            return new Color(Math.min(threshold, 255), Math.min(threshold, 255), Math.min(threshold, 255), alpha);
+            int c = Math.min((int) (threshold * 255), 255);
+            return new Color(c, c, c, alpha);
         }
 
         r = Math.min((int) (r / factor), 255);

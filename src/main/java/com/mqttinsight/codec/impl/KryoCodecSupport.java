@@ -28,8 +28,8 @@ public class KryoCodecSupport extends JsonCodecSupport implements DynamicCodecSu
     private final static String[] SCHEMA_FILE_EXTENSIONS = new String[]{"jar"};
 
     private final static List<MappingField> MAPPING_FIELDS = List.of(
-        MappingField.of("topic", "MappingFieldTopic", 55),
-        MappingField.of("class", "KryoRecordClass", 45)
+        MappingField.of("topic", "MappingFieldTopic", 60),
+        MappingField.of("class", "KryoRecordClass", 40)
     );
 
     private static final ThreadLocal<Kryo> KRYOS = ThreadLocal.withInitial(() -> {

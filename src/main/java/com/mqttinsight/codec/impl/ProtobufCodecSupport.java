@@ -10,7 +10,9 @@ import com.mqttinsight.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author ptma
@@ -20,8 +22,8 @@ public class ProtobufCodecSupport extends JsonCodecSupport implements DynamicCod
 
     private final static String[] SCHEMA_FILE_EXTENSIONS = new String[]{"proto"};
     private final static List<MappingField> MAPPING_FIELDS = List.of(
-        MappingField.of("topic", "MappingFieldTopic", 75),
-        MappingField.of("name", "ProtobufMessageName", 25)
+        MappingField.of("topic", "MappingFieldTopic", 70),
+        MappingField.of("name", "ProtobufMessageName", 30)
     );
 
     private final String name;

@@ -29,8 +29,8 @@ public class AvroCodecSupport extends JsonCodecSupport implements DynamicCodecSu
     private final static String[] SCHEMA_FILE_EXTENSIONS = new String[]{"avsc"};
     private final static List<MappingField> MAPPING_FIELDS = List.of(
         MappingField.of("topic", "MappingFieldTopic", 50),
-        MappingField.of("namespace", "AvroNamespace", 35),
-        MappingField.of("name", "AvroName", 15)
+        MappingField.of("namespace", "AvroNamespace", 30),
+        MappingField.of("name", "AvroName", 20)
     );
 
     private final String name;
