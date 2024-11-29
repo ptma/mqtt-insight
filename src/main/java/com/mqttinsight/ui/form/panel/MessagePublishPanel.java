@@ -10,10 +10,10 @@ import com.mqttinsight.config.Configuration;
 import com.mqttinsight.exception.VerificationException;
 import com.mqttinsight.mqtt.PublishedItem;
 import com.mqttinsight.mqtt.PublishedMqttMessage;
+import com.mqttinsight.ui.component.RemovableComboBox;
 import com.mqttinsight.ui.component.SyntaxTextEditor;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.component.model.PayloadFormatComboBoxModel;
-import com.mqttinsight.ui.component.renderer.TextableListRenderer;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +21,8 @@ import net.miginfocom.swing.MigLayout;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaDefaultInputMap;
 
 import javax.swing.*;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -39,7 +41,7 @@ public class MessagePublishPanel extends JPanel {
     private MigLayout topPanelLayout;
     private SyntaxTextEditor payloadEditor;
     private JPanel topPanel;
-    private JComboBox<PublishedItem> topicComboBox;
+    private RemovableComboBox<PublishedItem> topicComboBox;
     private JLabel qosLabel;
     private JComboBox<Integer> qosComboBox;
     private JCheckBox retainedCheckBox;
@@ -77,12 +79,11 @@ public class MessagePublishPanel extends JPanel {
         );
         topPanel.setLayout(topPanelLayout);
 
-        topicComboBox = new JComboBox<>();
+        topicComboBox = new RemovableComboBox<>();
         topicComboBox.setEditable(true);
         topicComboBox.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, LangUtil.getString("Topic"));
         loadPublishedTopics();
         topicComboBox.setSelectedItem("");
-        topicComboBox.setRenderer(new TextableListRenderer());
         topicComboBox.addActionListener(e -> {
             if ("comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
                 Object sel = topicComboBox.getSelectedItem();
@@ -91,7 +92,24 @@ public class MessagePublishPanel extends JPanel {
                     payloadEditor.setText(item.getPayload());
                     qosComboBox.setSelectedItem(item.getQos());
                     formatComboBox.setSelectedItem(item.getPayloadFormat());
+                } else {
+                    payloadEditor.setText("");
                 }
+            }
+        });
+        topicComboBox.getModel().addListDataListener(new ListDataListener() {
+            @Override
+            public void intervalAdded(ListDataEvent e) {
+            }
+
+            @Override
+            public void intervalRemoved(ListDataEvent e) {
+                topicComboBox.setSelectedItem("");
+                removePublishedTopic(e.getIndex0());
+            }
+
+            @Override
+            public void contentsChanged(ListDataEvent e) {
             }
         });
         topPanel.add(topicComboBox, "growx");
@@ -166,6 +184,13 @@ public class MessagePublishPanel extends JPanel {
             topicComboBox.removeAllItems();
             publishedHistory.sort(Comparator.comparing(PublishedItem::getTopic));
             publishedHistory.forEach(topic -> topicComboBox.addItem(topic));
+        }
+    }
+
+    private void removePublishedTopic(int index) {
+        List<PublishedItem> publishedHistory = mqttInstance.getProperties().getPublishedHistory();
+        if (index >= 0 && publishedHistory != null && index < publishedHistory.size()) {
+            publishedHistory.remove(index);
         }
     }
 
