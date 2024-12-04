@@ -140,7 +140,7 @@ public class TopicSegment extends JPanel {
 
     private void removeChildSegment(TopicSegment child) {
         childrenPanel.remove(child);
-        updateNode();
+        updateNode(true);
         if (isExpanded()) {
             updateSize();
         }
@@ -151,7 +151,7 @@ public class TopicSegment extends JPanel {
 
     public void incrementMessages() {
         messageCount.incrementAndGet();
-        updateNode();
+        updateNode(false);
     }
 
     public void incrementMessages(List<String> topicSegments) {
@@ -198,7 +198,7 @@ public class TopicSegment extends JPanel {
             if (getTopicCount() == 0) {
                 removeSelf();
             } else {
-                updateNode();
+                updateNode(false);
             }
         } else if (topic.startsWith(fullTopic)) {
             getChildren().forEach(segment -> segment.decrementMessages(topic));
@@ -207,7 +207,7 @@ public class TopicSegment extends JPanel {
 
     public void toggleExpanded() {
         this.expanded = !this.expanded;
-        updateNode();
+        updateNode(false);
         updateSize();
     }
 
@@ -327,7 +327,7 @@ public class TopicSegment extends JPanel {
         }
     }
 
-    public void updateNode() {
+    public void updateNode(boolean repaint) {
         nodePanel.setIcon(getChildrenCount() > 0 ? (this.expanded ? ICON_EXPANDED : ICON_COLLAPSED) : ICON_EMPTY);
 
         String topicsDescription, messagesDescription;
@@ -346,10 +346,12 @@ public class TopicSegment extends JPanel {
         String descriptionTemplate = String.format("(%s, %s)", topicsDescription, messagesDescription);
         nodePanel.description(String.format(descriptionTemplate, topicsCount, messagesCount));
         this.revalidate();
-        //this.repaint();
+        if (repaint) {
+            this.repaint();
+        }
 
         if (parent instanceof TopicSegment) {
-            ((TopicSegment) parent).updateNode();
+            ((TopicSegment) parent).updateNode(repaint);
         }
     }
 
