@@ -10,13 +10,17 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class RemovableComboBox<E> extends JComboBox<E> {
 
     private transient CellButtonMouseListener listener;
 
-    public RemovableComboBox() {
+    private final Consumer<E> onRemoveButtonClicked;
+
+    public RemovableComboBox(Consumer<E> onRemoveButtonClicked) {
         super();
+        this.onRemoveButtonClicked = onRemoveButtonClicked;
     }
 
     @Override
@@ -137,7 +141,7 @@ public class RemovableComboBox<E> extends JComboBox<E> {
             deleteButton.addActionListener(e -> {
                 ComboBoxModel<E> m = comboBox.getModel();
                 if (m.getSize() > 0 && m instanceof MutableComboBoxModel) {
-                    ((MutableComboBoxModel<?>) m).removeElementAt(targetIndex);
+                    comboBox.onRemoveButtonClicked.accept(m.getElementAt(targetIndex));
                     comboBox.showPopup();
                 }
             });

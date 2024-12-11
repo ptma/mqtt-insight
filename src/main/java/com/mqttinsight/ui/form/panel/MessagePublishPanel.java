@@ -21,8 +21,6 @@ import net.miginfocom.swing.MigLayout;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaDefaultInputMap;
 
 import javax.swing.*;
-import javax.swing.event.ListDataEvent;
-import javax.swing.event.ListDataListener;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -79,7 +77,11 @@ public class MessagePublishPanel extends JPanel {
         );
         topPanel.setLayout(topPanelLayout);
 
-        topicComboBox = new RemovableComboBox<>();
+        topicComboBox = new RemovableComboBox<>(item -> {
+            removePublishedTopic(item);
+            topicComboBox.removeItem(item);
+            topicComboBox.setSelectedItem("");
+        });
         topicComboBox.setEditable(true);
         topicComboBox.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, LangUtil.getString("Topic"));
         loadPublishedTopics();
@@ -95,21 +97,6 @@ public class MessagePublishPanel extends JPanel {
                 } else {
                     payloadEditor.setText("");
                 }
-            }
-        });
-        topicComboBox.getModel().addListDataListener(new ListDataListener() {
-            @Override
-            public void intervalAdded(ListDataEvent e) {
-            }
-
-            @Override
-            public void intervalRemoved(ListDataEvent e) {
-                topicComboBox.setSelectedItem("");
-                removePublishedTopic(e.getIndex0());
-            }
-
-            @Override
-            public void contentsChanged(ListDataEvent e) {
             }
         });
         topPanel.add(topicComboBox, "growx");
@@ -187,19 +174,16 @@ public class MessagePublishPanel extends JPanel {
         }
     }
 
-    private void removePublishedTopic(int index) {
+    private void removePublishedTopic(PublishedItem item) {
         List<PublishedItem> publishedHistory = mqttInstance.getProperties().getPublishedHistory();
-        if (index >= 0 && publishedHistory != null && index < publishedHistory.size()) {
-            publishedHistory.remove(index);
-        }
+        publishedHistory.remove(item);
+        Configuration.instance().changed();
     }
 
     private void addPublishedTopic(String topic, String payload, int qos, boolean retained, String payloadFormat) {
         List<PublishedItem> publishedHistory = mqttInstance.getProperties().getPublishedHistory();
         if (publishedHistory == null) {
             publishedHistory = new ArrayList<>();
-            mqttInstance.getProperties().setPublishedHistory(publishedHistory);
-            Configuration.instance().changed();
         }
         publishedHistory.removeIf(t -> t.getTopic().equals(topic));
         PublishedItem newItem = new PublishedItem(topic, payload, qos, retained, payloadFormat);
@@ -208,6 +192,8 @@ public class MessagePublishPanel extends JPanel {
         publishedHistory.sort(Comparator.comparing(PublishedItem::getTopic));
         publishedHistory.forEach(item -> topicComboBox.addItem(item));
         topicComboBox.setSelectedItem(newItem);
+        mqttInstance.getProperties().setPublishedHistory(publishedHistory);
+        Configuration.instance().changed();
     }
 
     public void toggleViewMode(MessageViewMode viewMode) {
