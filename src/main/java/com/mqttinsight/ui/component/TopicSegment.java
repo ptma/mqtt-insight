@@ -356,14 +356,12 @@ public class TopicSegment extends JPanel {
     }
 
     public void updateSize() {
-        SwingUtilities.invokeLater(() -> {
-            this.setPreferredSize(getComponentSize());
-            this.revalidate();
-            //this.repaint();
-            if (parent instanceof TopicSegment) {
-                ((TopicSegment) parent).updateSize();
-            }
-        });
+        this.setPreferredSize(getComponentSize());
+        this.revalidate();
+        //this.repaint();
+        if (parent instanceof TopicSegment) {
+            ((TopicSegment) parent).updateSize();
+        }
     }
 
     public static class SegmentNodePanel extends JPanel implements MouseListener {

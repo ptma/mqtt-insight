@@ -181,6 +181,6 @@ public class TopicTreePanel extends JScrollPane {
     public void removeRootSegment(TopicSegment segment) {
         segmentsContainer.remove(segment);
         segmentsContainer.revalidate();
-        //segmentsContainer.repaint();
+        segmentsContainer.repaint();
     }
 }

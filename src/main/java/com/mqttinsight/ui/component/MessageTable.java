@@ -445,7 +445,7 @@ public class MessageTable extends JXTable {
     public Optional<MqttMessage> getSelectedMessage() {
         int selectedRow = this.getSelectedRow();
         if (selectedRow >= 0) {
-            return Optional.of(tableModel.get(selectedRow));
+            return Optional.of(tableModel.get(convertRowIndexToModel(selectedRow)));
         } else {
             return Optional.empty();
         }
