@@ -31,8 +31,12 @@ public class ExceptionDialog extends JDialog {
     private JTextArea stackArea;
 
     public static void open(Window owner, String message, Throwable throwable) {
-        JDialog dialog = new ExceptionDialog(owner, message, throwable);
+        ExceptionDialog dialog = new ExceptionDialog(owner, message, throwable);
         dialog.setModal(true);
+        Container cp = dialog.getContentPane();
+        dialog.mainPanel.setPreferredSize(null);
+        Dimension d = new Dimension(cp.getSize().width, dialog.mainPanel.getPreferredSize().height);
+        cp.setPreferredSize(d);
         dialog.pack();
         dialog.setResizable(false);
         dialog.setLocationRelativeTo(owner);
