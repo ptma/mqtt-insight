@@ -30,7 +30,6 @@ public class SyntaxTextEditor extends RTextScrollPane {
         this.textArea = new RSyntaxTextArea();
         this.textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
         this.textArea.setLineWrap(true);
-        this.textArea.setWrapStyleWord(true);
         this.textArea.setCodeFoldingEnabled(true);
         this.textArea.setPaintTabLines(false);
         this.textArea.setTabSize(2);
@@ -39,15 +38,9 @@ public class SyntaxTextEditor extends RTextScrollPane {
         this.textArea.setMarkOccurrences(true);
         this.textArea.setHyperlinksEnabled(true);
         this.textArea.setAutoIndentEnabled(true);
-        this.textArea.setMargin(new Insets(5, 5, 5, 5));
+        this.textArea.setMargin(new Insets(5, 5, 5, 10));
         this.textArea.setCaretStyle(RSyntaxTextArea.INSERT_MODE, CaretStyle.VERTICAL_LINE_STYLE);
 
-        String fontName = Configuration.instance().getString(ConfKeys.FONT_NAME, Const.EDITOR_FONT_NAME);
-        Integer fontSize = Configuration.instance().getInt(ConfKeys.FONT_SIZE, Const.EDITOR_FONT_SIZE);
-        if (fontName != null && fontSize != null) {
-            Font font = StyleContext.getDefaultStyleContext().getFont(fontName, Font.PLAIN, fontSize);
-            this.textArea.setFont(font);
-        }
         this.textArea.addHyperlinkListener(e -> {
             if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
                 try {
@@ -73,6 +66,13 @@ public class SyntaxTextEditor extends RTextScrollPane {
             theme.apply(textArea);
         } catch (IOException ioe) {
             // ignore
+        }
+
+        String fontName = Configuration.instance().getString(ConfKeys.FONT_NAME, Const.EDITOR_FONT_NAME);
+        Integer fontSize = Configuration.instance().getInt(ConfKeys.FONT_SIZE, Const.EDITOR_FONT_SIZE);
+        if (fontName != null && fontSize != null) {
+            Font font = StyleContext.getDefaultStyleContext().getFont(fontName, Font.PLAIN, fontSize);
+            this.textArea.setFont(font);
         }
     }
 

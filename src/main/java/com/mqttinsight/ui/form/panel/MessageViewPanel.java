@@ -18,6 +18,7 @@ import com.mqttinsight.ui.event.InstanceEventListener;
 import com.mqttinsight.util.Const;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
@@ -31,6 +32,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +44,7 @@ public class MessageViewPanel extends JScrollPane {
     private final MqttInstance mqttInstance;
     protected MessageTableModel messageTableModel;
 
+    @Getter
     private MessageTable messageTable;
     private int lastSelectedRow = -1;
     private boolean autoScroll;
@@ -57,13 +60,14 @@ public class MessageViewPanel extends JScrollPane {
 
     private void initComponents(MessageViewMode viewMode) {
         Integer maxMessageStored = mqttInstance.getProperties().getMaxMessageStored();
-        messageTableModel = new MessageTableModel(maxMessageStored == null ? Const.MESSAGES_STORED_MAX_SIZE : maxMessageStored);
+        messageTableModel = new MessageTableModel(mqttInstance, maxMessageStored == null ? Const.MESSAGES_STORED_MAX_SIZE : maxMessageStored);
         messageTableModel.setViewMode(viewMode);
         Border scrollPanelBorder = new SingleLineBorder(UIManager.getColor("Component.borderColor"), true, true, true, true);
         setBorder(scrollPanelBorder);
         setMinimumSize(new Dimension(400, 250));
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void initializeMessageTable() {
         RowFilter rowFilter = null;
         if (messageTable != null) {
@@ -103,12 +107,7 @@ public class MessageViewPanel extends JScrollPane {
 
             @Override
             public void clearAllMessages() {
-                MessageViewPanel.this.clearAllMessages();
-            }
-
-            @Override
-            public void onMessage(MqttMessage message) {
-                MessageViewPanel.this.messageReceived(message, null);
+                MessageViewPanel.this.doClearAllMessages();
             }
 
             @Override
@@ -127,23 +126,33 @@ public class MessageViewPanel extends JScrollPane {
             }
 
             @Override
-            public void clearMessages(Subscription subscription) {
-                MessageViewPanel.this.clearMessages(subscription);
+            public void clearMessages(Subscription subscription, Runnable done) {
+                MessageViewPanel.this.doClearMessages(subscription, done);
+            }
+
+            @Override
+            public void clearMessages(String topicPrefix) {
+                MessageViewPanel.this.doClearMessages(topicPrefix);
             }
 
             @Override
             public void exportAllMessages() {
-                MessageViewPanel.this.exportMessages(null);
+                MessageViewPanel.this.doExportMessages(null);
             }
 
             @Override
             public void exportMessages(Subscription subscription) {
-                MessageViewPanel.this.exportMessages(subscription);
+                MessageViewPanel.this.doExportMessages(subscription);
             }
 
             @Override
             public void toggleAutoScroll(boolean autoScroll) {
                 MessageViewPanel.this.toggleAutoScroll(autoScroll);
+            }
+
+            @Override
+            public void applyFilterTopics(Set<String> topics) {
+                MessageViewPanel.this.doApplyFilterTopics(topics);
             }
         });
     }
@@ -155,16 +164,16 @@ public class MessageViewPanel extends JScrollPane {
         }
     }
 
-    public MessageTable getMessageTable() {
-        return messageTable;
-    }
-
     private void toggleAutoScroll(boolean autoScroll) {
         this.autoScroll = autoScroll;
         messageTable.setAutoScroll(autoScroll);
         if (messageTable.isAutoScroll()) {
             messageTable.goAndSelectRow(messageTable.getRowCount() - 1);
         }
+    }
+
+    private void doApplyFilterTopics(Set<String> topics) {
+        messageTable.doApplyFilterTopics(topics);
     }
 
     private String toCsvLineText(MqttMessage message) {
@@ -191,7 +200,7 @@ public class MessageViewPanel extends JScrollPane {
         });
     }
 
-    private void clearAllMessages() {
+    private void doClearAllMessages() {
         SwingUtilities.invokeLater(() -> {
             messageTableModel.clear();
             lastSelectedRow = -1;
@@ -199,16 +208,25 @@ public class MessageViewPanel extends JScrollPane {
         });
     }
 
-    private void clearMessages(Subscription subscription) {
+    public void doClearMessages(Subscription subscription, Runnable done) {
         SwingUtilities.invokeLater(() -> {
             messageTableModel.cleanMessages(subscription);
+            if (done != null) {
+                done.run();
+            }
+        });
+    }
+
+    public void doClearMessages(String topicPrefix) {
+        SwingUtilities.invokeLater(() -> {
+            messageTableModel.cleanMessages(topicPrefix);
         });
     }
 
     /**
      * @param subscription if null, export all messages
      */
-    private void exportMessages(Subscription subscription) {
+    private void doExportMessages(Subscription subscription) {
         JFileChooser jFileChooser = new JFileChooser();
         jFileChooser.setAcceptAllFileFilterUsed(false);
         jFileChooser.addChoosableFileFilter(new FileNameExtensionFilter(LangUtil.getString("JsonFileFilter"), "json"));
@@ -260,7 +278,7 @@ public class MessageViewPanel extends JScrollPane {
                     .filter(m -> m.getSubscription() != null && m.getSubscription().equals(subscription))
                     .collect(Collectors.toList());
             }
-            StringBuffer lines = new StringBuffer();
+            StringBuilder lines = new StringBuilder();
             switch (ext) {
                 case "csv":
                     lines.append("Time,MessageType,Topic,Payload,QoS,Retained,Duplicate\n");

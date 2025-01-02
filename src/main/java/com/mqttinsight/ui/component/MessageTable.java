@@ -19,6 +19,8 @@ import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jdesktop.swingx.JXTable;
 import org.jdesktop.swingx.decorator.ColorHighlighter;
@@ -38,8 +40,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Arrays;
 import java.util.List;
+import java.util.*;
 
 /**
  * @author ptma
@@ -48,6 +50,7 @@ import java.util.List;
 public class MessageTable extends JXTable {
 
     private final MqttInstance mqttInstance;
+    @Getter
     private final MessageTableModel tableModel;
     private final DefaultTableRenderer tableRenderer;
     private FlatPopupMenu popupMenu;
@@ -58,8 +61,11 @@ public class MessageTable extends JXTable {
     private JMenuItem menuClearVisible;
     private JMenuItem menuExport;
     private JMenu colorMenu;
+    @Setter
+    @Getter
     private boolean autoScroll;
-    private final VisibleFilter visibleFilter = new VisibleFilter();
+    private final SubscriptionFilter subscriptionFilter = new SubscriptionFilter();
+    private final TopicSegmentFilter topicSegmentFilter = new TopicSegmentFilter();
 
     public MessageTable(MqttInstance mqttInstance, MessageTableModel tableModel) {
         super(tableModel);
@@ -75,7 +81,6 @@ public class MessageTable extends JXTable {
         setRowSelectionAllowed(true);
         setColumnSelectionAllowed(false);
         putClientProperty(AbstractSearchable.MATCH_HIGHLIGHTER, Boolean.TRUE);
-
         boolean darkLaf = UIManager.getBoolean("laf.dark");
         if (tableModel.getViewMode() == MessageViewMode.TABLE) {
             tableRenderer = new DefaultTableRenderer(new TableViewRendererProvider(tableModel));
@@ -224,10 +229,6 @@ public class MessageTable extends JXTable {
         }
     }
 
-    public int getModelRowCount() {
-        return tableModel.getRowCount();
-    }
-
     @Override
     protected void createDefaultRenderers() {
         super.createDefaultRenderers();
@@ -350,9 +351,7 @@ public class MessageTable extends JXTable {
         int selRow = getSelectedRow();
         if (selRow >= 0 && selRow < getRowCount()) {
             int modelIndex = convertRowIndexToModel(selRow);
-            MqttMessage message = tableModel.get(modelIndex);
             tableModel.remove(modelIndex);
-            mqttInstance.applyEvent(listener -> listener.onMessageRemoved(message));
             if (getRowCount() > selRow) {
                 setRowSelectionInterval(selRow, selRow);
             } else if (selRow > 0) {
@@ -365,9 +364,7 @@ public class MessageTable extends JXTable {
     public void clearVisibleMessages() {
         for (int row = getRowCount() - 1; row >= 0; row--) {
             int modelIndex = convertRowIndexToModel(row);
-            MqttMessage message = tableModel.get(modelIndex);
             tableModel.remove(modelIndex);
-            mqttInstance.applyEvent(listener -> listener.onMessageRemoved(message));
         }
         System.gc();
     }
@@ -445,36 +442,39 @@ public class MessageTable extends JXTable {
         return tableModel.getMessages();
     }
 
-    public boolean isAutoScroll() {
-        return autoScroll;
+    public Optional<MqttMessage> getSelectedMessage() {
+        int selectedRow = this.getSelectedRow();
+        if (selectedRow >= 0) {
+            return Optional.of(tableModel.get(convertRowIndexToModel(selectedRow)));
+        } else {
+            return Optional.empty();
+        }
     }
 
-    public void setAutoScroll(boolean autoScroll) {
-        this.autoScroll = autoScroll;
-    }
-
-    public MessageTableModel getTableModel() {
-        return tableModel;
+    public void doApplyFilterTopics(Set<String> topics) {
+        boolean changed = topicSegmentFilter.applyTopics(topics);
+        if (changed) {
+            getTableModel().fireTableDataChanged();
+        }
     }
 
     @Override
     public <R extends TableModel> void setRowFilter(RowFilter<? super R, ? super Integer> filter) {
         if (filter == null) {
-            super.setRowFilter(visibleFilter);
+            super.setRowFilter(RowFilter.andFilter(Arrays.asList(subscriptionFilter, topicSegmentFilter)));
         } else {
-            List filters = Arrays.asList(visibleFilter, filter);
-            super.setRowFilter(RowFilter.andFilter(filters));
+            super.setRowFilter(RowFilter.andFilter(Arrays.asList(subscriptionFilter, topicSegmentFilter, filter)));
         }
     }
 
-    static class VisibleFilter extends RowFilter<MessageTableModel, Integer> {
+    static class SubscriptionFilter extends RowFilter<TableModel, Integer> {
 
-        protected VisibleFilter() {
+        protected SubscriptionFilter() {
         }
 
         @Override
-        public boolean include(Entry<? extends MessageTableModel, ? extends Integer> entry) {
-            MessageTableModel tableModel = entry.getModel();
+        public boolean include(Entry<? extends TableModel, ? extends Integer> entry) {
+            MessageTableModel tableModel = (MessageTableModel) entry.getModel();
             MqttMessage message = tableModel.get(entry.getIdentifier());
             if (message instanceof ReceivedMqttMessage) {
                 return isVisible(((ReceivedMqttMessage) message).getSubscription());
@@ -488,6 +488,39 @@ public class MessageTable extends JXTable {
                 return true;
             } else {
                 return subscription.isVisible();
+            }
+        }
+    }
+
+    static class TopicSegmentFilter extends RowFilter<TableModel, Integer> {
+
+        private final Set<String> topics = new HashSet<>();
+
+        protected TopicSegmentFilter() {
+        }
+
+        public boolean applyTopics(Set<String> topics) {
+            boolean changed = this.topics.size() != topics.size() || !this.topics.containsAll(topics);
+            if (changed) {
+                this.topics.clear();
+                this.topics.addAll(topics);
+            }
+            return changed;
+        }
+
+        @Override
+        public boolean include(Entry<? extends TableModel, ? extends Integer> entry) {
+            MessageTableModel tableModel = (MessageTableModel) entry.getModel();
+            MqttMessage message = tableModel.get(entry.getIdentifier());
+            String messageTopic = message.getTopic();
+            return topics.isEmpty() || topics.stream().noneMatch(filterTopic -> messageTopic.equals(filterTopic) || isStartsWith(filterTopic, messageTopic));
+        }
+
+        private boolean isStartsWith(String filterTopic, String messageTopic) {
+            if (filterTopic.equals("/")) {
+                return messageTopic.startsWith(filterTopic);
+            } else {
+                return messageTopic.startsWith(filterTopic + "/");
             }
         }
     }

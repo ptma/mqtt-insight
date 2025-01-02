@@ -16,6 +16,7 @@ public final class ConfKeys {
     public static final String WINDOW_TOP = "windowTop";
     public static final String WINDOW_LEFT = "windowLeft";
     public static final String SUBSCRIPTION_HORIZONTAL_DIVIDER = "subscriptionHorizontalDivider";
+    public static final String SUBSCRIPTION_VERTICAL_DIVIDER = "subscriptionVerticalDivider";
     public static final String MESSAGE_HORIZONTAL_DIVIDER = "messageHorizontalDivider";
     public static final String MESSAGE_VERTICAL_DIVIDER = "messageVerticalDivider";
 

@@ -5,6 +5,7 @@ import com.mqttinsight.mqtt.Subscription;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 
 import java.io.File;
+import java.util.Set;
 
 /**
  * @author ptma
@@ -28,10 +29,6 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
     }
 
     @Override
-    public void onMessage(MqttMessage message) {
-    }
-
-    @Override
     public void onMessage(MqttMessage message, MqttMessage parent) {
     }
 
@@ -48,7 +45,12 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
     }
 
     @Override
-    public void clearMessages(Subscription subscription) {
+    public void clearMessages(Subscription subscription, Runnable done) {
+    }
+
+    @Override
+    public void clearMessages(String topicPrefix) {
+
     }
 
     @Override
@@ -98,6 +100,9 @@ public abstract class InstanceEventAdapter implements InstanceEventListener {
 
     @Override
     public void onCodecsChanged() {
+    }
 
+    @Override
+    public void applyFilterTopics(Set<String> topics) {
     }
 }

@@ -35,6 +35,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
     private final MqttInstance mqttInstance;
     @Getter
     private final Subscription subscription;
+    @Getter
     private boolean subscribed = true;
 
     @Setter
@@ -203,7 +204,7 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         instanceEventAdapter = new InstanceEventAdapter() {
             @Override
             public void onCodecsChanged() {
-                loadFormatMenus();
+                SubscriptionItem.this.loadFormatMenus();
             }
         };
         mqttInstance.addEventListener(instanceEventAdapter);
@@ -249,10 +250,6 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         unsubscribeMenu.setEnabled(subscribed);
     }
 
-    public boolean isSubscribed() {
-        return subscribed;
-    }
-
     private boolean isFavorite() {
         return mqttInstance.getProperties().isFavorite(subscription.getTopic());
     }
@@ -294,17 +291,14 @@ public class SubscriptionItem extends JPanel implements MouseListener {
         return this.subscription.getTopic().equals(topic);
     }
 
-    public void resetMessageCount() {
-        subscription.resetMessageCount();
-        updateMessageCounter();
-    }
-
+    /**
+     * {@link com.mqttinsight.ui.form.panel.MessageViewPanel#doClearMessages(Subscription, Runnable)}
+     */
     private void clearMessages(ActionEvent e) {
         mqttInstance.applyEvent(eventListener -> {
-            eventListener.clearMessages(subscription);
+            eventListener.clearMessages(subscription, () -> {
+            });
         });
-        subscription.resetMessageCount();
-        updateMessageCounter();
     }
 
     private void exportMessages(ActionEvent e) {

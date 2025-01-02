@@ -71,7 +71,9 @@ public class DynamicCodecForm extends JDialog {
 
         codecTableModel = new CodecTableModel();
         codecsTable.setModel(codecTableModel);
+        codecsTable.setSortable(false);
         codecsTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        codecsTable.setRowHeight(25);
         codecsTable.getColumnExt(0).setPreferredWidth(50);
         codecsTable.getColumnExt(1).setPreferredWidth(80);
         codecsTable.getColumnExt(2).setPreferredWidth(300);
@@ -118,10 +120,10 @@ public class DynamicCodecForm extends JDialog {
             } else {
                 try {
                     if (CodecSupports.instance().nameExists(newItem.getName())) {
-                        Utils.Toast.warn(LangUtil.getString("CodecExists"));
+                        Utils.Toast.warn(LangUtil.format("CodecExists", newItem.getName()));
                         return false;
                     }
-                    DynamicCodecSupport dynamicInstance = codecSupport.newDynamicInstance(newItem.getName(), newItem.getSchemaFile());
+                    DynamicCodecSupport dynamicInstance = codecSupport.newDynamicInstance(newItem.getName(), newItem.getSchemaFile(), newItem.getMappings());
                     CodecSupports.instance().register(dynamicInstance);
                     Configuration.instance().getDynamicCodecs().add(newItem);
                     Configuration.instance().changed();
@@ -152,16 +154,16 @@ public class DynamicCodecForm extends JDialog {
                     return false;
                 } else {
                     try {
-                        if (CodecSupports.instance().nameExists(newItem.getName())) {
-                            Utils.Toast.warn(LangUtil.getString("CodecExists"));
+                        if (!oldItem.getName().equals(newItem.getName()) && CodecSupports.instance().nameExists(newItem.getName())) {
+                            Utils.Toast.warn(LangUtil.format("CodecExists", newItem.getName()));
                             return false;
                         }
-                        DynamicCodecSupport dynamicInstance = codecSupport.newDynamicInstance(newItem.getName(), newItem.getSchemaFile());
-                        int oldIndex = Configuration.instance().getDynamicCodecs().indexOf(oldItem);
-                        CodecSupports.instance().remove(oldItem.getName());
+                        oldItem.setSchemaFile(newItem.getSchemaFile());
+                        oldItem.setMappings(newItem.getMappings());
+
+                        DynamicCodecSupport dynamicInstance = codecSupport.newDynamicInstance(oldItem.getName(), oldItem.getSchemaFile(), oldItem.getMappings());
+                        // Register a new instance and replace the old one
                         CodecSupports.instance().register(dynamicInstance);
-                        Configuration.instance().getDynamicCodecs().remove(oldIndex);
-                        Configuration.instance().getDynamicCodecs().add(oldIndex, newItem);
                         Configuration.instance().changed();
                         codecTableModel.fireTableDataChanged();
                         MainWindowForm.instance().fireCodecsChanged();

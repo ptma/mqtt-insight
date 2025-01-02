@@ -31,6 +31,10 @@ public class ReceivedMqttMessage extends AbstractMqttMessage implements MqttMess
         return subscription;
     }
 
+    public void setSubscription(Subscription subscription) {
+        this.subscription = subscription;
+    }
+
     @Override
     @JsonIgnore
     public Color getColor() {

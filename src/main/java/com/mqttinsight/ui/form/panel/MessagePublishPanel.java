@@ -10,10 +10,10 @@ import com.mqttinsight.config.Configuration;
 import com.mqttinsight.exception.VerificationException;
 import com.mqttinsight.mqtt.PublishedItem;
 import com.mqttinsight.mqtt.PublishedMqttMessage;
+import com.mqttinsight.ui.component.RemovableComboBox;
 import com.mqttinsight.ui.component.SyntaxTextEditor;
 import com.mqttinsight.ui.component.model.MessageViewMode;
 import com.mqttinsight.ui.component.model.PayloadFormatComboBoxModel;
-import com.mqttinsight.ui.component.renderer.TextableListRenderer;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class MessagePublishPanel extends JPanel {
     private MigLayout topPanelLayout;
     private SyntaxTextEditor payloadEditor;
     private JPanel topPanel;
-    private JComboBox<PublishedItem> topicComboBox;
+    private RemovableComboBox<PublishedItem> topicComboBox;
     private JLabel qosLabel;
     private JComboBox<Integer> qosComboBox;
     private JCheckBox retainedCheckBox;
@@ -62,7 +62,7 @@ public class MessagePublishPanel extends JPanel {
         payloadPanel = new JPanel(new BorderLayout(0, 0));
         bottomPanel = new JPanel(new MigLayout(
             "insets 0 0 0 0,gap 5",
-            "[][][grow]",
+            "[grow][][]",
             "[]"
         ));
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
@@ -77,12 +77,15 @@ public class MessagePublishPanel extends JPanel {
         );
         topPanel.setLayout(topPanelLayout);
 
-        topicComboBox = new JComboBox<>();
+        topicComboBox = new RemovableComboBox<>(item -> {
+            removePublishedTopic(item);
+            topicComboBox.removeItem(item);
+            topicComboBox.setSelectedItem("");
+        });
         topicComboBox.setEditable(true);
         topicComboBox.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, LangUtil.getString("Topic"));
         loadPublishedTopics();
         topicComboBox.setSelectedItem("");
-        topicComboBox.setRenderer(new TextableListRenderer());
         topicComboBox.addActionListener(e -> {
             if ("comboBoxChanged".equalsIgnoreCase(e.getActionCommand())) {
                 Object sel = topicComboBox.getSelectedItem();
@@ -91,6 +94,8 @@ public class MessagePublishPanel extends JPanel {
                     payloadEditor.setText(item.getPayload());
                     qosComboBox.setSelectedItem(item.getQos());
                     formatComboBox.setSelectedItem(item.getPayloadFormat());
+                } else {
+                    payloadEditor.setText("");
                 }
             }
         });
@@ -127,11 +132,11 @@ public class MessagePublishPanel extends JPanel {
 
         publishButton = new JButton(LangUtil.getString("PublishMessage") + " (Ctrl + Enter)", Icons.SEND_GREEN);
         publishButton.addActionListener(e -> publishMessage());
-        bottomPanel.add(publishButton);
+        bottomPanel.add(publishButton, "cell 2 0");
         tipsLabel = new JLabel();
         tipsLabel.setIcon(Icons.TIPS);
         tipsLabel.setToolTipText(LangUtil.getString("PublishTips"));
-        bottomPanel.add(tipsLabel);
+        bottomPanel.add(tipsLabel, "cell 1 0");
 
         // Register shortcut
         InputMap inputMap = payloadEditor.textArea().getInputMap();
@@ -169,12 +174,16 @@ public class MessagePublishPanel extends JPanel {
         }
     }
 
+    private void removePublishedTopic(PublishedItem item) {
+        List<PublishedItem> publishedHistory = mqttInstance.getProperties().getPublishedHistory();
+        publishedHistory.remove(item);
+        Configuration.instance().changed();
+    }
+
     private void addPublishedTopic(String topic, String payload, int qos, boolean retained, String payloadFormat) {
         List<PublishedItem> publishedHistory = mqttInstance.getProperties().getPublishedHistory();
         if (publishedHistory == null) {
             publishedHistory = new ArrayList<>();
-            mqttInstance.getProperties().setPublishedHistory(publishedHistory);
-            Configuration.instance().changed();
         }
         publishedHistory.removeIf(t -> t.getTopic().equals(topic));
         PublishedItem newItem = new PublishedItem(topic, payload, qos, retained, payloadFormat);
@@ -183,6 +192,8 @@ public class MessagePublishPanel extends JPanel {
         publishedHistory.sort(Comparator.comparing(PublishedItem::getTopic));
         publishedHistory.forEach(item -> topicComboBox.addItem(item));
         topicComboBox.setSelectedItem(newItem);
+        mqttInstance.getProperties().setPublishedHistory(publishedHistory);
+        Configuration.instance().changed();
     }
 
     public void toggleViewMode(MessageViewMode viewMode) {
@@ -219,9 +230,9 @@ public class MessagePublishPanel extends JPanel {
                     // replace variables
                     replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{timestamp\\}", (p) -> System.currentTimeMillis() + "");
                     replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{uuid\\}", (p) -> UUID.randomUUID().toString());
-                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{int(\\(\\s*(\\d*),?\\s*?(\\d*)\\s*\\))?\\}", (matcher) -> {
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{int(\\(\\s*(\\d*)\\s*,\\s*?(\\d*)\\s*\\))?\\}", (matcher) -> {
                         long min = NumberUtil.isLong(matcher.group(2)) ? Long.parseLong(matcher.group(2)) : 0;
-                        long max = NumberUtil.isInteger(matcher.group(3)) ? Long.parseLong(matcher.group(3)) : 100;
+                        long max = NumberUtil.isLong(matcher.group(3)) ? Long.parseLong(matcher.group(3)) : 100;
                         if (min > max) {
                             long temp = min;
                             min = max;
@@ -231,7 +242,7 @@ public class MessagePublishPanel extends JPanel {
                     });
                     replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{float(\\(\\s*([\\-\\+]?\\d+(\\.?\\d+)?)\\s*,\\s*?([\\-\\+]?\\d+(\\.?\\d+)?)\\s*\\))?\\}", (matcher) -> {
                         float min = NumberUtil.isNumber(matcher.group(2)) ? NumberUtil.toBigDecimal(matcher.group(2)).floatValue() : 0;
-                        float max = NumberUtil.isNumber(matcher.group(3)) ? NumberUtil.toBigDecimal(matcher.group(3)).floatValue() : 1;
+                        float max = NumberUtil.isNumber(matcher.group(4)) ? NumberUtil.toBigDecimal(matcher.group(4)).floatValue() : 1;
                         if (min > max) {
                             float temp = min;
                             min = max;
@@ -239,8 +250,11 @@ public class MessagePublishPanel extends JPanel {
                         }
                         return RandomUtil.randomFloat(min, max) + "";
                     });
-                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{string(\\((\\d*)\\))?\\}", (matcher) -> {
+                    replacedPayload = StrUtil.replace(replacedPayload, "\\$\\{string(\\((\\d+)\\))?\\}", (matcher) -> {
                         int length = NumberUtil.isInteger(matcher.group(2)) ? Integer.parseInt(matcher.group(2)) : 4;
+                        if (length <= 0) {
+                            length = 4;
+                        }
                         return RandomUtil.randomString(length);
                     });
                 }

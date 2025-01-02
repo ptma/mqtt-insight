@@ -17,6 +17,7 @@ import com.mqttinsight.ui.form.MainWindowForm;
 import com.mqttinsight.ui.form.NewSubscriptionForm;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
+import com.mqttinsight.util.TopicUtil;
 import com.mqttinsight.util.Utils;
 import lombok.Getter;
 import net.miginfocom.swing.MigLayout;
@@ -31,8 +32,8 @@ import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -58,8 +59,9 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     private JPanel rootPanel;
     private JPanel topPanel;
-    private JSplitPane subscriptionSplitPanel;
-    private JSplitPane messageSplitPanel;
+    private JSplitPane mainSplitPanel;
+    private JSplitPane leftSplitPanel;
+    private JSplitPane rightSplitPanel;
     private JTabbedPane detailTabbedPanel;
 
     private JLabel statusLabel;
@@ -69,14 +71,16 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     private MessageToolbar messageToolbar;
 
     protected MessageViewMode viewMode;
-    protected SubscriptionListPanel subscriptionListPanel;
     protected MessageViewPanel messageViewPanel;
     protected MessagePublishPanel messagePublishPanel;
     protected MessagePreviewPanel messagePreviewPanel;
 
+    protected SubscriptionListPanel subscriptionListPanel;
+    protected TopicTreePanel topicTreePanel;
+
     private final List<InstanceEventListener> eventListeners;
 
-    private final List<BaseChartFrame> chartFrames;
+    private final List<BaseChartFrame<? extends SeriesProperties>> chartFrames;
 
     private ScriptLoader scriptLoader;
 
@@ -95,13 +99,53 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     private void initComponents() {
+        {
+            // main
+            Integer divider = Configuration.instance().getInt(ConfKeys.SUBSCRIPTION_HORIZONTAL_DIVIDER, 255);
+            mainSplitPanel.setDividerLocation(divider);
+            mainSplitPanel.setOneTouchExpandable(true);
+            mainSplitPanel.putClientProperty("JSplitPane.expandableSide", "right");
+            mainSplitPanel.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, evt -> {
+                Configuration.instance().set(ConfKeys.SUBSCRIPTION_HORIZONTAL_DIVIDER, evt.getNewValue());
+                Configuration.instance().changed();
+            });
+        }
+
+        {
+            // left
+            subscriptionListPanel = new SubscriptionListPanel(this);
+            topicTreePanel = new TopicTreePanel(this);
+
+            leftSplitPanel.setLeftComponent(subscriptionListPanel);
+            leftSplitPanel.setRightComponent(topicTreePanel);
+
+            Integer divider = Configuration.instance().getInt(ConfKeys.SUBSCRIPTION_VERTICAL_DIVIDER, 430);
+            leftSplitPanel.setDividerLocation(divider);
+            leftSplitPanel.setOneTouchExpandable(true);
+            leftSplitPanel.putClientProperty("JSplitPane.expandableSide", "left");
+            leftSplitPanel.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, evt -> {
+                Configuration.instance().set(ConfKeys.SUBSCRIPTION_VERTICAL_DIVIDER, evt.getNewValue());
+                Configuration.instance().changed();
+            });
+        }
+
+        // right
         MessageViewMode viewMode = MessageViewMode.of(Configuration.instance().getString(ConfKeys.MESSAGE_VIEW, MessageViewMode.TABLE.toString()));
-        subscriptionListPanel = new SubscriptionListPanel(this);
         messageViewPanel = new MessageViewPanel(this, viewMode);
         messagePublishPanel = new MessagePublishPanel(this);
         messagePreviewPanel = new MessagePreviewPanel(this);
-        subscriptionSplitPanel.setLeftComponent(subscriptionListPanel);
-        messageSplitPanel.setTopComponent(messageViewPanel);
+
+        rightSplitPanel.setTopComponent(messageViewPanel);
+        rightSplitPanel.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, evt -> {
+            if (rightSplitPanel.getOrientation() == JSplitPane.VERTICAL_SPLIT) {
+                Configuration.instance().set(ConfKeys.MESSAGE_VERTICAL_DIVIDER, evt.getNewValue());
+            } else {
+                Configuration.instance().set(ConfKeys.MESSAGE_HORIZONTAL_DIVIDER, evt.getNewValue());
+            }
+            Configuration.instance().changed();
+        });
+        rightSplitPanel.setOneTouchExpandable(true);
+        rightSplitPanel.putClientProperty("JSplitPane.expandableSide", "left");
 
         Border tabbedPanelBorder = new SingleLineBorder(UIManager.getColor("Component.borderColor"), true, true, true, true);
         detailTabbedPanel.setBorder(tabbedPanelBorder);
@@ -110,26 +154,6 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
         detailTabbedPanel.addTab(LangUtil.getString("Preview"), Icons.PREVIEW, messagePreviewPanel, LangUtil.getString("Preview"));
         detailTabbedPanel.addTab(LangUtil.getString("Publish"), Icons.SEND, messagePublishPanel, LangUtil.getString("Publish"));
-
-        Integer subscriptionDivider = Configuration.instance().getInt(ConfKeys.SUBSCRIPTION_HORIZONTAL_DIVIDER, 255);
-        subscriptionSplitPanel.setDividerLocation(subscriptionDivider);
-        subscriptionSplitPanel.setOneTouchExpandable(true);
-        subscriptionSplitPanel.putClientProperty("JSplitPane.expandableSide", "right");
-        subscriptionSplitPanel.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, evt -> {
-            Configuration.instance().set(ConfKeys.SUBSCRIPTION_HORIZONTAL_DIVIDER, evt.getNewValue());
-            Configuration.instance().changed();
-        });
-        messageSplitPanel.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, evt -> {
-            if (messageSplitPanel.getOrientation() == JSplitPane.VERTICAL_SPLIT) {
-                Configuration.instance().set(ConfKeys.MESSAGE_VERTICAL_DIVIDER, evt.getNewValue());
-            } else {
-                Configuration.instance().set(ConfKeys.MESSAGE_HORIZONTAL_DIVIDER, evt.getNewValue());
-            }
-            Configuration.instance().changed();
-        });
-        messageSplitPanel.setOneTouchExpandable(true);
-        messageSplitPanel.putClientProperty("JSplitPane.expandableSide", "left");
-
         // Should be initialized after MessageTable initialization
         initTopBar();
 
@@ -186,17 +210,17 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             return;
         }
         if (viewMode == MessageViewMode.TABLE) {
-            messageSplitPanel.setOrientation(JSplitPane.VERTICAL_SPLIT);
-            Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_VERTICAL_DIVIDER, 500);
-            int maxHeight = messageSplitPanel.getPreferredSize().height - PREVIEW_PANEL_MIN_HEIGHT;
-            messageSplitPanel.setDividerLocation(Math.min(divider, maxHeight));
+            rightSplitPanel.setOrientation(JSplitPane.VERTICAL_SPLIT);
+            Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_VERTICAL_DIVIDER, 430);
+            int maxHeight = rightSplitPanel.getPreferredSize().height - PREVIEW_PANEL_MIN_HEIGHT;
+            rightSplitPanel.setDividerLocation(Math.min(divider, maxHeight));
             detailTabbedPanel.setTabPlacement(JTabbedPane.LEFT);
             detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.TOP);
         } else {
-            messageSplitPanel.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
-            Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_HORIZONTAL_DIVIDER, 850);
-            int maxWidth = messageSplitPanel.getPreferredSize().width - PREVIEW_PANEL_MIN_WIDTH;
-            messageSplitPanel.setDividerLocation(Math.min(divider, maxWidth));
+            rightSplitPanel.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
+            Integer divider = Configuration.instance().getInt(ConfKeys.MESSAGE_HORIZONTAL_DIVIDER, 600);
+            int maxWidth = rightSplitPanel.getPreferredSize().width - PREVIEW_PANEL_MIN_WIDTH;
+            rightSplitPanel.setDividerLocation(Math.min(divider, maxWidth));
             detailTabbedPanel.setTabPlacement(JTabbedPane.TOP);
             detailTabbedPanel.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_ICON_PLACEMENT, SwingConstants.LEADING);
         }
@@ -279,9 +303,7 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     @Override
     public void applyEvent(Consumer<InstanceEventListener> action) {
         try {
-            Iterator<InstanceEventListener> itr = eventListeners.iterator();
-            while (itr.hasNext()) {
-                InstanceEventListener listener = itr.next();
+            for (InstanceEventListener listener : eventListeners) {
                 if (listener != null) {
                     action.accept(listener);
                 }
@@ -374,9 +396,8 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
 
     @Override
     public void messageReceived(MqttMessage message) {
-        applyEvent(l -> l.onMessage(message));
-        if (scriptLoader != null && message instanceof ReceivedMqttMessage) {
-            ReceivedMqttMessage receivedMessage = (ReceivedMqttMessage) message;
+        applyEvent(l -> l.onMessage(message, null));
+        if (scriptLoader != null && message instanceof ReceivedMqttMessage receivedMessage) {
             SwingUtilities.invokeLater(() -> {
                 try {
                     scriptLoader.executeDecode(receivedMessage, decodedMessage -> {
@@ -413,11 +434,19 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         return this.doSubscribe(subscription);
     }
 
+    public Optional<Subscription> matchAnySubscription(String topic) {
+        return subscriptionListPanel.getSubscriptions()
+            .stream()
+            .map(SubscriptionItem::getSubscription)
+            .filter(subscription -> TopicUtil.match(subscription.getTopic(), topic))
+            .findAny();
+    }
+
     @Override
     public void publishMessage(PublishedMqttMessage message) {
         ThreadUtil.execute(() -> {
             if (doPublishMessage(message)) {
-                applyEvent(l -> l.onMessage(message));
+                applyEvent(l -> l.onMessage(message, null));
             }
         });
     }
@@ -556,19 +585,24 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         topPanel = new JPanel();
         topPanel.setLayout(new BorderLayout(0, 0));
         rootPanel.add(topPanel, BorderLayout.NORTH);
-        subscriptionSplitPanel = new JSplitPane();
-        subscriptionSplitPanel.setContinuousLayout(false);
-        subscriptionSplitPanel.setDividerLocation(219);
-        subscriptionSplitPanel.setResizeWeight(0.0);
-        rootPanel.add(subscriptionSplitPanel, BorderLayout.CENTER);
-        messageSplitPanel = new JSplitPane();
-        messageSplitPanel.setDividerLocation(385);
-        messageSplitPanel.setOrientation(0);
-        messageSplitPanel.setResizeWeight(1.0);
-        subscriptionSplitPanel.setRightComponent(messageSplitPanel);
+        mainSplitPanel = new JSplitPane();
+        mainSplitPanel.setContinuousLayout(false);
+        mainSplitPanel.setDividerLocation(166);
+        mainSplitPanel.setResizeWeight(0.0);
+        rootPanel.add(mainSplitPanel, BorderLayout.CENTER);
+        rightSplitPanel = new JSplitPane();
+        rightSplitPanel.setDividerLocation(385);
+        rightSplitPanel.setOrientation(0);
+        rightSplitPanel.setResizeWeight(1.0);
+        mainSplitPanel.setRightComponent(rightSplitPanel);
         detailTabbedPanel = new JTabbedPane();
         detailTabbedPanel.setDoubleBuffered(true);
-        messageSplitPanel.setRightComponent(detailTabbedPanel);
+        rightSplitPanel.setRightComponent(detailTabbedPanel);
+        leftSplitPanel = new JSplitPane();
+        leftSplitPanel.setDividerLocation(385);
+        leftSplitPanel.setOrientation(0);
+        leftSplitPanel.setResizeWeight(1.0);
+        mainSplitPanel.setLeftComponent(leftSplitPanel);
     }
 
     /**

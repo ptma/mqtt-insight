@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.awt.*;
-import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -32,6 +31,7 @@ public class Subscription {
     /**
      * 显示的颜色
      */
+    @Setter
     private Color color;
 
     /**
@@ -39,28 +39,19 @@ public class Subscription {
      */
     private final AtomicInteger messageCount;
 
+    @Setter
     private String payloadFormat;
 
     @Setter
     private boolean visible = true;
-
-    /**
-     * 开始订阅的时间
-     */
-    private final Date subscribeTime;
 
     public Subscription(final MqttInstance mqttInstance, final String topic, final int qos, final String payloadFormat, final Color color) {
         this.mqttInstance = mqttInstance;
         this.topic = topic;
         this.qos = qos;
         this.color = color;
-        this.subscribeTime = new Date();
         this.payloadFormat = payloadFormat;
         messageCount = new AtomicInteger(0);
-    }
-
-    public void setPayloadFormat(String payloadFormat) {
-        this.payloadFormat = payloadFormat;
     }
 
     public String getSelfPayloadFormat() {
@@ -72,18 +63,13 @@ public class Subscription {
     }
 
     public void incrementMessageCount() {
-        this.messageCount.incrementAndGet();
+        messageCount.incrementAndGet();
     }
 
     public void decrementMessageCount() {
-        this.messageCount.decrementAndGet();
+        if (messageCount.get() > 0) {
+            messageCount.decrementAndGet();
+        }
     }
 
-    public void resetMessageCount() {
-        this.messageCount.set(0);
-    }
-
-    public void setColor(Color color) {
-        this.color = color;
-    }
 }

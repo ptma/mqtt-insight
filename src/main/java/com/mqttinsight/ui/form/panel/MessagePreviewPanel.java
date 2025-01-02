@@ -1,27 +1,14 @@
 package com.mqttinsight.ui.form.panel;
 
 import cn.hutool.core.thread.ThreadUtil;
-import com.formdev.flatlaf.FlatClientProperties;
-import com.mqttinsight.codec.CodecSupport;
-import com.mqttinsight.codec.CodecSupports;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.mqtt.MqttMessage;
-import com.mqttinsight.ui.component.SingleLineBorder;
-import com.mqttinsight.ui.component.SyntaxTextEditor;
-import com.mqttinsight.ui.component.TextSearchToolbar;
-import com.mqttinsight.ui.component.model.MessageViewMode;
-import com.mqttinsight.ui.component.model.PayloadFormatComboBoxModel;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.ui.form.MessagePreviewFrame;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
-import net.miginfocom.swing.MigLayout;
-import org.jdesktop.swingx.JXLabel;
-import org.jdesktop.swingx.painter.RectanglePainter;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import java.awt.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -38,17 +25,22 @@ public class MessagePreviewPanel extends BasePreviewPanel {
         super(mqttInstance);
         initEventListeners();
         separateWindowMenuitem = Utils.UI.createMenuItem(LangUtil.getString("PreviewSeparateWindow"), (e) -> {
-            MessagePreviewFrame.open(this.mqttInstance, this.previewedMessage);
+            MessagePreviewFrame.open(this.mqttInstance, this.previewedMessage, this.getCurrentPreviewFormat());
         });
 
         // Append a menu item to the editor pop-up menu
-        payloadEditor.textArea().getPopupMenu().addSeparator();
-        payloadEditor.textArea().getPopupMenu().add(separateWindowMenuitem).setEnabled(false);
+        payloadEditor.textArea().getPopupMenu().add(new JPopupMenu.Separator(), 0);
+        payloadEditor.textArea().getPopupMenu().add(separateWindowMenuitem, 0).setEnabled(false);
 
         // Load the check status from the option and save it when it changes
         prettyCheckbox.setSelected(mqttInstance.getProperties().isPrettyDuringPreview());
         prettyCheckbox.addActionListener(e -> {
             mqttInstance.getProperties().setPrettyDuringPreview(prettyCheckbox.isSelected());
+            Configuration.instance().changed();
+        });
+        syntaxEnableCheckbox.setSelected(mqttInstance.getProperties().isSyntaxHighlighting());
+        syntaxEnableCheckbox.addActionListener(e -> {
+            mqttInstance.getProperties().setSyntaxHighlighting(syntaxEnableCheckbox.isSelected());
             Configuration.instance().changed();
         });
     }

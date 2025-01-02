@@ -36,15 +36,21 @@ public class BasePreviewPanel extends JPanel {
     private JPanel toolbarPanel;
     private TextSearchToolbar textSearchToolbar;
     private JPanel topPanel;
+
     private JTextField topicField;
 
+    private JPanel labelPanel;
     private JXLabel timeLabel;
     private JXLabel qosLabel;
     private JXLabel retainedLabel;
     private JXLabel sizeLabel;
+
+    private JPanel formatPanel;
     private JLabel formatLabel;
     private JComboBox<String> formatComboBox;
     protected JCheckBox prettyCheckbox;
+    protected JCheckBox syntaxEnableCheckbox;
+
     private JPanel payloadPanel;
 
     public BasePreviewPanel(MqttInstance mqttInstance) {
@@ -62,7 +68,7 @@ public class BasePreviewPanel extends JPanel {
 
         topPanelLayout = new MigLayout(
             "insets 0 0 5 0,gap 5",
-            "[grow][][][][][][][]",
+            "[grow][][]",
             "[]"
         );
         topPanel.setLayout(topPanelLayout);
@@ -71,61 +77,89 @@ public class BasePreviewPanel extends JPanel {
         topicField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, LangUtil.getString("Topic"));
         topPanel.add(topicField, "growx");
 
-        RectanglePainter badgePainter = new RectanglePainter();
-        badgePainter.setRounded(true);
-        badgePainter.setRoundWidth(20);
-        badgePainter.setRoundHeight(20);
-        boolean isDarkTheme = UIManager.getBoolean("laf.dark");
-        Color bgColor = UIManager.getColor("Panel.background");
-        Color badgeColor;
-        if (isDarkTheme) {
-            badgeColor = Utils.brighter(bgColor, 0.7f);
-        } else {
-            badgeColor = Utils.darker(bgColor, 0.9f);
+        {
+            labelPanel = new JPanel();
+            labelPanel.setLayout(new MigLayout(
+                "insets 0 0 0 0,gap 5",
+                "[][][][]",
+                "[]"
+            ));
+
+            RectanglePainter badgePainter = new RectanglePainter();
+            badgePainter.setRounded(true);
+            badgePainter.setRoundWidth(20);
+            badgePainter.setRoundHeight(20);
+            boolean isDarkTheme = UIManager.getBoolean("laf.dark");
+            Color bgColor = UIManager.getColor("Panel.background");
+            Color badgeColor;
+            if (isDarkTheme) {
+                badgeColor = Utils.brighter(bgColor, 0.7f);
+            } else {
+                badgeColor = Utils.darker(bgColor, 0.9f);
+            }
+            badgePainter.setFillPaint(badgeColor);
+            badgePainter.setBorderPaint(new Color(badgeColor.getRed(), badgeColor.getGreen(), badgeColor.getBlue(), 128));
+            Border badgeBorder = BorderFactory.createEmptyBorder(2, 8, 2, 8);
+
+            timeLabel = new JXLabel(" ");
+            timeLabel.setBackgroundPainter(badgePainter);
+            timeLabel.setOpaque(false);
+            timeLabel.setBorder(badgeBorder);
+            labelPanel.add(timeLabel, "span 2,wmin 162px");
+
+            qosLabel = new JXLabel(" ");
+            qosLabel.setBackgroundPainter(badgePainter);
+            qosLabel.setOpaque(false);
+            qosLabel.setBorder(badgeBorder);
+            labelPanel.add(qosLabel, "wmin 52px");
+
+            retainedLabel = new JXLabel(LangUtil.getString("Retained"));
+            retainedLabel.setVisible(false);
+            retainedLabel.setBackgroundPainter(badgePainter);
+            retainedLabel.setOpaque(false);
+            retainedLabel.setBorder(badgeBorder);
+            labelPanel.add(retainedLabel, "hidemode 3");
+
+            sizeLabel = new JXLabel(" ");
+            sizeLabel.setBackgroundPainter(badgePainter);
+            sizeLabel.setOpaque(false);
+            sizeLabel.setBorder(badgeBorder);
+            sizeLabel.setHorizontalTextPosition(SwingConstants.RIGHT);
+            labelPanel.add(sizeLabel, "");
+
+            topPanel.add(labelPanel, "");
         }
-        badgePainter.setFillPaint(badgeColor);
-        badgePainter.setBorderPaint(new Color(badgeColor.getRed(), badgeColor.getGreen(), badgeColor.getBlue(), 128));
-        Border badgeBorder = BorderFactory.createEmptyBorder(2, 8, 2, 8);
 
-        timeLabel = new JXLabel(" ");
-        timeLabel.setBackgroundPainter(badgePainter);
-        timeLabel.setOpaque(false);
-        timeLabel.setBorder(badgeBorder);
-        topPanel.add(timeLabel, "span 2,wmin 162px");
+        {
+            formatPanel = new JPanel();
+            formatPanel.setLayout(new MigLayout(
+                "insets 0 0 0 0,gap 5",
+                "[][][][grow]",
+                "[]"
+            ));
+            formatLabel = new JLabel(LangUtil.getString("PayloadFormat"));
+            formatPanel.add(formatLabel, "right");
+            formatComboBox = new JComboBox<>();
+            formatComboBox.setModel(new PayloadFormatComboBoxModel(true, false));
+            formatComboBox.setSelectedItem(CodecSupport.DEFAULT);
+            formatComboBox.addActionListener(e -> this.updatePreviewMessage());
+            formatPanel.add(formatComboBox, "");
 
-        qosLabel = new JXLabel(" ");
-        qosLabel.setBackgroundPainter(badgePainter);
-        qosLabel.setOpaque(false);
-        qosLabel.setBorder(badgeBorder);
-        topPanel.add(qosLabel, "wmin 52px");
+            prettyCheckbox = new JCheckBox(LangUtil.getString("Pretty"), null, true);
+            prettyCheckbox.addActionListener(e -> {
+                this.updatePreviewMessage();
+            });
+            formatPanel.add(prettyCheckbox, "");
 
-        retainedLabel = new JXLabel(LangUtil.getString("Retained"));
-        retainedLabel.setVisible(false);
-        retainedLabel.setBackgroundPainter(badgePainter);
-        retainedLabel.setOpaque(false);
-        retainedLabel.setBorder(badgeBorder);
-        topPanel.add(retainedLabel, "hidemode 3");
+            syntaxEnableCheckbox = new JCheckBox(LangUtil.getString("SyntaxHighlighting"), null, true);
+            syntaxEnableCheckbox.addActionListener(e -> {
+                this.updatePreviewMessage();
+            });
+            syntaxEnableCheckbox.setToolTipText(LangUtil.getString("SyntaxHighlightingTips"));
+            formatPanel.add(syntaxEnableCheckbox, "");
 
-        sizeLabel = new JXLabel(" ");
-        sizeLabel.setBackgroundPainter(badgePainter);
-        sizeLabel.setOpaque(false);
-        sizeLabel.setBorder(badgeBorder);
-        sizeLabel.setHorizontalTextPosition(SwingConstants.RIGHT);
-        topPanel.add(sizeLabel, "");
-
-        formatLabel = new JLabel(LangUtil.getString("PayloadFormat"));
-        topPanel.add(formatLabel, "right");
-        formatComboBox = new JComboBox<>();
-        formatComboBox.setModel(new PayloadFormatComboBoxModel(true, false));
-        formatComboBox.setSelectedItem(CodecSupport.DEFAULT);
-        formatComboBox.addActionListener(e -> this.updatePreviewMessage());
-        topPanel.add(formatComboBox, "");
-
-        prettyCheckbox = new JCheckBox(LangUtil.getString("Pretty"), null, true);
-        prettyCheckbox.addActionListener(e -> {
-            this.updatePreviewMessage();
-        });
-        topPanel.add(prettyCheckbox, "");
+            topPanel.add(formatPanel, "");
+        }
 
         payloadEditor = new SyntaxTextEditor();
         payloadEditor.textArea().setEditable(false);
@@ -149,31 +183,39 @@ public class BasePreviewPanel extends JPanel {
 
     public void toggleViewMode(MessageViewMode viewMode) {
         if (viewMode == MessageViewMode.TABLE) {
-            topPanelLayout.setColumnConstraints("[grow][][][][][][right][]");
+            topPanelLayout.setColumnConstraints("[grow][][]");
             topPanelLayout.setRowConstraints("[]");
             topPanelLayout.setComponentConstraints(topicField, "growx");
-            topPanelLayout.setComponentConstraints(formatLabel, "");
+            topPanelLayout.setComponentConstraints(formatPanel, "");
         } else {
-            topPanelLayout.setColumnConstraints("[][][][][][][grow,right][]");
+            topPanelLayout.setColumnConstraints("[grow][][]");
             topPanelLayout.setRowConstraints("[][]");
             topPanelLayout.setComponentConstraints(topicField, "growx, span, wrap");
-            topPanelLayout.setComponentConstraints(formatLabel, "newline");
+            topPanelLayout.setComponentConstraints(formatPanel, "newline");
         }
+    }
+
+    public String getCurrentPreviewFormat() {
+        return (String) formatComboBox.getSelectedItem();
+    }
+
+    public void setCurrentPreviewFormat(String format) {
+        formatComboBox.setSelectedItem(format);
     }
 
     public void updatePreviewMessage() {
         boolean pretty = prettyCheckbox.isSelected();
         if (previewedMessage != null) {
             String format = (String) formatComboBox.getSelectedItem();
+            CodecSupport codec;
             if (CodecSupport.DEFAULT.equals(format)) {
                 payloadEditor.setText(previewedMessage.payloadAsString(pretty));
-                CodecSupport codec = CodecSupports.instance().getByName(previewedMessage.getPayloadFormat());
-                payloadEditor.setSyntax(codec.getSyntax());
+                codec = CodecSupports.instance().getByName(previewedMessage.getPayloadFormat());
             } else {
-                CodecSupport codec = CodecSupports.instance().getByName(format);
+                codec = CodecSupports.instance().getByName(format);
                 payloadEditor.setText(previewedMessage.decodePayload(codec, pretty));
-                payloadEditor.setSyntax(codec.getSyntax());
             }
+            payloadEditor.setSyntax(syntaxEnableCheckbox.isSelected() ? codec.getSyntax() : null);
         }
     }
 
@@ -204,7 +246,7 @@ public class BasePreviewPanel extends JPanel {
                     timeLabel.setText(previewedMessage.getTime());
                     sizeLabel.setText(DataSizeUtil.format(previewedMessage.payloadSize()));
                     payloadEditor.setText(previewText);
-                    payloadEditor.setSyntax(codec.getSyntax());
+                    payloadEditor.setSyntax(syntaxEnableCheckbox.isSelected() ? codec.getSyntax() : null);
 
                     if (toolbarPanel.isVisible()) {
                         textSearchToolbar.find(true);

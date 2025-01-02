@@ -15,16 +15,16 @@
         </border>
         <children/>
       </grid>
-      <splitpane id="fed37" binding="subscriptionSplitPanel">
+      <splitpane id="fed37" binding="mainSplitPanel">
         <constraints border-constraint="Center"/>
         <properties>
           <continuousLayout value="false"/>
-          <dividerLocation value="219"/>
+          <dividerLocation value="166"/>
           <resizeWeight value="0.0"/>
         </properties>
         <border type="none"/>
         <children>
-          <splitpane id="9066f" binding="messageSplitPanel">
+          <splitpane id="9066f" binding="rightSplitPanel">
             <constraints>
               <splitpane position="right"/>
             </constraints>
@@ -46,6 +46,18 @@
                 <children/>
               </tabbedpane>
             </children>
+          </splitpane>
+          <splitpane id="544e6" binding="leftSplitPanel">
+            <constraints>
+              <splitpane position="left"/>
+            </constraints>
+            <properties>
+              <dividerLocation value="385"/>
+              <orientation value="0"/>
+              <resizeWeight value="1.0"/>
+            </properties>
+            <border type="none"/>
+            <children/>
           </splitpane>
         </children>
       </splitpane>

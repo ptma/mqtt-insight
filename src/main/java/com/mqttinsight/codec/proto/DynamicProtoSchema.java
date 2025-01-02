@@ -8,10 +8,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.mqttinsight.exception.SchemaLoadException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -37,22 +34,37 @@ public class DynamicProtoSchema {
         return proto.getFilename();
     }
 
-    public Map<String, Object> parse(byte[] binary) throws ProtoParseException {
+    public Map<String, Object> parse(byte[] binary, String messageName) throws ProtoParseException {
         DynamicMessage dynamicMessage = null;
         MessageElement messageElement = null;
-        for (MessageElement type : proto.getMessages()) {
+        if (messageName != null) {
             try {
-                dynamicMessage = tryBuildMessage(type.getName(), binary);
-                messageElement = type;
-                if (dynamicMessage.getUnknownFields().asMap().isEmpty()) {
-                    messageElement.incrementHitCount();
-                    break;
+                Optional<MessageElement> optionalElement = proto.getMessage(messageName);
+                if (optionalElement.isPresent()) {
+                    dynamicMessage = tryBuildMessage(messageName, binary);
+                    messageElement = optionalElement.get();
+                    if (dynamicMessage != null && dynamicMessage.getUnknownFields().asMap().isEmpty()) {
+                        messageElement.incrementHitCount();
+                    }
                 }
             } catch (InvalidProtocolBufferException ignore) {
             }
         }
         if (dynamicMessage == null) {
-            throw new ProtoParseException("Cannot find proper schema for this protocol buffer message, maybe provide worng schema file");
+            for (MessageElement type : proto.getMessages()) {
+                try {
+                    dynamicMessage = tryBuildMessage(type.getName(), binary);
+                    messageElement = type;
+                    if (dynamicMessage != null && dynamicMessage.getUnknownFields().asMap().isEmpty()) {
+                        messageElement.incrementHitCount();
+                        break;
+                    }
+                } catch (InvalidProtocolBufferException ignore) {
+                }
+            }
+            if (dynamicMessage == null) {
+                throw new ProtoParseException("Cannot find proper schema for this protocol buffer message, maybe provide worng schema file");
+            }
         }
 
         Map<String, Object> objectMap = new HashMap<>();
@@ -81,6 +93,9 @@ public class DynamicProtoSchema {
 
     private DynamicMessage tryBuildMessage(String testName, byte[] binary) throws InvalidProtocolBufferException {
         DynamicMessage.Builder testBuilder = dynamicSchema.newMessageBuilder(testName);
+        if (testBuilder == null) {
+            return null;
+        }
         testBuilder.mergeFrom(binary);
         return testBuilder.build();
     }

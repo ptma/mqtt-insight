@@ -79,6 +79,7 @@ public class MqttProperties implements Serializable, Cloneable {
     protected String payloadFormat;
     protected boolean clearUnsubMessage = true;
     protected boolean prettyDuringPreview = true;
+    protected boolean syntaxHighlighting = true;
 
     /* ============== Getter and Setter ============== */
     public String getUsername() {

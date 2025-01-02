@@ -1,4 +1,4 @@
-package com.mqttinsight.codec;
+package com.mqttinsight.codec.impl;
 
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;

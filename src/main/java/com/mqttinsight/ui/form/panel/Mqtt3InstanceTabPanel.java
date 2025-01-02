@@ -250,7 +250,14 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
                 message.isRetained(),
                 message.isDuplicate()
             );
-            mqttMessage.setFormat(properties.getPayloadFormat());
+            matchAnySubscription(topic)
+                .ifPresentOrElse(subscription -> {
+                        mqttMessage.setSubscription(subscription);
+                        subscription.incrementMessageCount();
+                    },
+                    () -> {
+                        mqttMessage.setFormat(properties.getPayloadFormat());
+                    });
             messageReceived(mqttMessage);
         }
 

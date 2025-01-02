@@ -233,7 +233,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
         executorService = ThreadUtil.newFixedExecutor(1, "Chart ", false);
         instanceEventAdapter = new InstanceEventAdapter() {
             @Override
-            public void onMessage(MqttMessage message) {
+            public void onMessage(MqttMessage message, MqttMessage parent) {
                 executorService.execute(() -> {
                     BaseChartFrame.this.onMessage(message);
                 });

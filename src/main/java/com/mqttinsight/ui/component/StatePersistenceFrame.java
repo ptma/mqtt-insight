@@ -96,22 +96,12 @@ public abstract class StatePersistenceFrame extends JXFrame {
     private Dimension getScreenSize() {
         GraphicsEnvironment graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice[] devices = graphicsEnv.getScreenDevices();
-        int width = 0;
-        int height = 0;
-        for (GraphicsDevice device : devices) {
-            Rectangle bounds = device.getDefaultConfiguration().getBounds();
-            if (bounds.x == 0) {
-                width = Math.max(width, bounds.width);
-            } else {
-                width = Math.max(width, bounds.width) + bounds.x;
-            }
-            if (bounds.y == 0) {
-                height = Math.max(height, bounds.height);
-            } else {
-                height = Math.max(height, bounds.height) + bounds.y;
-            }
+        if (devices.length > 0) {
+            Rectangle bounds = devices[0].getDefaultConfiguration().getBounds();
+            return new Dimension(bounds.width, bounds.height);
+        } else {
+            return new Dimension(960, 640);
         }
-        return new Dimension(width, height);
     }
 
     @Override
@@ -154,9 +144,7 @@ public abstract class StatePersistenceFrame extends JXFrame {
         } else {
             // Default size
             Dimension size;
-            if (getPreferredSize() != null) {
-                size = getPreferredSize();
-            } else if (screenSize.getWidth() > 1280) {
+            if (screenSize.getWidth() > 1280) {
                 this.setLocation((screenSize.width - 1280) / 2, (screenSize.height - 800) / 2);
                 size = new Dimension(1280, 800);
             } else if (screenSize.getWidth() > 1024) {

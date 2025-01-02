@@ -26,13 +26,18 @@ public class HexCodecSupport implements CodecSupport {
 
     @Override
     public byte[] toPayload(String topic, String text) throws CodecException {
-        return text == null ? new byte[0] : Hex.decode(text.replaceAll(" ", ""));
+        return text == null ? new byte[0] : Hex.decode(text.replaceAll("\\s", ""));
     }
 
     private String toHexString(byte[] payload) {
-        StringBuilder builder = new StringBuilder(payload.length * 2);
-        for (byte b : payload) {
-            builder.append(String.format("%02X ", b));
+        StringBuilder builder = new StringBuilder(payload.length * 3);
+        for (int i = 0; i < payload.length; i++) {
+            builder.append(String.format("%02X ", payload[i]));
+            if ((i + 1) % 16 == 0) {
+                builder.append("\n");
+            } else if ((i + 1) % 8 == 0) {
+                builder.append(" ");
+            }
         }
         return builder.toString();
     }

@@ -46,7 +46,12 @@ public final class Configuration implements Serializable {
             userPath = System.getProperty("user.home") + File.separator + "MqttInsight";
         }
         try {
-            conf = Utils.JSON.readObject(new File(confFilePath()), Conf.class);
+            File confFile = new File(confFilePath());
+            if (confFile.exists()) {
+                conf = Utils.JSON.readObject(confFile, Conf.class);
+            } else {
+                conf = new Conf();
+            }
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             if (conf == null) {
