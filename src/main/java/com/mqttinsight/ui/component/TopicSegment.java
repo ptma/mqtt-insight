@@ -176,6 +176,9 @@ public class TopicSegment extends JPanel {
         if (childAppended.get() && isExpanded()) {
             updateSize();
         }
+        if (childAppended.get() && !isSegmentVisible()) {
+            topicTreePanel.notifyTopicSegmentsVisibleChange();
+        }
     }
 
     private void addChildSegment(TopicSegment segment) {
