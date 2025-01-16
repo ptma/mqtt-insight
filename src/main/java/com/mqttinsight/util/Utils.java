@@ -278,6 +278,16 @@ public class Utils {
             return menuItem;
         }
 
+        public static JMenuItem createCheckBoxMenuItem(String menuText, ActionListener action) {
+            JMenuItem menuItem = new JCheckBoxMenuItem();
+            Utils.UI.buttonText(menuItem, menuText);
+
+            if (action != null) {
+                menuItem.addActionListener(action);
+            }
+            return menuItem;
+        }
+
         public static JMenuItem createMenuItem(String menuText, Action action) {
             JMenuItem menuItem = new NormalMenuItem();
             if (action != null) {

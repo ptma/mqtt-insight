@@ -11,6 +11,7 @@ import com.mqttinsight.ui.chart.BaseChartFrame;
 import com.mqttinsight.ui.chart.series.SeriesProperties;
 import com.mqttinsight.ui.component.*;
 import com.mqttinsight.ui.component.model.MessageViewMode;
+import com.mqttinsight.ui.component.tree.TopicTree;
 import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.ui.event.InstanceEventListener;
 import com.mqttinsight.ui.form.MainWindowForm;
@@ -76,7 +77,8 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     protected MessagePreviewPanel messagePreviewPanel;
 
     protected SubscriptionListPanel subscriptionListPanel;
-    protected TopicTreePanel topicTreePanel;
+    protected TopicTree topicTree;
+    private JScrollPane topicTreeScrollPanel;
 
     private final List<InstanceEventListener> eventListeners;
 
@@ -114,10 +116,13 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
         {
             // left
             subscriptionListPanel = new SubscriptionListPanel(this);
-            topicTreePanel = new TopicTreePanel(this);
+            topicTree = new TopicTree(this);
+            topicTreeScrollPanel = new JScrollPane(topicTree);
+            Border scrollPanelBorder = new SingleLineBorder(UIManager.getColor("Component.borderColor"), true, true, true, true);
+            topicTreeScrollPanel.setBorder(scrollPanelBorder);
 
             leftSplitPanel.setLeftComponent(subscriptionListPanel);
-            leftSplitPanel.setRightComponent(topicTreePanel);
+            leftSplitPanel.setRightComponent(topicTreeScrollPanel);
 
             Integer divider = Configuration.instance().getInt(ConfKeys.SUBSCRIPTION_VERTICAL_DIVIDER, 430);
             leftSplitPanel.setDividerLocation(divider);

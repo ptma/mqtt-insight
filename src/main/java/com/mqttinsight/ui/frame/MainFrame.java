@@ -79,6 +79,8 @@ public class MainFrame extends StatePersistenceFrame {
         UIManager.put("TextComponent.arc", 5);
         UIManager.put("SplitPaneDivider.style", "grip");
         UIManager.put("SplitPane.centerOneTouchButtons", true);
+        UIManager.put("Tree.leftChildIndent", 4);
+        UIManager.put("Tree.rightChildIndent", 8);
 
         UIManager.put("PasswordField.showRevealButton", true);
 
