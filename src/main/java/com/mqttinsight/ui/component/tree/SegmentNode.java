@@ -7,10 +7,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class SegmentTreeNode extends DefaultMutableTreeNode {
+public class SegmentNode extends DefaultMutableTreeNode {
 
     private final TopicTree tree;
-    private final SegmentTreeNode parent;
+    private final SegmentNode parent;
     @Getter
     private final String name;
     @Getter
@@ -21,7 +21,7 @@ public class SegmentTreeNode extends DefaultMutableTreeNode {
 
     private final AtomicInteger messageCount = new AtomicInteger(0);
 
-    public SegmentTreeNode(TopicTree tree, SegmentTreeNode parent, String name) {
+    public SegmentNode(TopicTree tree, SegmentNode parent, String name) {
         this.tree = tree;
         this.parent = parent;
         this.name = name;
@@ -43,7 +43,7 @@ public class SegmentTreeNode extends DefaultMutableTreeNode {
             return new HashSet<>(Collections.singletonList(getFullTopic()));
         } else {
             return getChildren().stream()
-                .map(SegmentTreeNode::getInvisibleTopics)
+                .map(SegmentNode::getInvisibleTopics)
                 .reduce((setA, setB) -> {
                     setA.addAll(setB);
                     return setA;
@@ -59,14 +59,14 @@ public class SegmentTreeNode extends DefaultMutableTreeNode {
 
         this.segmentVisible = segmentVisible;
         tree.getTreeModel().nodeChanged(this);
-        
+
         if (updateParentCompositeVisibleStatus) {
             updateSegmentCompositeVisibleStatus(true, true);
         }
     }
 
     public boolean isSegmentCompositeVisible() {
-        return segmentVisible || getChildren().stream().anyMatch(SegmentTreeNode::isSegmentCompositeVisible);
+        return segmentVisible || getChildren().stream().anyMatch(SegmentNode::isSegmentCompositeVisible);
     }
 
     public void updateSegmentCompositeVisibleStatus(boolean updateParent, boolean notify) {
@@ -90,10 +90,10 @@ public class SegmentTreeNode extends DefaultMutableTreeNode {
         String segment = topicSegments.get(0);
 
         AtomicBoolean childAppended = new AtomicBoolean(false);
-        SegmentTreeNode child = getChild(segment).orElseGet(() -> {
-            SegmentTreeNode newChild = new SegmentTreeNode(tree, this, segment);
+        SegmentNode child = getChild(segment).orElseGet(() -> {
+            SegmentNode newChild = new SegmentNode(tree, this, segment);
             childAppended.set(true);
-            tree.getTreeModel().insertNodeInto(newChild, this, this.getChildCount());
+            addChildSegment(newChild);
             return newChild;
         });
         if (topicSegments.size() > 1) {
@@ -104,6 +104,18 @@ public class SegmentTreeNode extends DefaultMutableTreeNode {
         if (childAppended.get() && !isSegmentVisible()) {
             tree.notifyTopicSegmentsVisibleChange();
         }
+    }
+
+    private void addChildSegment(SegmentNode child) {
+        List<SegmentNode> segments = getChildren();
+        for (int i = 0; i < segments.size(); i++) {
+            SegmentNode existingSegment = segments.get(i);
+            if (child.getName().compareTo(existingSegment.getName()) <= 0) {
+                tree.getTreeModel().insertNodeInto(child, this, i);
+                return;
+            }
+        }
+        tree.getTreeModel().insertNodeInto(child, this, segments.size());
     }
 
     public void decrementMessages(String topic) {
@@ -131,7 +143,7 @@ public class SegmentTreeNode extends DefaultMutableTreeNode {
         }
     }
 
-    public void removeChild(SegmentTreeNode child) {
+    public void removeChild(SegmentNode child) {
         tree.getTreeModel().removeNodeFromParent(child);
         if (getTopicCount() == 0) {
             removeSelf();
@@ -143,7 +155,7 @@ public class SegmentTreeNode extends DefaultMutableTreeNode {
     }
 
     public int getTotalMessageCount() {
-        return getSelfMessageCount() + getChildren().stream().map(SegmentTreeNode::getTotalMessageCount)
+        return getSelfMessageCount() + getChildren().stream().map(SegmentNode::getTotalMessageCount)
             .reduce(0, Integer::sum);
     }
 
@@ -153,23 +165,23 @@ public class SegmentTreeNode extends DefaultMutableTreeNode {
             count++;
         }
         count += getChildren().stream()
-            .map(SegmentTreeNode::getTopicCount)
+            .map(SegmentNode::getTopicCount)
             .reduce(0, Integer::sum);
         return count;
     }
 
-    public Optional<SegmentTreeNode> getChild(String segment) {
+    public Optional<SegmentNode> getChild(String segment) {
         return getChildren().stream()
             .filter(c -> c.getName().equals(segment))
             .findFirst();
     }
 
-    public List<SegmentTreeNode> getChildren() {
+    public List<SegmentNode> getChildren() {
         if (children == null) {
             return List.of();
         } else {
             return children.stream()
-                .map(c -> (SegmentTreeNode) c)
+                .map(c -> (SegmentNode) c)
                 .toList();
         }
     }

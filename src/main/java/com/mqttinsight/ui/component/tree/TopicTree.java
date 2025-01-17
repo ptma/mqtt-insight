@@ -25,7 +25,7 @@ import java.util.function.BiConsumer;
 public class TopicTree extends JXTree {
 
     private final MqttInstance mqttInstance;
-    private final SegmentTreeNode rootNode;
+    private final SegmentNode rootNode;
     private final DefaultTreeModel treeModel;
     private FlatPopupMenu popupMenu;
     private JMenuItem menuClearMessages;
@@ -39,7 +39,7 @@ public class TopicTree extends JXTree {
         selectionModel.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         this.setSelectionModel(selectionModel);
         treeModel = new DefaultTreeModel(null, false);
-        rootNode = new SegmentTreeNode(this, null, "#");
+        rootNode = new SegmentNode(this, null, "#");
         treeModel.setRoot(rootNode);
         this.setModel(treeModel);
         this.setRootVisible(false);
@@ -114,7 +114,7 @@ public class TopicTree extends JXTree {
                     }
 
                     TopicTree.this.setSelectionRow(rowIndex);
-                    SegmentTreeNode node = (SegmentTreeNode) clickedPath.getLastPathComponent();
+                    SegmentNode node = (SegmentNode) clickedPath.getLastPathComponent();
                     menuHideMessages.setSelected(!node.isSegmentCompositeVisible());
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
@@ -130,8 +130,8 @@ public class TopicTree extends JXTree {
     public String getToolTipText(MouseEvent e) {
         TreePath treePath = getPathForLocation(e.getX(), e.getY());
         if (treePath != null) {
-            if (treePath.getLastPathComponent() instanceof SegmentTreeNode) {
-                SegmentTreeNode node = (SegmentTreeNode) treePath.getLastPathComponent();
+            if (treePath.getLastPathComponent() instanceof SegmentNode) {
+                SegmentNode node = (SegmentNode) treePath.getLastPathComponent();
                 return node.getFullTopic();
             }
         }
@@ -141,7 +141,7 @@ public class TopicTree extends JXTree {
     private void removeSegmentMessages() {
         TreePath selectedPath = getSelectionPath();
         if (selectedPath != null) {
-            final SegmentTreeNode selectNode = (SegmentTreeNode) selectedPath.getLastPathComponent();
+            final SegmentNode selectNode = (SegmentNode) selectedPath.getLastPathComponent();
             if (selectNode != null) {
                 removeSegmentMessages(selectNode);
             }
@@ -151,7 +151,7 @@ public class TopicTree extends JXTree {
     private void toggleSegmentVisible() {
         TreePath selectedPath = getSelectionPath();
         if (selectedPath != null) {
-            final SegmentTreeNode selectNode = (SegmentTreeNode) selectedPath.getLastPathComponent();
+            final SegmentNode selectNode = (SegmentNode) selectedPath.getLastPathComponent();
             if (selectNode != null) {
                 boolean segmentVisible = !selectNode.isSegmentVisible();
                 selectNode.toggleSegmentVisible(segmentVisible, true, true);
@@ -165,14 +165,14 @@ public class TopicTree extends JXTree {
         });
         TreePath selectedPath = getSelectionPath();
         if (selectedPath != null) {
-            final SegmentTreeNode selectNode = (SegmentTreeNode) selectedPath.getLastPathComponent();
+            final SegmentNode selectNode = (SegmentNode) selectedPath.getLastPathComponent();
             if (selectNode != null) {
                 selectNode.toggleSegmentVisible(true, true, true);
             }
         }
     }
 
-    public void removeSegmentMessages(SegmentTreeNode node) {
+    public void removeSegmentMessages(SegmentNode node) {
         SwingUtilities.invokeLater(() -> {
             mqttInstance.applyEvent(l -> l.clearMessages(node.getFullTopic()));
         });
@@ -180,7 +180,7 @@ public class TopicTree extends JXTree {
 
     public void notifyTopicSegmentsVisibleChange() {
         Set<String> invisibleTopics = getRootSegments().stream()
-            .map(SegmentTreeNode::getInvisibleTopics)
+            .map(SegmentNode::getInvisibleTopics)
             .reduce((setA, setB) -> {
                 setA.addAll(setB);
                 return setA;
@@ -210,25 +210,25 @@ public class TopicTree extends JXTree {
         }
     }
 
-    public List<SegmentTreeNode> getRootSegments() {
+    public List<SegmentNode> getRootSegments() {
         return Collections.list(rootNode.children())
             .stream()
-            .map(item -> (SegmentTreeNode) item)
+            .map(item -> (SegmentNode) item)
             .toList();
     }
 
     private void updateSegments(String topic) {
         extractSegmentAndHandle(topic, (segment, remainTopic) -> {
-            SegmentTreeNode rootSegment = Collections.list(rootNode.children()).stream()
-                .map(item -> (SegmentTreeNode) item)
+            SegmentNode rootSegment = Collections.list(rootNode.children()).stream()
+                .map(item -> (SegmentNode) item)
                 .filter(item -> item.getName().equals(segment))
                 .findFirst()
                 .orElse(null);
 
 
             if (rootSegment == null) {
-                rootSegment = new SegmentTreeNode(this, rootNode, segment);
-                treeModel.insertNodeInto(rootSegment, rootNode, rootNode.getChildCount());
+                rootSegment = new SegmentNode(this, rootNode, segment);
+                addRootSegment(rootSegment);
             }
             if (remainTopic != null) {
                 rootSegment.incrementMessages(StrUtil.split(remainTopic, '/'));
@@ -240,13 +240,25 @@ public class TopicTree extends JXTree {
 
     private void removeTopicSegments(String topic) {
         extractSegmentAndHandle(topic, (segment, remainTopic) -> {
-            Optional<SegmentTreeNode> rootSegment = getRootSegments().stream()
+            Optional<SegmentNode> rootSegment = getRootSegments().stream()
                 .filter(item -> item.getName().equals(segment))
                 .findFirst();
             rootSegment.ifPresent((topicSegment) -> {
                 topicSegment.decrementMessages(topic);
             });
         });
+    }
+
+    private void addRootSegment(SegmentNode segmentNode) {
+        List<SegmentNode> segments = getRootSegments();
+        for (int i = 0; i < segments.size(); i++) {
+            SegmentNode existingSegment = segments.get(i);
+            if (segmentNode.getName().compareTo(existingSegment.getName()) <= 0) {
+                treeModel.insertNodeInto(segmentNode, rootNode, i);
+                return;
+            }
+        }
+        treeModel.insertNodeInto(segmentNode, rootNode, segments.size());
     }
 
     private void locateSegments(String topic) {

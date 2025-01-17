@@ -46,7 +46,7 @@ public class TopicTreeCellRenderer extends DefaultTreeCellRenderer {
 
     @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-        if (value instanceof SegmentTreeNode node) {
+        if (value instanceof SegmentNode node) {
             nameLabel.setText(node.getName());
             Color fg;
             if (node.isSegmentVisible()) {
