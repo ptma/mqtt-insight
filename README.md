@@ -13,12 +13,14 @@ MqttInsight is an open source cross platform MQTT desktop client.
 * Supports MQTT3 and MQTT5;
 * Supports Websocket;
 * Switchable table and dialogue message views;
+* Topic hierarchy visualization;
 * Supports Node.js JavaScript (Supported by [Javet](https://github.com/caoccao/Javet));
 * Built in message codecs such as PlainText, JSON, XML, HEX, Base64, Protobuf, Message Pack, Avro, Hessian, Hessian2,
   and Kryo;
 * Supports codecs through Java SPI;
 * Supports codecs written in JavaScript;
 * Provides charts such as message quantity statistics, message load statistics, and message content statistics;
+* Message search and filtering.
 
 ## Screenshots
 
