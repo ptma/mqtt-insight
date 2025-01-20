@@ -359,6 +359,7 @@ public class MessageViewPanel extends JScrollPane {
                     mqttInstance.applyEvent(l -> l.tableSelectionChanged(message));
                 }
             } else {
+                lastSelectedRow = selectedRow;
                 mqttInstance.applyEvent(l -> l.tableSelectionChanged(null));
             }
         }
