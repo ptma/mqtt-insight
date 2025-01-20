@@ -4,7 +4,6 @@ import lombok.Getter;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SegmentNode extends DefaultMutableTreeNode {
@@ -89,10 +88,8 @@ public class SegmentNode extends DefaultMutableTreeNode {
         }
         String segment = topicSegments.get(0);
 
-        AtomicBoolean childAppended = new AtomicBoolean(false);
         SegmentNode child = getChild(segment).orElseGet(() -> {
             SegmentNode newChild = new SegmentNode(tree, this, segment);
-            childAppended.set(true);
             addChildSegment(newChild);
             return newChild;
         });
@@ -100,9 +97,6 @@ public class SegmentNode extends DefaultMutableTreeNode {
             child.incrementMessages(topicSegments.subList(1, topicSegments.size()));
         } else {
             child.incrementMessages();
-        }
-        if (childAppended.get() && !isSegmentVisible()) {
-            tree.notifyTopicSegmentsVisibleChange();
         }
     }
 
