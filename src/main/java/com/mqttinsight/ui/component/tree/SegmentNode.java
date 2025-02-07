@@ -79,7 +79,6 @@ public class SegmentNode extends DefaultMutableTreeNode {
 
     public void incrementMessages() {
         messageCount.incrementAndGet();
-        tree.getTreeModel().nodeChanged(this);
     }
 
     public void incrementMessages(List<String> topicSegments) {
@@ -126,14 +125,9 @@ public class SegmentNode extends DefaultMutableTreeNode {
         }
     }
 
-    public void removeSegmentMessages() {
-        tree.removeSegmentMessages(this);
-    }
-
     public void removeSelf() {
         if (parent != null) {
             parent.removeChild(this);
-            tree.getTreeModel().nodeChanged(parent);
         }
     }
 

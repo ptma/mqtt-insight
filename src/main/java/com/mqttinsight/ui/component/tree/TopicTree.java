@@ -186,7 +186,9 @@ public class TopicTree extends JXTree {
                 return setA;
             })
             .orElseGet(HashSet::new);
-        mqttInstance.applyEvent(l -> l.applyFilterTopics(invisibleTopics));
+        SwingUtilities.invokeLater(() -> {
+            mqttInstance.applyEvent(l -> l.applyFilterTopics(invisibleTopics));
+        });
     }
 
     private void extractSegmentAndHandle(String topic, BiConsumer<String, String> handler) {
@@ -225,7 +227,6 @@ public class TopicTree extends JXTree {
                 .findFirst()
                 .orElse(null);
 
-
             if (rootSegment == null) {
                 rootSegment = new SegmentNode(this, rootNode, segment);
                 addRootSegment(rootSegment);
@@ -235,6 +236,7 @@ public class TopicTree extends JXTree {
             } else {
                 rootSegment.incrementMessages();
             }
+            treeModel.nodeChanged(rootSegment);
         });
     }
 
