@@ -2,7 +2,6 @@
 --
 ![JDK](https://img.shields.io/badge/JDK-17-blue.svg)
 ![Apache 2.0](https://img.shields.io/badge/Apache-2.0-blue.svg)
-![Release](https://img.shields.io/badge/Release-1.1.2-blue.svg)
 [![Release](https://img.shields.io/github/v/release/ptma/mqtt-insight.svg)](https://github.com/ptma/mqtt-insight/releases)
 ![](https://img.shields.io/github/downloads/ptma/mqtt-insight/total.svg)
 
