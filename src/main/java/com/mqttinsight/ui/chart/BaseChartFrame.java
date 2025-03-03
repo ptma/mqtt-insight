@@ -214,7 +214,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
                 }
             }
             favoriteSeries.removeIf(t -> t.getName().equals(name));
-            favoriteSeries.add(FavoriteSeries.of(name, seriesTableModel.getSeries()));
+            favoriteSeries.add(FavoriteSeries.of(name, new ArrayList<>(seriesTableModel.getSeries())));
             Configuration.instance().changed();
             loadFavoriteSeries();
         });
