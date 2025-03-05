@@ -134,7 +134,7 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
                         } else {
                             chart.addSeries(series.getSeriesName(), series.xDataList(), series.yDataList());
                             XYSeries xySeries = chart.getSeriesMap().get(series.getSeriesName());
-                            xySeries.setSmooth(true);
+                            xySeries.setSmooth(false);
                         }
                         chartPanel.revalidate();
                         chartPanel.repaint();
@@ -238,7 +238,7 @@ public class MessageContentChartFrame extends BaseChartFrame<ValueSeriesProperti
         chart.getStyler().setLegendPosition(Styler.LegendPosition.OutsideS);
         chart.getStyler().setLegendLayout(Styler.LegendLayout.Horizontal);
         chart.getStyler().setLegendSeriesLineLength(12);
-        chart.getStyler().setMarkerSize(6);
+        chart.getStyler().setMarkerSize(0);
         chart.getStyler().setToolTipsEnabled(true);
         chart.getStyler().setToolTipType(Styler.ToolTipType.xAndYLabels);
         chart.getStyler().setBaseFont(UIManager.getFont("Label.font"));
