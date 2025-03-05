@@ -300,6 +300,8 @@ public class MessageLoadChartFrame extends BaseChartFrame<LoadSeriesProperties> 
         chart.getStyler().setToolTipsEnabled(true);
         chart.getStyler().setToolTipType(Styler.ToolTipType.xAndYLabels);
         chart.getStyler().setBaseFont(UIManager.getFont("Label.font"));
+        chart.getStyler().setCursorEnabled(true);
+        chart.getStyler().setCursorFont(UIManager.getFont("Label.font"));
         if (UIManager.getBoolean("laf.dark")) {
             chart.getStyler().setChartFontColor(UIManager.getColor("Label.foreground"));
             chart.getStyler().setChartBackgroundColor(UIManager.getColor("Panel.background"));
