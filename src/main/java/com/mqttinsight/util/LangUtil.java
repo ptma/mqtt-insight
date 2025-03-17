@@ -28,7 +28,7 @@ public class LangUtil {
             String languageTag = Configuration.instance().getString(ConfKeys.LANGUAGE, Locale.getDefault().toLanguageTag());
             LangUtil.setLocale(Locale.forLanguageTag(languageTag));
         } catch (Exception e) {
-            LangUtil.setLocale(Locale.getDefault());
+            LangUtil.setLocale(Locale.forLanguageTag("en"));
         }
     }
 
