@@ -15,6 +15,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -25,12 +26,16 @@ public class InputDialog extends JDialog {
     private JButton buttonOK;
     private JButton buttonCancel;
     private JTextField inputField;
+    private JComboBox<String> inputCombo;
     private JLabel messageLabel;
     private JLabel iconLabel;
+    private JPanel formPanel;
     private final Consumer<String> inputConsumer;
 
-    public static void open(Frame owner, String message, String defaultValue, Consumer<String> inputConsumer) {
-        JDialog dialog = new InputDialog(owner, message, defaultValue, inputConsumer);
+    private boolean selectable;
+
+    public static void open(Frame owner, String message, String defaultValue, Set<String> options, Consumer<String> inputConsumer) {
+        JDialog dialog = new InputDialog(owner, message, defaultValue, options, inputConsumer);
         dialog.setModal(true);
         dialog.pack();
         dialog.setResizable(false);
@@ -38,9 +43,30 @@ public class InputDialog extends JDialog {
         dialog.setVisible(true);
     }
 
-    InputDialog(Frame owner, String message, String defaultValue, Consumer<String> inputConsumer) {
+    InputDialog(Frame owner, String message, String defaultValue, Set<String> options, Consumer<String> inputConsumer) {
         super(owner);
         $$$setupUI$$$();
+        this.selectable = options != null && !options.isEmpty();
+        if (selectable) {
+            inputCombo = new JComboBox<>();
+            for (String option : options) {
+                inputCombo.addItem(option);
+            }
+            inputCombo.setEditable(true);
+            if (defaultValue != null) {
+                inputCombo.setSelectedItem(defaultValue);
+            } else {
+                inputCombo.setSelectedItem("");
+            }
+            formPanel.add(inputCombo, new CellConstraints().xy(3, 3, CellConstraints.FILL, CellConstraints.DEFAULT));
+        } else {
+            inputField = new JTextField();
+            formPanel.add(inputField, new CellConstraints().xy(3, 3, CellConstraints.FILL, CellConstraints.DEFAULT));
+            if (defaultValue != null) {
+                inputField.setText(defaultValue);
+            }
+        }
+
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
@@ -48,9 +74,6 @@ public class InputDialog extends JDialog {
         this.inputConsumer = inputConsumer;
         setTitle(LangUtil.getString("InputDialogTitle"));
         messageLabel.setText(message);
-        if (defaultValue != null) {
-            inputField.setText(defaultValue);
-        }
         iconLabel.setIcon(UIManager.getIcon("OptionPane.questionIcon"));
         LangUtil.buttonText(buttonOK, "&Ok");
         LangUtil.buttonText(buttonCancel, "&Cancel");
@@ -70,11 +93,20 @@ public class InputDialog extends JDialog {
     }
 
     private void onOK() {
-        if (StrUtil.isBlank(inputField.getText())) {
+        if (selectable) {
+            if (StrUtil.isBlank((String) inputCombo.getSelectedItem())) {
+                Utils.Message.info(this.getOwner(), LangUtil.getString("InputDialogEmptyInfo"));
+                return;
+            }
+        } else if (StrUtil.isBlank(inputField.getText())) {
             Utils.Message.info(this.getOwner(), LangUtil.getString("InputDialogEmptyInfo"));
             return;
         }
-        inputConsumer.accept(inputField.getText());
+        if (selectable) {
+            inputConsumer.accept((String) inputCombo.getSelectedItem());
+        } else {
+            inputConsumer.accept(inputField.getText());
+        }
         dispose();
     }
 
@@ -106,19 +138,17 @@ public class InputDialog extends JDialog {
         buttonCancel = new JButton();
         buttonCancel.setText("Cancel");
         panel2.add(buttonCancel, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JPanel panel3 = new JPanel();
-        panel3.setLayout(new FormLayout("fill:d:noGrow,left:4dlu:noGrow,fill:max(d;4px):grow", "center:d:grow,top:4dlu:noGrow,center:max(d;4px):noGrow"));
-        contentPane.add(panel3, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        panel3.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        formPanel = new JPanel();
+        formPanel.setLayout(new FormLayout("fill:d:noGrow,left:4dlu:noGrow,fill:max(d;4px):grow", "center:d:grow,top:4dlu:noGrow,center:max(d;4px):noGrow"));
+        contentPane.add(formPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        formPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         iconLabel = new JLabel();
         iconLabel.setText("");
         CellConstraints cc = new CellConstraints();
-        panel3.add(iconLabel, cc.xywh(1, 1, 1, 3));
+        formPanel.add(iconLabel, cc.xywh(1, 1, 1, 3));
         messageLabel = new JLabel();
         messageLabel.setText("Input:");
-        panel3.add(messageLabel, cc.xy(3, 1));
-        inputField = new JTextField();
-        panel3.add(inputField, cc.xy(3, 3, CellConstraints.FILL, CellConstraints.DEFAULT));
+        formPanel.add(messageLabel, cc.xy(3, 1));
     }
 
     /**

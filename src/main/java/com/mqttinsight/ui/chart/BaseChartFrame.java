@@ -27,8 +27,11 @@ import javax.swing.event.ListSelectionEvent;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 /**
  * @author ptma
@@ -201,7 +204,9 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
         if (seriesTableModel.getSeries().isEmpty()) {
             return;
         }
-        Utils.Message.input(this, LangUtil.getString("EnterCollectionName"), (name) -> {
+        List<FavoriteSeries<T>> favs = getFavoriteSeries();
+        Set<String> options = favs == null ? Collections.emptySet() : favs.stream().map(FavoriteSeries::getName).collect(Collectors.toSet());
+        Utils.Message.input(this, LangUtil.getString("EnterCollectionName"), options, (name) -> {
             List<FavoriteSeries<T>> favoriteSeries = getFavoriteSeries();
             if (favoriteSeries == null) {
                 favoriteSeries = new ArrayList<>();
@@ -214,7 +219,7 @@ public abstract class BaseChartFrame<T extends SeriesProperties> extends StatePe
                 }
             }
             favoriteSeries.removeIf(t -> t.getName().equals(name));
-            favoriteSeries.add(FavoriteSeries.of(name, seriesTableModel.getSeries()));
+            favoriteSeries.add(FavoriteSeries.of(name, new ArrayList<>(seriesTableModel.getSeries())));
             Configuration.instance().changed();
             loadFavoriteSeries();
         });

@@ -206,7 +206,11 @@ public class Utils {
         }
 
         public static void input(String message, Consumer<String> inputConsumer) {
-            input(MqttInsightApplication.frame, message, null, inputConsumer);
+            input(MqttInsightApplication.frame, message, null, null, inputConsumer);
+        }
+
+        public static void input(String message, Set<String> options, Consumer<String> inputConsumer) {
+            input(MqttInsightApplication.frame, message, null, options, inputConsumer);
         }
 
         public static void input(String message, String defaultValue, Consumer<String> inputConsumer) {
@@ -214,11 +218,19 @@ public class Utils {
         }
 
         public static void input(Frame parent, String message, Consumer<String> inputConsumer) {
-            input(parent, message, null, inputConsumer);
+            input(parent, message, null, null, inputConsumer);
+        }
+
+        public static void input(Frame parent, String message, Set<String> options, Consumer<String> inputConsumer) {
+            input(parent, message, null, options, inputConsumer);
         }
 
         public static void input(Frame parent, String message, String defaultValue, Consumer<String> inputConsumer) {
-            InputDialog.open(parent, message, defaultValue, inputConsumer);
+            InputDialog.open(parent, message, defaultValue, null, inputConsumer);
+        }
+
+        public static void input(Frame parent, String message, String defaultValue, Set<String> options, Consumer<String> inputConsumer) {
+            InputDialog.open(parent, message, defaultValue, options, inputConsumer);
         }
     }
 
