@@ -16,6 +16,7 @@ import com.mqttinsight.ui.event.InstanceEventAdapter;
 import com.mqttinsight.ui.event.InstanceEventListener;
 import com.mqttinsight.ui.form.MainWindowForm;
 import com.mqttinsight.ui.form.NewSubscriptionForm;
+import com.mqttinsight.ui.form.SubscriptionManagerForm;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.TopicUtil;
@@ -478,8 +479,15 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
                             this.subscribe(subscription);
                         });
                     });
-                favoriteMenu.addSeparator();
             }
+            favoriteMenu.add(Utils.UI.createMenuItem(LangUtil.getString("SubscriptionsManagement")))
+                .addActionListener(e -> {
+                    SubscriptionManagerForm.open(this);
+                    loadFavoriteMenus();
+                });
+
+            favoriteMenu.addSeparator();
+
             favoriteSubscriptions.sort(Comparator.comparing(FavoriteSubscription::getTopic));
             favoriteSubscriptions.forEach(favorite -> {
                 SplitIconMenuItem menuItem = new SplitIconMenuItem(favorite.getTopic(), null, Icons.REMOVE);
