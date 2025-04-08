@@ -2,12 +2,14 @@ package com.mqttinsight.scripting.modules;
 
 import com.caoccao.javet.enums.V8ValueReferenceType;
 import com.caoccao.javet.exceptions.JavetException;
+import com.caoccao.javet.exceptions.JavetExecutionException;
 import com.caoccao.javet.values.reference.V8ValueTypedArray;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mqttinsight.codec.CodecSupport;
 import com.mqttinsight.mqtt.Subscription;
 import com.mqttinsight.scripting.MqttMessageWrapper;
 import com.mqttinsight.scripting.ScriptCodec;
+import com.mqttinsight.scripting.ScriptEnginePool;
 import com.mqttinsight.scripting.ScriptPubMqttMessage;
 import com.mqttinsight.ui.form.panel.MqttInstance;
 import com.mqttinsight.util.TopicUtil;
@@ -71,22 +73,34 @@ public class MqttClientWrapper {
         publish(topic, payload.getBytes(), qos, retained);
     }
 
-    public void publish(String topic, V8ValueTypedArray payload, int qos, boolean retained) throws JavetException, IOException {
-        byte[] bytes;
-        if (payload.getType() == V8ValueReferenceType.Uint8Array) {
-            ObjectNode json = Utils.JSON.toObject(payload.toJsonString(), ObjectNode.class);
-            if (json.get("type") != null && "Buffer".equals(json.get("type").asText())) {
-                bytes = json.get("data").binaryValue();
-            } else {
+    public void publish(String topic, V8ValueTypedArray payload, int qos, boolean retained) {
+        try {
+            byte[] bytes;
+            if (payload.getType() == V8ValueReferenceType.Uint8Array) {
+                ObjectNode json = Utils.JSON.toObject(payload.toJsonString(), ObjectNode.class);
+                if (json.get("type") != null && "Buffer".equals(json.get("type").asText())) {
+                    bytes = json.get("data").binaryValue();
+                } else {
+                    bytes = payload.toBytes();
+                }
+            } else if (payload.getType() == V8ValueReferenceType.Int8Array) {
                 bytes = payload.toBytes();
+            } else {
+                log.warn("The type of the payload parameter \"{}\" is not supported.", payload.getType());
+                return;
             }
-        } else if (payload.getType() == V8ValueReferenceType.Int8Array) {
-            bytes = payload.toBytes();
-        } else {
-            log.warn("The type of the payload parameter \"{}\" is not supported.", payload.getType());
-            return;
+            publish(topic, bytes, qos, retained);
+        } catch (Exception e) {
+            Throwable throwable = e;
+            if (e.getCause() != null) {
+                throwable = e.getCause();
+            }
+            if (throwable instanceof JavetExecutionException) {
+                ScriptEnginePool.instance().getLogger().error(((JavetExecutionException) throwable).getScriptingError().toString());
+            } else {
+                ScriptEnginePool.instance().getLogger().error(throwable.getMessage(), throwable);
+            }
         }
-        publish(topic, bytes, qos, retained);
     }
 
     public void publish(String topic, byte[] payload, int qos, boolean retained) {
