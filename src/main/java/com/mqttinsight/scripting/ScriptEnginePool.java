@@ -4,7 +4,6 @@ import com.caoccao.javet.enums.JSRuntimeType;
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.interop.NodeRuntime;
 import com.caoccao.javet.interop.converters.IJavetConverter;
-import com.caoccao.javet.interop.converters.JavetProxyConverter;
 import com.caoccao.javet.interop.engine.IJavetEngine;
 import com.caoccao.javet.interop.engine.IJavetEnginePool;
 import com.caoccao.javet.interop.engine.JavetEnginePool;
@@ -25,7 +24,7 @@ public class ScriptEnginePool {
     private final Logger logger;
 
     private ScriptEnginePool() {
-        converter = new JavetProxyConverter();
+        converter = new CustomizeJavetProxyConverter();
         logger = new Logger();
         javetEnginePool = new JavetEnginePool<>();
         javetEnginePool.getConfig().setJSRuntimeType(JSRuntimeType.Node);
