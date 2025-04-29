@@ -113,6 +113,16 @@ mqtt.topicVariables("/device/{product}", "/device/test123");
 * `topic` string, 要匹配的主题
 * `return` boolean, 是否匹配
 
+### 1.6 mqtt.onClose(callback)
+
+关闭回调方法
+
+```js
+mqtt.onClose(() => {
+    // do something
+});
+```
+
 ### 2. codec
 
 编解码器注册工具
@@ -179,6 +189,16 @@ mqtt.topicVariables("/device/{product}", "/device/test123");
 * `pattern` string , 主题匹配模式, 可使用 `#`、`+`、`*`、`?` 通配符以及正则表达式
 * `topic` string, 要匹配的主题
 * `return` boolean, 是否匹配
+
+### 2.7 codec.onClose(callback)
+
+关闭回调方法
+
+```js
+codec.onClose(() => {
+    // do something
+});
+```
 
 ### 3. toast
 

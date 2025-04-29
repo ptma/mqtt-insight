@@ -9,6 +9,8 @@ import com.caoccao.javet.interop.engine.IJavetEnginePool;
 import com.caoccao.javet.interop.engine.JavetEnginePool;
 import com.mqttinsight.scripting.modules.Logger;
 
+import java.io.File;
+
 public class ScriptEnginePool {
 
     private static class ScriptEnginePoolHolder {
@@ -33,8 +35,8 @@ public class ScriptEnginePool {
         javetEnginePool.getConfig().setJavetLogger(logger);
     }
 
-    public ScriptEngine getScriptEngine() throws JavetException {
-        return new ScriptEngine(javetEnginePool.getEngine(), converter, logger);
+    public ScriptEngine createScriptEngine(File scriptFile) throws JavetException {
+        return new ScriptEngine(javetEnginePool.getEngine(), converter, logger, scriptFile);
     }
 
     public void releaseEngine(IJavetEngine<NodeRuntime> iJavetEngine) {
@@ -51,11 +53,4 @@ public class ScriptEnginePool {
         return logger;
     }
 
-    public void close() {
-        try {
-            javetEnginePool.close();
-        } catch (JavetException e) {
-            logger.error(e.getMessage(), e);
-        }
-    }
 }

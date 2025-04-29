@@ -539,6 +539,12 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
             if (scriptLoader == null) {
                 scriptLoader = new ScriptLoader(this);
             }
+            if (scriptLoader.isScriptLoaded(scriptFile.getAbsolutePath()) && !isReload) {
+                int opt = Utils.Message.confirm(String.format(LangUtil.getString("ScriptReloadConfirm"), scriptFile.getAbsolutePath()));
+                if (JOptionPane.YES_OPTION != opt) {
+                    return;
+                }
+            }
             scriptLoader.loadScript(scriptFile, (result) -> {
                 if (result.isSuccess()) {
                     if (!isReload) {

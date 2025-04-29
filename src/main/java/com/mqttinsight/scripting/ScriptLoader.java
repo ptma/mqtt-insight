@@ -1,6 +1,5 @@
 package com.mqttinsight.scripting;
 
-import cn.hutool.core.io.FileUtil;
 import com.caoccao.javet.exceptions.JavetException;
 import com.mqttinsight.mqtt.MqttMessage;
 import com.mqttinsight.mqtt.ReceivedMqttMessage;
@@ -32,30 +31,33 @@ public class ScriptLoader {
         this.scriptCodec = new ScriptCodec();
     }
 
+    public boolean isScriptLoaded(String scriptPath) {
+        return engines.containsKey(scriptPath);
+    }
+
     public void loadScript(File scriptFile, Consumer<ScriptResult> resultConsumer) {
         String scriptPath = scriptFile.getAbsolutePath();
-        String scriptContent = FileUtil.readUtf8String(scriptFile);
-        ScriptEngine scriptEngine = engines.computeIfAbsent(scriptPath, (k) -> {
-            try {
-                return ScriptEnginePool.instance().getScriptEngine();
-            } catch (JavetException e) {
-                log.error(e.getMessage());
-                return null;
-            }
-        });
+        if (engines.containsKey(scriptPath)) {
+            removeScript(scriptPath);
+        }
+        ScriptEngine scriptEngine = null;
+        try {
+            scriptEngine = ScriptEnginePool.instance().createScriptEngine(scriptFile);
+        } catch (JavetException e) {
+            log.error(e.getMessage());
+        }
         if (scriptEngine == null) {
             resultConsumer.accept(ScriptResult.error("Failed to create Node.js runtime."));
             return;
         }
-
-        removeScript(scriptPath);
+        engines.put(scriptPath, scriptEngine);
 
         Map<String, Object> modules = new HashMap<>();
         modules.put("mqtt", new MqttClientWrapper(mqttInstance, scriptCodec, scriptPath));
         modules.put("toast", TOAST_WRAPPER);
         modules.put("logger", ScriptEnginePool.instance().getLogger());
 
-        scriptEngine.execute(scriptPath, scriptContent, modules, resultConsumer);
+        scriptEngine.execute(modules, resultConsumer);
     }
 
     public void executeDecode(ReceivedMqttMessage receivedMessage, Consumer<MqttMessage> decodedConsumer) {
@@ -66,14 +68,14 @@ public class ScriptLoader {
         scriptCodec.removeScript(scriptPath);
         ScriptEngine scriptEngine = engines.get(scriptPath);
         if (scriptEngine != null) {
-            scriptEngine.closeRuntime();
+            scriptEngine.release();
             engines.remove(scriptPath);
         }
     }
 
     public void closeAll() {
         scriptCodec.removeAllScripts();
-        engines.values().forEach(ScriptEngine::closeRuntime);
+        engines.values().forEach(ScriptEngine::release);
         engines.clear();
     }
 }

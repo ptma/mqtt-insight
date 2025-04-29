@@ -24,11 +24,12 @@ import java.util.function.Function;
  * @author ptma
  */
 @Slf4j
-public class MqttClientWrapper {
+public class MqttClientWrapper implements CloseableModule {
 
     private final MqttInstance mqttInstance;
     private final ScriptCodec scriptCodec;
     private final String scriptPath;
+    private Runnable closingCallback;
 
     public MqttClientWrapper(MqttInstance mqttInstance, ScriptCodec scriptCodec, String scriptPath) {
         this.mqttInstance = mqttInstance;
@@ -176,6 +177,16 @@ public class MqttClientWrapper {
      */
     public void decode(String topic, Function<MqttMessageWrapper, Object> function) {
         scriptCodec.decode(scriptPath, topic, function);
+    }
+
+    public void onClose(Runnable callback) {
+        this.closingCallback = callback;
+    }
+
+    public void close() {
+        if (closingCallback != null) {
+            closingCallback.run();
+        }
     }
 
 }
