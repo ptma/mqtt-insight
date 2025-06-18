@@ -517,7 +517,7 @@ public class ConnectionEditorForm extends JDialog {
         Validator.notEmpty(nameField, () -> LangUtil.format("FieldRequiredValidation", nameLabel.getText()));
         Validator.notEmpty(serverField, () -> LangUtil.format("FieldRequiredValidation", serverLabel.getText()));
         Validator.notEmpty(clientIdField, () -> LangUtil.format("FieldRequiredValidation", clientIdLabel.getText()));
-        Validator.maxLength(clientIdField, 23, () -> LangUtil.format("FieldMaxLengthValidation", clientIdLabel.getText(), 23));
+        Validator.maxLength(clientIdField, 128, () -> LangUtil.format("FieldMaxLengthValidation", clientIdLabel.getText(), 128));
         if (Version.MQTT_5.equals(versionComboBox.getSelectedItem())) {
             Validator.range(receiveMaximumField, 1, 65535, () -> LangUtil.format("FieldRangeValidation", receiveMaximumLabel.getText(), 1, 65535));
             Validator.range(maximumPacketSizeField, 1, 2684354656l, () -> LangUtil.format("FieldRangeValidation", maximumPacketSizeLabel.getText(), 1, 2684354656l));
