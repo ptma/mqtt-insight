@@ -57,10 +57,9 @@ public class CodecSupportLoader {
             f.getName().endsWith(".js")
         ).forEach(scriptFile -> {
             String scriptPath = scriptFile.getAbsolutePath();
-            String scriptContent = FileUtil.readUtf8String(scriptFile);
             ScriptEngine scriptEngine = engines.computeIfAbsent(scriptPath, (k) -> {
                 try {
-                    return ScriptEnginePool.instance().getScriptEngine();
+                    return ScriptEnginePool.instance().createScriptEngine(scriptFile);
                 } catch (JavetException e) {
                     log.error(e.getMessage());
                     return null;
@@ -76,7 +75,7 @@ public class CodecSupportLoader {
             modules.put("toast", TOAST_WRAPPER);
             modules.put("logger", ScriptEnginePool.instance().getLogger());
 
-            scriptEngine.execute(scriptPath, scriptContent, modules, t -> {
+            scriptEngine.execute(modules, t -> {
                 if (!t.isSuccess()) {
                     log.error("Failed to load scripting codec '{}'. {}", scriptFile.getName(), t.getMessage(), t.getException());
                 } else {
@@ -87,7 +86,7 @@ public class CodecSupportLoader {
     }
 
     public static void dispose() {
-        engines.values().forEach(ScriptEngine::closeRuntime);
+        engines.values().forEach(ScriptEngine::release);
         engines.clear();
     }
 

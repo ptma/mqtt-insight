@@ -370,10 +370,6 @@ public class MessageToolbar extends JToolBar {
             if (subComponent instanceof JMenuItem) {
                 JMenuItem subMenu = (JMenuItem) subComponent;
                 if (filePath.equals(subMenu.getActionCommand())) {
-                    int opt = Utils.Message.confirm(String.format(LangUtil.getString("ScriptReloadConfirm"), filePath));
-                    if (JOptionPane.YES_OPTION == opt) {
-                        mqttInstance.applyEvent(l -> l.fireScriptReload(scriptFile));
-                    }
                     return;
                 }
             }

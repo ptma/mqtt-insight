@@ -16,7 +16,9 @@ import java.util.function.Function;
  * @author ptma
  */
 @Slf4j
-public class CodecWrapper {
+public class CodecWrapper implements CloseableModule {
+
+    private Runnable closingCallback;
 
     /**
      * 注册脚本解码器
@@ -103,5 +105,15 @@ public class CodecWrapper {
      */
     public boolean topicMatch(String pattern, String topic) {
         return TopicUtil.match(pattern, topic);
+    }
+
+    public void onClose(Runnable callback) {
+        this.closingCallback = callback;
+    }
+
+    public void close() {
+        if (closingCallback != null) {
+            closingCallback.run();
+        }
     }
 }
