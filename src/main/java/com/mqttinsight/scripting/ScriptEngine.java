@@ -84,7 +84,7 @@ public class ScriptEngine {
             if (nodeRuntime == null) {
                 return;
             }
-            nodeRuntime.await();
+            nodeRuntime.await(V8AwaitMode.RunNoWait);
             nodeRuntime.setStopping(true);
             nodeRuntime.close();
             ScriptEnginePool.instance().releaseEngine(javetEngine);
