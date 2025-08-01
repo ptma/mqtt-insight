@@ -94,8 +94,6 @@ public class MessagePublishPanel extends JPanel {
                     payloadEditor.setText(item.getPayload());
                     qosComboBox.setSelectedItem(item.getQos());
                     formatComboBox.setSelectedItem(item.getPayloadFormat());
-                } else {
-                    payloadEditor.setText("");
                 }
             }
         });
