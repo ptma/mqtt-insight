@@ -4,6 +4,8 @@ import cn.hutool.core.text.AntPathMatcher;
 import com.mqttinsight.exception.VerificationException;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * MQTT 主题工具
@@ -31,7 +33,14 @@ public class TopicUtil {
      * @return 是否匹配
      */
     public static boolean match(String subscriptionTopic, String messageTopic) {
-        return PATH_MATCHER.match(convertTopicToPattern(subscriptionTopic), messageTopic);
+        if (subscriptionTopic.startsWith("$share/")) {
+            String topic = Stream.of(subscriptionTopic.split("/"))
+                .skip(2)
+                .collect(Collectors.joining("/"));
+            return PATH_MATCHER.match(convertTopicToPattern(topic), messageTopic);
+        } else {
+            return PATH_MATCHER.match(convertTopicToPattern(subscriptionTopic), messageTopic);
+        }
     }
 
     /**
