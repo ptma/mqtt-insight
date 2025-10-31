@@ -31,8 +31,10 @@ public class Mqtt3Options {
         if (properties.getReconnection().isEnable()) {
             connOpts.setMaxReconnectDelay(properties.getReconnection().getReconnectInterval());
         }
-        if (StrUtil.isNotEmpty(properties.getUsername()) && StrUtil.isNotEmpty(properties.getPassword())) {
+        if (StrUtil.isNotEmpty(properties.getUsername())) {
             connOpts.setUserName(properties.getUsername());
+        }
+        if (StrUtil.isNotEmpty(properties.getPassword())) {
             connOpts.setPassword(properties.getPassword().toCharArray());
         }
         if (properties.getLastWill() != null && properties.getLastWill().isEnable()) {

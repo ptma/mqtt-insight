@@ -45,8 +45,10 @@ public class Mqtt5Options {
             connOpts.setUserProperties(properties.getUserProperties().stream().map(Property::toUserProperty).toList());
         }
 
-        if (StrUtil.isNotEmpty(properties.getUsername()) && StrUtil.isNotEmpty(properties.getPassword())) {
+        if (StrUtil.isNotEmpty(properties.getUsername())) {
             connOpts.setUserName(properties.getUsername());
+        }
+        if (StrUtil.isNotEmpty(properties.getPassword())) {
             connOpts.setPassword(properties.getPassword().getBytes(StandardCharsets.UTF_8));
         }
         if (properties.getLastWill() != null && properties.getLastWill().isEnable()) {
