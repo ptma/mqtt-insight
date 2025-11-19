@@ -43,7 +43,8 @@ public class MqttClientWrapper implements CloseableModule {
 
     public void subscribe(String topic, int qos) {
         Subscription subscription = new Subscription(mqttInstance, topic, qos, CodecSupport.DEFAULT, Utils.generateRandomColor());
-        mqttInstance.subscribe(subscription);
+        mqttInstance.subscribe(subscription, subscribed -> {
+        });
     }
 
     public void publish(String topic, String payload) {

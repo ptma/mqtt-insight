@@ -26,7 +26,7 @@ public interface MqttInstance {
 
     ConnectionStatus getConnectionStatus();
 
-    boolean subscribe(final Subscription subscription);
+    void subscribe(final Subscription subscription, Consumer<Boolean> subscribed);
 
     void unsubscribe(final Subscription subscription, Consumer<Boolean> unsubscribed);
 
