@@ -37,7 +37,7 @@ val organization: String = "ptma@163.com"
 val copyrightVal: String = "Copyright (C) ptma@163.com"
 val supportUrl: String = "https://github.com/ptma/mqtt-insight"
 
-val flatlafVersion = "3.4"
+val flatlafVersion = "3.7"
 val javetVersion = "3.1.8"
 val fatJar = false
 

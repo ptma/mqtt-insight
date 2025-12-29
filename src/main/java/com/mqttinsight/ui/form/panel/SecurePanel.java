@@ -1,12 +1,12 @@
 package com.mqttinsight.ui.form.panel;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.util.SystemFileChooser;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.exception.VerificationException;
 import com.mqttinsight.mqtt.SecureSetting;
-import com.mqttinsight.ui.component.FileExtensionsFilter;
 import com.mqttinsight.util.Icons;
 import com.mqttinsight.util.LangUtil;
 
@@ -43,11 +43,10 @@ public abstract class SecurePanel {
         fileFieldToolbar.setBorder(null);
         textField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_COMPONENT, fileFieldToolbar);
         browserFileButton.addActionListener(e -> {
-            JFileChooser jFileChooser = new JFileChooser();
+            SystemFileChooser jFileChooser = new SystemFileChooser();
             jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            jFileChooser.setAcceptAllFileFilterUsed(false);
-            jFileChooser.addChoosableFileFilter(new FileExtensionsFilter(LangUtil.getString("CaAndKeysFileFilter"), "jks", "jceks", "p12", "pfx", "bks", "pem", "key"));
-            jFileChooser.addChoosableFileFilter(new FileExtensionsFilter(LangUtil.getString("AllFileFilter"), "*"));
+            jFileChooser.setAcceptAllFileFilterUsed(true);
+            jFileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter(LangUtil.getString("CaAndKeysFileFilter"), "jks", "jceks", "p12", "pfx", "bks", "pem", "key"));
             jFileChooser.setDialogTitle(LangUtil.getString("ChooseFile"));
             String directory = Configuration.instance().getString(ConfKeys.CERT_OPEN_DIALOG_PATH);
             if (directory != null) {

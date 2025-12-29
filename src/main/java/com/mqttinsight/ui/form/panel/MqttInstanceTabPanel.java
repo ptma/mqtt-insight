@@ -2,6 +2,7 @@ package com.mqttinsight.ui.form.panel;
 
 import cn.hutool.core.thread.ThreadUtil;
 import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.util.SystemFileChooser;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
@@ -520,10 +521,10 @@ public abstract class MqttInstanceTabPanel extends JPanel implements MqttInstanc
     }
 
     private void doLoadScript() {
-        JFileChooser jFileChooser = new JFileChooser();
+        SystemFileChooser jFileChooser = new SystemFileChooser();
         jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         jFileChooser.setAcceptAllFileFilterUsed(false);
-        jFileChooser.addChoosableFileFilter(new FileExtensionsFilter(LangUtil.getString("JavaScriptFileFilter"), "js"));
+        jFileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter(LangUtil.getString("JavaScriptFileFilter"), "js"));
         jFileChooser.setDialogTitle(LangUtil.getString("ChooseFile"));
         String directory = Configuration.instance().getString(ConfKeys.SCRITP_OPEN_DIALOG_PATH);
         if (directory != null) {
