@@ -7,8 +7,8 @@ import com.mqttinsight.mqtt.options.Mqtt3Options;
 import com.mqttinsight.util.LangUtil;
 import com.mqttinsight.util.Utils;
 import lombok.SneakyThrows;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
 import java.util.Collections;
@@ -114,32 +114,41 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
     }
 
     @Override
-    public boolean doSubscribe(final Subscription subscription) {
+    public void doSubscribe(final Subscription subscription, Consumer<Boolean> done) {
         try {
-            IMqttToken token = mqttClient.subscribe(subscription.getTopic(), subscription.getQos(), (topic, message) -> {
-                ReceivedMqttMessage mqttMessage = ReceivedMqttMessage.of(subscription,
-                    topic,
-                    message.getPayload(),
-                    message.getQos(),
-                    message.isRetained(),
-                    message.isDuplicate()
-                );
-                subscription.incrementMessageCount();
-                messageReceived(mqttMessage);
-            });
-            boolean success = token.getException() == null;
-            if (success) {
-                applyEvent(l -> l.onSubscribe(subscription));
-                log.info("Successfully subscribed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
-            } else {
-                log.warn("Failed to subscribe. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
-            }
-            return success;
+            mqttClient.subscribe(subscription.getTopic(),
+                subscription.getQos(),
+                null,
+                new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken token) {
+                        done.accept(Boolean.TRUE);
+                        applyEvent(l -> l.onSubscribe(subscription));
+                        log.info("Successfully subscribed. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos());
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken token, Throwable exception) {
+                        done.accept(Boolean.FALSE);
+                        log.warn("Failed to subscribe. Topic: {}, QoS: {}.", subscription.getTopic(), subscription.getQos(), token.getException());
+                    }
+                },
+                (topic, message) -> {
+                    ReceivedMqttMessage mqttMessage = ReceivedMqttMessage.of(subscription,
+                        topic,
+                        message.getPayload(),
+                        message.getQos(),
+                        message.isRetained(),
+                        message.isDuplicate()
+                    );
+                    subscription.incrementMessageCount();
+                    messageReceived(mqttMessage);
+                });
         } catch (MqttException e) {
+            done.accept(Boolean.FALSE);
             String causeMessage = getCauseMessage(e);
             Utils.Toast.error(causeMessage);
             log.error(causeMessage, e);
-            return false;
         }
     }
 
@@ -171,13 +180,14 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
     }
 
     @Override
-    public boolean doPublishMessage(PublishedMqttMessage message) {
+    public void doPublishMessage(PublishedMqttMessage message, Consumer<Boolean> done) {
         if (!mqttClient.isConnected()) {
+            done.accept(Boolean.FALSE);
             Utils.Toast.info("Not connected yet!");
-            return false;
+            return;
         }
         try {
-            IMqttDeliveryToken token = mqttClient.publish(message.getTopic(),
+            mqttClient.publish(message.getTopic(),
                 message.payloadAsBytes(),
                 message.getQos(),
                 message.isRetained(),
@@ -185,29 +195,23 @@ public class Mqtt3InstanceTabPanel extends MqttInstanceTabPanel {
                 new IMqttActionListener() {
                     @Override
                     public void onSuccess(IMqttToken token) {
-
+                        done.accept(Boolean.TRUE);
+                        log.info("Successfully published message. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained());
                     }
 
                     @Override
                     public void onFailure(IMqttToken token, Throwable exception) {
+                        done.accept(Boolean.FALSE);
                         Utils.Toast.error(exception.getMessage());
                         log.warn("Failed to publish message. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained(), exception);
                     }
                 }
             );
-            token.waitForCompletion(5000);
-            boolean success = token.getException() == null;
-            if (success) {
-                log.info("Successfully published message. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained());
-            } else {
-                log.warn("Failed to publish message. Topic: {}, QoS: {}, Retained: {}.", message.getTopic(), message.getQos(), message.isRetained(), token.getException());
-            }
-            return success;
         } catch (MqttException e) {
+            done.accept(Boolean.FALSE);
             String causeMessage = getCauseMessage(e);
             Utils.Toast.error(causeMessage);
             log.error(causeMessage, e);
-            return false;
         }
     }
 

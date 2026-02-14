@@ -7,7 +7,6 @@ import io.github.fvarrui.javapackager.gradle.PackageTask
 import io.github.fvarrui.javapackager.model.*
 import io.github.fvarrui.javapackager.model.Platform
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.internal.os.OperatingSystem
 
 plugins {
     `java-library`
@@ -37,8 +36,8 @@ val organization: String = "ptma@163.com"
 val copyrightVal: String = "Copyright (C) ptma@163.com"
 val supportUrl: String = "https://github.com/ptma/mqtt-insight"
 
-val flatlafVersion = "3.4"
-val javetVersion = "3.1.8"
+val flatlafVersion = "3.7"
+val javetVersion = "5.0.4"
 val fatJar = false
 
 val requireModules = listOf(
@@ -57,6 +56,23 @@ val requireModules = listOf(
 
 if (JavaVersion.current() < JavaVersion.VERSION_17)
     throw RuntimeException("compile required Java ${JavaVersion.VERSION_17}, current Java ${JavaVersion.current()}")
+
+val osName = System.getProperty("os.name").toLowerCase()
+val osArch = System.getProperty("os.arch").toLowerCase()
+
+val javetPlatformDependency = when {
+    osName.contains("win") -> "com.caoccao.javet:javet-node-windows-x86_64:${javetVersion}"
+    osName.contains("mac") -> {
+        if (osArch.contains("aarch64") || osArch.contains("arm64")) {
+            "com.caoccao.javet:javet-node-macos-arm64:${javetVersion}"
+        } else {
+            "com.caoccao.javet:javet-node-macos-x86_64:${javetVersion}"
+        }
+    }
+
+    osName.contains("linux") -> "com.caoccao.javet:javet-node-linux-x86_64:${javetVersion}"
+    else -> "com.caoccao.javet:javet-node-windows-x86_64:${javetVersion}"
+}
 
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
@@ -96,11 +112,9 @@ dependencies {
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
     implementation("org.eclipse.paho:org.eclipse.paho.mqttv5.client:1.2.5")
 
-    if (OperatingSystem.current().isMacOsX) {
-        implementation("com.caoccao.javet:javet-macos:${javetVersion}") // Mac OS (x86_64 and arm64)
-    } else {
-        implementation("com.caoccao.javet:javet:${javetVersion}") // Linux and Windows (x86_64)
-    }
+    implementation("com.caoccao.javet:javet:${javetVersion}")
+    implementation(javetPlatformDependency)
+
     implementation("org.knowm.xchart:xchart:3.8.6") {
         exclude(group = "de.rototor.pdfbox", module = "graphics2d")
         exclude(group = "com.madgag", module = "animated-gif-lib")
@@ -190,87 +204,8 @@ configure<PackagePluginExtension> {
     )
 }
 
-var taskPlatform = Platform.windows
-var taskPlatform_M1 = false
-tasks.register<Copy>("extractJavet") {
-    delete(layout.buildDirectory.dir("javet"))
-
-    if (taskPlatform == Platform.mac) {
-        from({
-            configurations.runtimeClasspath.get()
-                .filter { it.name.equals("javet-macos-${javetVersion}.jar") }
-                .map {
-                    zipTree(it).matching {
-                        if (taskPlatform_M1) {
-                            exclude("**/*x86_64.*.dylib")
-                        } else {
-                            exclude("**/*arm64.*.dylib")
-                        }
-                    }
-                }
-        })
-    } else {
-        from({
-            configurations.runtimeClasspath.get()
-                .filter { it.name.equals("javet-${javetVersion}.jar") }
-                .map {
-                    zipTree(it).matching {
-                        if (taskPlatform == Platform.windows) {
-                            exclude("**/*.so")
-                        } else if (taskPlatform == Platform.linux) {
-                            exclude("**/*.dll")
-                        }
-                    }
-                }
-        })
-    }
-    into(layout.buildDirectory.dir("javet"))
-}
-
-tasks.register<Jar>("repackJavet") {
-    if (taskPlatform == Platform.mac) {
-        archiveBaseName.set("javet-macos-${javetVersion}")
-    } else {
-        archiveBaseName.set("javet-${javetVersion}")
-    }
-    from(layout.buildDirectory.dir("javet"))
-    manifest.attributes["Automatic-Module-Name"] = "com.caoccao.javet"
-
-    dependsOn("extractJavet")
-}
-
-tasks.register<Copy>("replaceJavet") {
-    if (taskPlatform == Platform.mac) {
-        from(layout.buildDirectory.file("libs/javet-macos-${javetVersion}.jar"))
-        into(layout.buildDirectory.dir("MqttInsight.app/Contents/Resources/Java/libs"))
-    } else {
-        from(layout.buildDirectory.file("libs/javet-${javetVersion}.jar"))
-        into(layout.buildDirectory.dir("MqttInsight/libs"))
-    }
-
-    dependsOn("repackJavet")
-}
-
-tasks.register<Copy>("copyLibs") {
-    doLast {
-        val taskExtract = tasks.findByPath("extractJavet")
-        taskExtract?.actions?.forEach { action ->
-            action.execute(taskExtract)
-        }
-        val taskRepack = tasks.findByPath("repackJavet")
-        taskRepack?.actions?.forEach { action ->
-            action.execute(taskRepack)
-        }
-        val taskReplace = tasks.findByPath("replaceJavet")
-        taskReplace?.actions?.forEach { action ->
-            action.execute(taskReplace)
-        }
-    }
-}
 
 tasks.register<PackageTask>("packageForWindows") {
-    taskPlatform = Platform.windows
-
     val innoSetupLanguageMap = LinkedHashMap<String, String>()
     innoSetupLanguageMap["Chinese"] = "compiler:Languages\\ChineseSimplified.isl"
     innoSetupLanguageMap["English"] = "compiler:Default.isl"
@@ -305,8 +240,6 @@ tasks.register<PackageTask>("packageForWindows") {
 }
 
 tasks.register<PackageTask>("packageForLinux") {
-    taskPlatform = Platform.linux
-
     description = "package For Linux"
     platform = Platform.linux
 
@@ -328,9 +261,6 @@ tasks.register<PackageTask>("packageForLinux") {
 }
 
 tasks.register<PackageTask>("packageForMac_M1") {
-    taskPlatform = Platform.mac
-    taskPlatform_M1 = true
-
     description = "package For Mac M1"
     platform = Platform.mac
 
@@ -349,9 +279,6 @@ tasks.register<PackageTask>("packageForMac_M1") {
 }
 
 tasks.register<PackageTask>("packageForMac") {
-    taskPlatform = Platform.mac
-    taskPlatform_M1 = true
-
     description = "package For Mac"
     platform = Platform.mac
 

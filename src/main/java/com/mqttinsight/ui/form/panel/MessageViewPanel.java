@@ -3,6 +3,7 @@ package com.mqttinsight.ui.form.panel;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.formdev.flatlaf.util.SystemFileChooser;
 import com.mqttinsight.MqttInsightApplication;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
@@ -24,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -227,11 +227,11 @@ public class MessageViewPanel extends JScrollPane {
      * @param subscription if null, export all messages
      */
     private void doExportMessages(Subscription subscription) {
-        JFileChooser jFileChooser = new JFileChooser();
+        SystemFileChooser jFileChooser = new SystemFileChooser();
         jFileChooser.setAcceptAllFileFilterUsed(false);
-        jFileChooser.addChoosableFileFilter(new FileNameExtensionFilter(LangUtil.getString("JsonFileFilter"), "json"));
-        jFileChooser.addChoosableFileFilter(new FileNameExtensionFilter(LangUtil.getString("CsvFileFilter"), "csv"));
-        jFileChooser.addChoosableFileFilter(new FileNameExtensionFilter(LangUtil.getString("TextFileFilter"), "txt"));
+        jFileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter(LangUtil.getString("JsonFileFilter"), "json"));
+        jFileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter(LangUtil.getString("CsvFileFilter"), "csv"));
+        jFileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter(LangUtil.getString("TextFileFilter"), "txt"));
         jFileChooser.setDialogTitle(LangUtil.getString("ExportMessages"));
         String directory = Configuration.instance().getString(ConfKeys.EXPORT_SAVE_DIALOG_PATH);
         if (directory != null) {
@@ -241,7 +241,7 @@ public class MessageViewPanel extends JScrollPane {
         if (result == JFileChooser.APPROVE_OPTION) {
             Configuration.instance().set(ConfKeys.EXPORT_SAVE_DIALOG_PATH, jFileChooser.getCurrentDirectory().getAbsolutePath());
             File file = jFileChooser.getSelectedFile();
-            FileNameExtensionFilter currentFilter = (FileNameExtensionFilter) jFileChooser.getFileFilter();
+            SystemFileChooser.FileNameExtensionFilter currentFilter = (SystemFileChooser.FileNameExtensionFilter) jFileChooser.getFileFilter();
             String ext = currentFilter.getExtensions()[0];
             String absolutePath = file.getAbsolutePath();
             if (!absolutePath.endsWith("." + ext)) {

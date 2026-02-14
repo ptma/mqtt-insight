@@ -265,9 +265,11 @@ public class SubscriptionItem extends JPanel implements MouseListener {
 
     public void resubscribe() {
         SwingUtilities.invokeLater(() -> {
-            if (mqttInstance.subscribe(subscription)) {
-                setSubscribed(true);
-            }
+            mqttInstance.subscribe(subscription, subscribed -> {
+                if (subscribed) {
+                    setSubscribed(true);
+                }
+            });
         });
     }
 

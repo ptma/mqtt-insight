@@ -2,6 +2,7 @@ package com.mqttinsight.ui.form;
 
 import cn.hutool.core.util.StrUtil;
 import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.util.SystemFileChooser;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -15,7 +16,6 @@ import com.mqttinsight.codec.proto.MappingField;
 import com.mqttinsight.config.ConfKeys;
 import com.mqttinsight.config.Configuration;
 import com.mqttinsight.exception.VerificationException;
-import com.mqttinsight.ui.component.FileExtensionsFilter;
 import com.mqttinsight.ui.component.model.CodecMappingTableModel;
 import com.mqttinsight.ui.component.model.DynaminCodecComboModel;
 import com.mqttinsight.ui.component.renderer.EmptyPlaceholderTableCellRenderer;
@@ -192,14 +192,14 @@ public class CodecEditorForm extends JDialog {
         fileFieldToolbar.setBorder(null);
         textField.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_COMPONENT, fileFieldToolbar);
         browserFileButton.addActionListener(e -> {
-            JFileChooser jFileChooser = new JFileChooser();
+            SystemFileChooser jFileChooser = new SystemFileChooser();
             jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             jFileChooser.setAcceptAllFileFilterUsed(false);
             String filterDescription = LangUtil.getString("SchemaFile");
             filterDescription += " (";
             filterDescription += Arrays.stream(codecSupport.getSchemaFileExtensions()).map(ext -> "*." + ext).collect(Collectors.joining(","));
             filterDescription += ")";
-            jFileChooser.addChoosableFileFilter(new FileExtensionsFilter(filterDescription, codecSupport.getSchemaFileExtensions()));
+            jFileChooser.addChoosableFileFilter(new SystemFileChooser.FileNameExtensionFilter(filterDescription, codecSupport.getSchemaFileExtensions()));
             jFileChooser.setDialogTitle(LangUtil.getString("ChooseFile"));
             String directory = Configuration.instance().getString(ConfKeys.SCHEMA_OPEN_DIALOG_PATH);
             if (directory != null) {
