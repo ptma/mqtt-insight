@@ -40,7 +40,7 @@ public class ScriptEngine {
         if (this.nodeRuntime == null) {
             this.nodeRuntime = javetEngine.getV8Runtime();
             nodeRuntime.setConverter(converter);
-            nodeRuntime.allowEval(false);
+            nodeRuntime.allowEval(true);
             nodeRuntime.setLogger(logger);
             nodeRuntime.setGCScheduled(true);
             nodeRuntime.lowMemoryNotification();
