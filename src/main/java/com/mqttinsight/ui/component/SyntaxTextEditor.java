@@ -17,6 +17,7 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.io.IOException;
+import java.io.StringReader;
 
 /**
  * @author ptma
@@ -28,18 +29,21 @@ public class SyntaxTextEditor extends RTextScrollPane {
     public SyntaxTextEditor() {
         super();
         this.textArea = new RSyntaxTextArea();
+        this.textArea.setDoubleBuffered(true);
         this.textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
         this.textArea.setLineWrap(true);
-        this.textArea.setCodeFoldingEnabled(true);
+        this.textArea.setCodeFoldingEnabled(false);
         this.textArea.setPaintTabLines(false);
         this.textArea.setTabSize(2);
         this.textArea.setShowMatchedBracketPopup(false);
         this.textArea.setBracketMatchingEnabled(false);
-        this.textArea.setMarkOccurrences(true);
-        this.textArea.setHyperlinksEnabled(true);
-        this.textArea.setAutoIndentEnabled(true);
+        this.textArea.setMarkOccurrences(false);
+        this.textArea.setHyperlinksEnabled(false);
+        this.textArea.setAutoIndentEnabled(false);
         this.textArea.setMargin(new Insets(5, 5, 5, 10));
         this.textArea.setCaretStyle(RSyntaxTextArea.INSERT_MODE, CaretStyle.VERTICAL_LINE_STYLE);
+        this.textArea.setAnimateBracketMatching(false);
+        this.textArea.getDocument().putProperty("max-visible-lines", 200);
 
         this.textArea.addHyperlinkListener(e -> {
             if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
@@ -52,7 +56,7 @@ public class SyntaxTextEditor extends RTextScrollPane {
         });
         this.setViewportView(textArea);
         this.setLineNumbersEnabled(true);
-        this.setFoldIndicatorEnabled(true);
+        this.setFoldIndicatorEnabled(false);
         this.getGutter().setFoldIndicatorStyle(FoldIndicatorStyle.CLASSIC);
         this.getGutter().setBorder(new Gutter.GutterBorder(0, 5, 0, 2));
         try {
@@ -81,7 +85,12 @@ public class SyntaxTextEditor extends RTextScrollPane {
     }
 
     public void setText(String text) {
-        this.textArea.setText(text);
+        try {
+            this.textArea.read(new StringReader(text), null);
+        } catch (IOException ignore) {
+
+        }
+        //this.textArea.setText(text);
         this.textArea.setCaretPosition(0);
     }
 

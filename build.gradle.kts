@@ -97,7 +97,7 @@ dependencies {
     }
     implementation("com.miglayout:miglayout-swing:11.3")
 
-    implementation("com.fifesoft:rsyntaxtextarea:3.3.4")
+    implementation("com.fifesoft:rsyntaxtextarea:3.6.2")
     implementation(files("libs/swing-toast-notifications-1.0.1.jar"))
 
     implementation("cn.hutool:hutool-core:5.8.24")
